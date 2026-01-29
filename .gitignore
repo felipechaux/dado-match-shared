@@ -1,0 +1,42 @@
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/resources/
+!**/src/test/resources/
+
+### Android ###
+local.properties
+.navigation/
+captures/
+.externalNativeBuild
+.cxx
+*.apk
+*.aar
+*.keystore
+!debug.keystore
+
+### iOS ###
+*.hprof
+.DS_Store
+DerivedData/
+*.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+xcuserdata/
+Pods/
+Podfile.lock
+.swiftpm/
+dist/
+build/
+.artifacts/
+
+### Gradle ###
+.gradle-history
+.kotlin-daemon
+*.hprof
