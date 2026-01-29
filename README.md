@@ -133,10 +133,10 @@ cd dado-match-shared
 # Build iOS XCFramework
 
 ## For Development (Debug)
-./gradlew shared:assembleSharedKMPDebugXCFramework
+./gradlew shared:assembleDadoMatchSharedDebugXCFramework
 
 ## For Release
-./gradlew shared:assembleSharedKMPReleaseXCFramework
+./gradlew shared:assembleDadoMatchSharedReleaseXCFramework
 ```
 
 ### Creating a Release
