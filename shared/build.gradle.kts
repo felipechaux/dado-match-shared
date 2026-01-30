@@ -4,12 +4,11 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.compose.compiler)
-    id("org.jetbrains.compose") version "1.7.0"
     id("com.android.library")
     alias(libs.plugins.kotlinxSerialization)
-    alias(libs.plugins.skie)
-    alias(libs.plugins.moko.multiplatform.resources)
+    // alias(libs.plugins.skie)
     id("org.jetbrains.kotlin.plugin.parcelize")
     alias(libs.plugins.org.jlleitschuh.gradle.ktlint)
 
@@ -45,15 +44,12 @@ kotlin {
             xcf.add(this)
             isStatic = true
             transitiveExport = true
-            export(libs.moko.resources)
-            export(libs.moko.graphics)
             export(libs.compose.animation)
         }
     }
 
     sourceSets {
         androidMain {
-            kotlin.srcDir("build/generated/moko/androidMain/src")
             dependencies {
                 implementation(libs.ktor.client.okhttp)
                 implementation(compose.preview)
@@ -78,9 +74,7 @@ kotlin {
                 implementation(libs.ktor.client.core)
                 implementation(libs.ktor.client.contentnegotiation)
                 implementation(libs.ktor.client.serialization.json)
-                api(libs.moko.resources)
-                api(libs.moko.graphics)
-                api(libs.moko.resources.compose) // for compose multiplatform
+
                 api(libs.datastore.preferences)
                 api(libs.datastore)
 
@@ -145,15 +139,9 @@ android {
 
 }
 
-multiplatformResources {
-    resourcesPackage.set("com.dadomatch.shared.resources")
-}
 
-skie {
-    features {
-        enableSwiftUIObservingPreview = true
-    }
-}
+
+// skie {\n//     features {\n//         enableSwiftUIObservingPreview = true\n//     }\n// }
 
 ktlint {
     version.set("0.50.0")
@@ -167,7 +155,6 @@ ktlint {
     filter {
         exclude("**/generated/**")
         exclude("**/build/**")
-        exclude("**/MR.kt")
         include("**/kotlin/**")
     }
 }

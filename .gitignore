@@ -40,3 +40,7 @@ build/
 .gradle-history
 .kotlin-daemon
 *.hprof
+
+# Kotlin/VSCode
+.kotlin/
+.vscode/
