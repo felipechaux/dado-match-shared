@@ -44,3 +44,4 @@ build/
 # Kotlin/VSCode
 .kotlin/
 .vscode/
+build_debug.txt

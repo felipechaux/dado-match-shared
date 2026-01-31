@@ -44,7 +44,7 @@ kotlin {
             xcf.add(this)
             isStatic = true
             transitiveExport = true
-            export(libs.compose.animation)
+// export(libs.compose.animation)
         }
     }
 
