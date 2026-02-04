@@ -4,6 +4,8 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -12,6 +14,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.dadomatch.shared.presentation.ui.theme.NeonCyan
 import com.dadomatch.shared.presentation.ui.theme.NeonPink
 import kotlinx.coroutines.launch
@@ -20,7 +23,36 @@ import com.dadomatch.shared.presentation.ui.theme.AppTheme
 import kotlin.math.*
 
 @Composable
-fun Rizz(
+fun RizzApp() {
+    RizzRoller()
+}
+
+@Composable
+fun RizzRoller(modifier: Modifier = Modifier) {
+    var result by remember { mutableStateOf(1) }
+    var rolling by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        RizzDice(
+            rolling = rolling,
+            onRollComplete = {
+                result = it
+                rolling = false
+            },
+            modifier = Modifier.size(250.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = { rolling = true }) {
+            Text(text = "Rolar", fontSize = 24.sp)
+        }
+    }
+}
+
+@Composable
+fun RizzDice(
     rolling: Boolean,
     onRollComplete: (Int) -> Unit,
     modifier: Modifier = Modifier
@@ -147,29 +179,80 @@ fun Rizz(
 private fun DrawScope.drawDepthSortedDice(size: Float, rotX: Float, rotY: Float, rotZ: Float) {
     val h = size / 2
     
-    // Define the 6 faces
+    // Define the 6 faces with their pips in local 3D coordinates
+    // Each face has: original normal, corners IN LOCAL SPACE, and pip 3D positions IN LOCAL SPACE
     val faces = listOf(
-        // Front (1)
-        RawFace(floatArrayOf(0f, 0f, 1f), listOf(floatArrayOf(-h, -h, h), floatArrayOf(h, -h, h), floatArrayOf(h, h, h), floatArrayOf(-h, h, h)), listOf(0f to 0f)),
-        // Back (6)
-        RawFace(floatArrayOf(0f, 0f, -1f), listOf(floatArrayOf(h, -h, -h), floatArrayOf(-h, -h, -h), floatArrayOf(-h, h, -h), floatArrayOf(h, h, -h)), listOf(-0.5f to -0.5f, -0.5f to 0f, -0.5f to 0.5f, 0.5f to -0.5f, 0.5f to 0f, 0.5f to 0.5f)),
-        // Right (2)
-        RawFace(floatArrayOf(1f, 0f, 0f), listOf(floatArrayOf(h, -h, h), floatArrayOf(h, -h, -h), floatArrayOf(h, h, -h), floatArrayOf(h, h, h)), listOf(-0.35f to -0.35f, 0.35f to 0.35f)),
-        // Left (5)
-        RawFace(floatArrayOf(-1f, 0f, 0f), listOf(floatArrayOf(-h, -h, -h), floatArrayOf(-h, -h, h), floatArrayOf(-h, h, h), floatArrayOf(-h, h, -h)), listOf(-0.35f to -0.35f, 0.35f to 0.35f, -0.35f to 0.35f, 0.35f to -0.35f, 0f to 0f)),
-        // Top (3)
-        RawFace(floatArrayOf(0f, -1f, 0f), listOf(floatArrayOf(-h, -h, -h), floatArrayOf(h, -h, -h), floatArrayOf(h, -h, h), floatArrayOf(-h, -h, h)), listOf(-0.35f to -0.35f, 0f to 0f, 0.35f to 0.35f)),
-        // Bottom (4)
-        RawFace(floatArrayOf(0f, 1f, 0f), listOf(floatArrayOf(-h, h, h), floatArrayOf(h, h, h), floatArrayOf(h, h, -h), floatArrayOf(-h, h, -h)), listOf(-0.35f to -0.35f, -0.35f to 0.35f, 0.35f to -0.35f, 0.35f to 0.35f))
+        // Front (1) - normal pointing +Z
+        FaceWithPips(
+            normal = floatArrayOf(0f, 0f, 1f),
+            corners = listOf(floatArrayOf(-h, -h, h), floatArrayOf(h, -h, h), floatArrayOf(h, h, h), floatArrayOf(-h, h, h)),
+            pipPositions = listOf(floatArrayOf(0f, 0f, h)) // 1 pip in center
+        ),
+        // Back (6) - normal pointing -Z
+        FaceWithPips(
+            normal = floatArrayOf(0f, 0f, -1f),
+            corners = listOf(floatArrayOf(h, -h, -h), floatArrayOf(-h, -h, -h), floatArrayOf(-h, h, -h), floatArrayOf(h, h, -h)),
+            pipPositions = listOf(
+                floatArrayOf(-h * 0.5f, -h * 0.5f, -h),
+                floatArrayOf(-h * 0.5f, 0f, -h),
+                floatArrayOf(-h * 0.5f, h * 0.5f, -h),
+                floatArrayOf(h * 0.5f, -h * 0.5f, -h),
+                floatArrayOf(h * 0.5f, 0f, -h),
+                floatArrayOf(h * 0.5f, h * 0.5f, -h)
+            ) // 6 pips in 2 columns
+        ),
+        // Right (2) - normal pointing +X
+        FaceWithPips(
+            normal = floatArrayOf(1f, 0f, 0f),
+            corners = listOf(floatArrayOf(h, -h, h), floatArrayOf(h, -h, -h), floatArrayOf(h, h, -h), floatArrayOf(h, h, h)),
+            pipPositions = listOf(
+                floatArrayOf(h, -h * 0.35f, -h * 0.35f),
+                floatArrayOf(h, h * 0.35f, h * 0.35f)
+            ) // 2 pips diagonal
+        ),
+        // Left (5) - normal pointing -X
+        FaceWithPips(
+            normal = floatArrayOf(-1f, 0f, 0f),
+            corners = listOf(floatArrayOf(-h, -h, -h), floatArrayOf(-h, -h, h), floatArrayOf(-h, h, h), floatArrayOf(-h, h, -h)),
+            pipPositions = listOf(
+                floatArrayOf(-h, -h * 0.35f, -h * 0.35f),
+                floatArrayOf(-h, h * 0.35f, h * 0.35f),
+                floatArrayOf(-h, -h * 0.35f, h * 0.35f),
+                floatArrayOf(-h, h * 0.35f, -h * 0.35f),
+                floatArrayOf(-h, 0f, 0f)
+            ) // 5 pips (4 corners + center)
+        ),
+        // Top (3) - normal pointing -Y
+        FaceWithPips(
+            normal = floatArrayOf(0f, -1f, 0f),
+            corners = listOf(floatArrayOf(-h, -h, -h), floatArrayOf(h, -h, -h), floatArrayOf(h, -h, h), floatArrayOf(-h, -h, h)),
+            pipPositions = listOf(
+                floatArrayOf(-h * 0.35f, -h, -h * 0.35f),
+                floatArrayOf(0f, -h, 0f),
+                floatArrayOf(h * 0.35f, -h, h * 0.35f)
+            ) // 3 pips diagonal
+        ),
+        // Bottom (4) - normal pointing +Y
+        FaceWithPips(
+            normal = floatArrayOf(0f, 1f, 0f),
+            corners = listOf(floatArrayOf(-h, h, h), floatArrayOf(h, h, h), floatArrayOf(h, h, -h), floatArrayOf(-h, h, -h)),
+            pipPositions = listOf(
+                floatArrayOf(-h * 0.35f, h, -h * 0.35f),
+                floatArrayOf(-h * 0.35f, h, h * 0.35f),
+                floatArrayOf(h * 0.35f, h, -h * 0.35f),
+                floatArrayOf(h * 0.35f, h, h * 0.35f)
+            ) // 4 pips in corners
+        )
     )
 
-    // Calculate rotated faces
+    // Rotate all faces and their pips
     val rotatedFaces = faces.map { face ->
         val rotatedNormal = rotate3D(face.normal[0], face.normal[1], face.normal[2], rotX, rotY, rotZ)
         val rotatedCorners = face.corners.map { c -> rotate3D(c[0], c[1], c[2], rotX, rotY, rotZ) }
+        val rotatedPips = face.pipPositions.map { pip -> rotate3D(pip[0], pip[1], pip[2], rotX, rotY, rotZ) }
         val avgZ = rotatedCorners.map { it[2] }.average().toFloat()
         
-        ProcessedFace(rotatedNormal, rotatedCorners, face.pips, avgZ)
+        RotatedFace(rotatedNormal, rotatedCorners, rotatedPips, avgZ)
     }
 
     // Sort by depth (back to front)
@@ -201,54 +284,9 @@ private fun DrawScope.drawDepthSortedDice(size: Float, rotX: Float, rotY: Float,
             )
         }
 
-        // Pips (if face is facing camera or at least near enough)
-        // Note: With solid face fills, we can actually draw all sorted faces,
-        // but backface culling (normal.z > 0) is still safer for pips.
+        // Draw pips only if face is facing camera
         if (face.normal[2] > 0) {
-            face.pips.forEach { (px, py) ->
-                // Pips are on the local XY plane of the rotated face
-                // We calculate their 3D world pos by interpolating corners
-                // Local coordinate px, py range [-0.5, 0.5] if corners are [-h, h]
-                // But corners are already rotated. Better calculate world pos THEN rotate.
-                
-                // Simplified: calculate world pos based on normals and px,py
-                val worldPip = when {
-                    abs(face.normal[0]) > 0.9f -> floatArrayOf(face.normal[0] * h, px * h, py * h)
-                    abs(face.normal[1]) > 0.9f -> floatArrayOf(px * h, face.normal[1] * h, py * h)
-                    else -> floatArrayOf(px * h, py * h, face.normal[2] * h)
-                }
-                // Wait, the above logic is flawed because 'face.normal' is already rotated.
-                // We need the pips to be relative to the rotated corners.
-                // Vector interpolation: center + u*px + v*py
-                
-                val centerP = floatArrayOf(
-                    face.corners.map { it[0] }.average().toFloat(),
-                    face.corners.map { it[1] }.average().toFloat(),
-                    face.corners.map { it[2] }.average().toFloat()
-                )
-                
-                // Basis vectors for the face plane
-                val vx = face.corners[1][0] - face.corners[0][0]
-                val vy = face.corners[1][1] - face.corners[0][1]
-                val vz = face.corners[1][2] - face.corners[0][2]
-                
-                val wx = face.corners[3][0] - face.corners[0][0]
-                val wy = face.corners[3][1] - face.corners[0][1]
-                val wz = face.corners[3][2] - face.corners[0][2]
-
-                // Normalizing vectors might be overkill, rely on pips being -0.5..0.5
-                // Corner 0 is -h, -h. Corner 1 is h, -h. Corner 3 is -h, h.
-                // Center is 0,0.
-                // pipPos = center + (vx/2h)*px*h*2 + (wx/2h)*py*h*2 ? No.
-                // If corners are -h..h, then px scaled by 2h/2h?
-                // pipPos = center + vx * (px/h) + wx * (py/h)
-                
-                val pip3D = floatArrayOf(
-                    centerP[0] + (vx / size) * px * size + (wx / size) * py * size,
-                    centerP[1] + (vy / size) * px * size + (wy / size) * py * size,
-                    centerP[2] + (vz / size) * px * size + (wz / size) * py * size
-                )
-                
+            face.pipPositions.forEach { pip3D ->
                 val screenPos = projectToScreen(pip3D, size)
                 val zM = (pip3D[2] + size * 2) / (size * 2)
                 
@@ -262,8 +300,8 @@ private fun DrawScope.drawDepthSortedDice(size: Float, rotX: Float, rotY: Float,
     }
 }
 
-private data class RawFace(val normal: FloatArray, val corners: List<FloatArray>, val pips: List<Pair<Float, Float>>)
-private data class ProcessedFace(val normal: FloatArray, val corners: List<FloatArray>, val pips: List<Pair<Float, Float>>, val avgZ: Float)
+private data class FaceWithPips(val normal: FloatArray, val corners: List<FloatArray>, val pipPositions: List<FloatArray>)
+private data class RotatedFace(val normal: FloatArray, val corners: List<FloatArray>, val pipPositions: List<FloatArray>, val avgZ: Float)
 
 private fun DrawScope.projectToScreen(p: FloatArray, size: Float): Offset {
     val zMod = (p[2] + size * 2) / (size * 2)
@@ -302,7 +340,7 @@ private fun rotate3D(x: Float, y: Float, z: Float, rotX: Float, rotY: Float, rot
 
 @Preview
 @Composable
-fun RizzPreview() {
+fun RizzAppPreview() {
     AppTheme {
         Box(
             modifier = Modifier
@@ -310,7 +348,7 @@ fun RizzPreview() {
                 .background(com.dadomatch.shared.presentation.ui.theme.DeepDarkBlue),
             contentAlignment = Alignment.Center
         ) {
-            Rizz(rolling = false, onRollComplete = {})
+            RizzApp()
         }
     }
 }

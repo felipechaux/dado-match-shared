@@ -1,0 +1,6 @@
+## This is a template for your local.properties file.
+## Copy this file to 'local.properties' and fill in your actual values.
+## DO NOT commit 'local.properties' to version control.
+
+GEMINI_API_KEY=your_api_key_here
+GEMINI_MODEL_NAME=gemini-2.0-flash-lite

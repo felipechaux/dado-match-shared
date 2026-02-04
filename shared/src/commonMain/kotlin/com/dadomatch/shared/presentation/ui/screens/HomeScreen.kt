@@ -1,17 +1,36 @@
 package com.dadomatch.shared.presentation.ui.screens
-
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
+ 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,20 +44,29 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.dadomatch.shared.presentation.ui.components.Rizz
-import com.dadomatch.shared.presentation.ui.theme.*
+import com.dadomatch.shared.presentation.ui.components.RizzDice
+import com.dadomatch.shared.presentation.ui.theme.AppTheme
+import com.dadomatch.shared.presentation.ui.theme.DarkSurface
+import com.dadomatch.shared.presentation.ui.theme.DeepDarkBlue
+import com.dadomatch.shared.presentation.ui.theme.NeonCyan
+import com.dadomatch.shared.presentation.ui.theme.NeonPink
+import com.dadomatch.shared.presentation.ui.theme.TextGray
+import com.dadomatch.shared.presentation.ui.theme.TextWhite
+import com.dadomatch.shared.presentation.viewmodel.HomeViewModel
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun HomeScreen() {
     var selectedEnvironment by remember { mutableStateOf("Fiesta") }
     var selectedIntensity by remember { mutableStateOf("Gracioso") }
     var rolling by remember { mutableStateOf(false) }
-    var showIcebreaker by remember { mutableStateOf(false) }
-    var currentIcebreaker by remember { mutableStateOf("") }
 
     val environments = listOf("Gym", "Fiesta", "Biblioteca", "Café")
     val intensities = listOf("Cringe", "Romántico", "Directo", "Gracioso")
+    
+    val viewModel: HomeViewModel = koinViewModel()
+    val uiState by viewModel.uiState.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize().background(DeepDarkBlue)) {
         Column(
@@ -109,12 +137,11 @@ fun HomeScreen() {
         Spacer(modifier = Modifier.weight(1f))
 
         // Rizz Component
-        Rizz(
+        RizzDice(
             rolling = rolling,
             onRollComplete = { result ->
                 rolling = false
-                currentIcebreaker = generateIcebreaker(selectedEnvironment, selectedIntensity)
-                showIcebreaker = true
+                viewModel.onRollComplete(selectedEnvironment, selectedIntensity)
             },
             modifier = Modifier.size(250.dp)
         )
@@ -145,7 +172,7 @@ fun HomeScreen() {
         Button(
             onClick = {
                 rolling = true
-                showIcebreaker = false
+                viewModel.dismissIcebreaker()
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -183,11 +210,38 @@ fun HomeScreen() {
 }
 
     // Icebreaker Modal/Overlay
-    if (showIcebreaker) {
+    if (uiState.showIcebreaker) {
         IcebreakerDialog(
-            text = currentIcebreaker,
-            onDismiss = { showIcebreaker = false }
+            text = uiState.currentIcebreaker,
+            onDismiss = { viewModel.dismissIcebreaker() }
         )
+    }
+
+    if (uiState.error != null) {
+        AlertDialog(
+            onDismissRequest = { /* Handle error dismissal */ },
+            confirmButton = {
+                TextButton(onClick = { /* Handle retry or dismiss */ }) {
+                    Text("OK", color = NeonPink)
+                }
+            },
+            title = { Text("Ups!", color = NeonPink) },
+            text = { Text(uiState.error!!, color = TextWhite) },
+            containerColor = DarkSurface
+        )
+    }
+
+    if (uiState.isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                CircularProgressIndicator(color = NeonCyan)
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Cocinando tu Rizz...", color = TextWhite, fontWeight = FontWeight.Bold)
+            }
+        }
     }
 }
 
@@ -269,35 +323,6 @@ fun IcebreakerDialog(
     )
 }
 
-fun generateIcebreaker(env: String, intensity: String): String {
-    val phrases = mapOf(
-        "Gym" to mapOf(
-            "Cringe" to "Oye, ¿usas esos pesos porque no puedes cargar con mi amor?",
-            "Romántico" to "Te vi y me diste más energía que mi pre-entreno.",
-            "Directo" to "¿Me ayudas con esta serie? Y de paso me das tu número.",
-            "Gracioso" to "Mi app me obligó a decirte esto: ¿Entrenas a menudo aquí o ya eres mi meta de hoy?"
-        ),
-        "Fiesta" to mapOf(
-            "Cringe" to "Si fueras un trago, serías un 'Bésame Mucho'.",
-            "Romántico" to "La música está alta, pero no tanto como los latidos de mi corazón al verte.",
-            "Directo" to "Bailas increíble. ¿Quieres seguir bailando o vamos a por algo de tomar?",
-            "Gracioso" to "Mi app dice que si no te hablaba ahora, el dado me explotaría en la mano."
-        ),
-        "Biblioteca" to mapOf(
-            "Cringe" to "Shhh... guarda silencio, que mi corazón está gritando tu nombre.",
-            "Romántico" to "Pareces el libro que nunca quiero terminar de leer.",
-            "Directo" to "Me desconcentraste totalmente. ¿Cómo se llama lo que estás leyendo?",
-            "Gracioso" to "Oye, mi dado me dice que estamos en el capítulo de 'Amor a primera vista'."
-        ),
-        "Café" to mapOf(
-            "Cringe" to "¿Eres barista? Porque acabas de preparar un shot de amor en mi corazón.",
-            "Romántico" to "Tu sonrisa me despierta más que este café.",
-            "Directo" to "Menos latte y más hablar nosotros, ¿qué dices?",
-            "Gracioso" to "Mi app me obligó a decirte esto... y tiene razón, eres lo mejor del local."
-        )
-    )
-    return phrases[env]?.get(intensity) ?: "¡Lánzate y dile hola!"
-}
 
 @Preview
 @Composable

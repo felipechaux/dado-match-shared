@@ -1,6 +1,8 @@
 import org.gradle.kotlin.dsl.invoke
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -8,10 +10,9 @@ plugins {
     alias(libs.plugins.compose.compiler)
     id("com.android.library")
     alias(libs.plugins.kotlinxSerialization)
-    // alias(libs.plugins.skie)
     id("org.jetbrains.kotlin.plugin.parcelize")
     alias(libs.plugins.org.jlleitschuh.gradle.ktlint)
-
+    alias(libs.plugins.buildkonfig)
 }
 
 // Version management
@@ -44,7 +45,6 @@ kotlin {
             xcf.add(this)
             isStatic = true
             transitiveExport = true
-// export(libs.compose.animation)
         }
     }
 
@@ -88,6 +88,7 @@ kotlin {
                 api(libs.androidx.navigation.compose)
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.calf.file.picker)
+                implementation(libs.generative.ai)
             }
         }
         commonTest {
@@ -139,10 +140,6 @@ android {
 
 }
 
-
-
-// skie {\n//     features {\n//         enableSwiftUIObservingPreview = true\n//     }\n// }
-
 ktlint {
     version.set("0.50.0")
     debug.set(false)
@@ -161,4 +158,32 @@ ktlint {
 
 dependencies {
     add("debugImplementation", libs.compose.ui.tooling)
+}
+
+buildkonfig {
+    packageName = "com.dadomatch.shared"
+    objectName = "BuildKonfig"
+    exposeObjectWithName = "BuildKonfig"
+
+    val localProperties = Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    val parentPropertiesFile = rootProject.file("../local.properties")
+    
+    if (localPropertiesFile.exists()) {
+        localProperties.load(localPropertiesFile.inputStream())
+    } else if (parentPropertiesFile.exists()) {
+        localProperties.load(parentPropertiesFile.inputStream())
+    }
+
+    defaultConfigs {
+        val geminiApiKey = localProperties.getProperty("GEMINI_API_KEY") 
+            ?: System.getenv("GEMINI_API_KEY") 
+            ?: ""
+        val geminiModelName = localProperties.getProperty("GEMINI_MODEL_NAME") 
+            ?: System.getenv("GEMINI_MODEL_NAME") 
+            ?: "gemini-2.0-flash-lite"
+
+        buildConfigField(STRING, "GEMINI_API_KEY", geminiApiKey)
+        buildConfigField(STRING, "GEMINI_MODEL_NAME", geminiModelName)
+    }
 }
