@@ -15,6 +15,7 @@ plugins {
     alias(libs.plugins.buildkonfig)
 }
 
+
 // Version management
 val sharedVersion = project.findProperty("dadomatch.shared.version")?.toString()
     ?: System.getenv("SHARED_VERSION")

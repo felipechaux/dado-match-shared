@@ -5,11 +5,9 @@ pluginManagement {
         gradlePluginPortal()
         mavenCentral()
         google()
-        maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
-        maven("https://maven.pkg.jetbrains.space/kotlin/p/wasm/experimental")
-        maven("https://androidx.dev/storage/compose-compiler/repository")
-
         maven { url = uri("https://jitpack.io") }
+        maven { url = uri("https://maven.pkg.jetbrains.space/public/p/compose/dev") }
+        maven { url = uri("https://maven.pkg.jetbrains.space/public/p/compose/stable") }
     }
 }
 
@@ -18,11 +16,9 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
-        maven("https://maven.pkg.jetbrains.space/kotlin/p/wasm/experimental")
-        maven("https://androidx.dev/storage/compose-compiler/repository")
-        maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
         maven { url = uri("https://jitpack.io") }
+        maven { url = uri("https://maven.pkg.jetbrains.space/public/p/compose/dev") }
+        maven { url = uri("https://maven.pkg.jetbrains.space/public/p/compose/stable") }
     }
 }
 
