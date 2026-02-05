@@ -71,7 +71,6 @@ kotlin {
                 implementation(compose.runtime)
                 implementation(compose.components.resources)
                 implementation(libs.compose.view.model)
-                //api(compose.animation)
                 implementation(libs.ktor.client.core)
                 implementation(libs.ktor.client.contentnegotiation)
                 implementation(libs.ktor.client.serialization.json)
