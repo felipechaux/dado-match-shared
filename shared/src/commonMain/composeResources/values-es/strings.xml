@@ -1,0 +1,52 @@
+<resources>
+    <string name="app_name">DadoMatch</string>
+    <string name="slogan">Menos scroll, más acción.</string>
+    
+    <!-- Home Screen -->
+    <string name="home_title">DadoMatch</string>
+    <string name="environment_label">Ambiente</string>
+    <string name="intensity_label">Intensidad</string>
+    <string name="launch_button">LANZAR</string>
+    <string name="rolling_rizz">Cocinando tu Rizz...</string>
+    <string name="error_title">¡Ups!</string>
+    <string name="ok_button">OK</string>
+    
+    <!-- Environments -->
+    <string name="env_gym">Gym</string>
+    <string name="env_party">Fiesta</string>
+    <string name="env_library">Biblioteca</string>
+    <string name="env_cafe">Café</string>
+    
+    <!-- Intensities -->
+    <string name="int_cringe">Cringe</string>
+    <string name="int_romantic">Romántico</string>
+    <string name="int_direct">Directo</string>
+    <string name="int_funny">Gracioso</string>
+    
+    <!-- Success Screen -->
+    <string name="success_title">Tus Éxitos</string>
+    <string name="success_subtitle">Tu progreso dominando el Rizz.</string>
+    <string name="recent_label">Recientes</string>
+    
+    <!-- Dialogs -->
+    <string name="icebreaker_title">¡Tu Icebreaker!</string>
+    <string name="got_it_button">¡LO TENGO!</string>
+    <string name="did_you_use_it_title">¿Lo usaste?</string>
+    <string name="did_you_use_it_desc">¡Cuéntanos si te lanzaste!</string>
+    <string name="yes_button">¡SÍ!</string>
+    <string name="not_yet_button">AÚN NO</string>
+    <string name="how_did_it_go_title">¿Qué tal funcionó?</string>
+    <string name="feedback_desc">Tu feedback nos ayuda a mejorar el Rizz.</string>
+    <string name="top_feedback">Top</string>
+    <string name="cringe_feedback">Cringe</string>
+    
+    <!-- Navigation -->
+    <string name="nav_home">Inicio</string>
+    <string name="nav_success">Éxitos</string>
+    <string name="nav_profile">Perfil</string>
+    <string name="nav_settings">Ajustes</string>
+    
+     <!-- Error Fallbacks -->
+    <string name="ai_error_fallback">¡Lánzate y dile hola!</string>
+    <string name="ai_connection_error">Error al conectar con la IA: %s</string>
+</resources>

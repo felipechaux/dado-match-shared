@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -16,6 +17,7 @@ import com.dadomatch.shared.presentation.ui.components.LiquidFooterMenu
 import com.dadomatch.shared.presentation.ui.screens.HomeScreen
 import com.dadomatch.shared.presentation.ui.screens.ProfileScreen
 import com.dadomatch.shared.presentation.ui.screens.SettingsScreen
+import com.dadomatch.shared.presentation.ui.screens.SplashScreen
 import org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 fun AppNavigation(
@@ -24,21 +26,25 @@ fun AppNavigation(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    val showBottomBar = currentRoute != Screen.Splash.route
+
     Scaffold(
         containerColor = com.dadomatch.shared.presentation.ui.theme.DeepDarkBlue,
         bottomBar = {
-            LiquidFooterMenu(
-                currentRoute = currentRoute,
-                onNavigate = { route ->
-                    navController.navigate(route) {
-                        popUpTo(navController.graph.findStartDestination().route ?: Screen.Home.route) {
-                            saveState = true
+            if (showBottomBar) {
+                LiquidFooterMenu(
+                    currentRoute = currentRoute,
+                    onNavigate = { route ->
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.findStartDestination().route ?: Screen.Home.route) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
                         }
-                        launchSingleTop = true
-                        restoreState = true
                     }
-                }
-            )
+                )
+            }
         }
     ) { paddingValues ->
         Box(
@@ -47,13 +53,25 @@ fun AppNavigation(
         ) {
             NavHost(
                 navController = navController,
-                startDestination = Screen.Home.route,
+                startDestination = Screen.Splash.route,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = paddingValues.calculateBottomPadding())
+                    .padding(bottom = if (showBottomBar) paddingValues.calculateBottomPadding() else 0.dp)
             ) {
+                composable(Screen.Splash.route) {
+                    SplashScreen(
+                        onNavigateToHome = {
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.Splash.route) { inclusive = true }
+                            }
+                        }
+                    )
+                }
                 composable(Screen.Home.route) {
                     HomeScreen()
+                }
+                composable(Screen.Successes.route) {
+                    com.dadomatch.shared.presentation.ui.screens.SuccessesScreen()
                 }
                 composable(Screen.Profile.route) {
                     ProfileScreen()

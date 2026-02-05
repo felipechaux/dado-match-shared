@@ -18,6 +18,7 @@ calf-file-picker = "0.5.0"
 coilCompose3Version = "3.0.4"
 gemini-common = "0.9.0-1.1.0"
 buildkonfig = "0.17.1"
+compottie = "2.0.0-rc01"
 
 
  [libraries]
@@ -55,6 +56,9 @@ koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koinComp
 koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koinComposeMultiplatform" }
 
 androidx-navigation-compose = { group = "org.jetbrains.androidx.navigation", name="navigation-compose", version.ref = "navigation-compose" }
+compottie = { module = "io.github.alexzhirkevich:compottie", version.ref = "compottie" }
+compottie-dot-lottie = { module = "io.github.alexzhirkevich:compottie-dotlottie", version.ref = "compottie" }
+compottie-resources = { module = "io.github.alexzhirkevich:compottie-resources", version.ref = "compottie" }
 generative-ai = { module = "dev.shreyaspatil.generativeai:generativeai-google", version.ref = "gemini-common" }
 
  [plugins]

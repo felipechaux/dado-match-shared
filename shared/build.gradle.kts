@@ -90,6 +90,7 @@ kotlin {
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.calf.file.picker)
                 implementation(libs.generative.ai)
+                implementation(libs.compottie)
             }
         }
         commonTest {

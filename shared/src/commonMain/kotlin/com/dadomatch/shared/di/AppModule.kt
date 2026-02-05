@@ -1,11 +1,13 @@
 package com.dadomatch.shared.di
 
+import com.dadomatch.shared.presentation.viewmodel.HomeViewModel
 import com.dadomatch.shared.BuildKonfig
 import com.dadomatch.shared.data.remote.GeminiService
 import com.dadomatch.shared.data.repository.IcebreakerRepositoryImpl
-import com.dadomatch.shared.domain.repository.IcebreakerRepository
-import com.dadomatch.shared.domain.usecase.GenerateIcebreakerUseCase
-import com.dadomatch.shared.presentation.viewmodel.HomeViewModel
+import com.dadomatch.shared.data.repository.SuccessRepositoryImpl
+import com.dadomatch.shared.domain.repository.SuccessRepository
+import com.dadomatch.shared.domain.usecase.*
+import com.dadomatch.shared.presentation.viewmodel.SuccessesViewModel
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
@@ -23,10 +25,15 @@ val appModule = module {
     
     // Repository
     singleOf(::IcebreakerRepositoryImpl) bind IcebreakerRepository::class
+    singleOf(::SuccessRepositoryImpl) bind SuccessRepository::class
     
     // UseCase
     factoryOf(::GenerateIcebreakerUseCase)
+    factoryOf(::SubmitFeedbackUseCase)
+    factoryOf(::AddSuccessUseCase)
+    factoryOf(::GetSuccessesUseCase)
     
     // ViewModel
     viewModelOf(::HomeViewModel)
+    viewModelOf(::SuccessesViewModel)
 }

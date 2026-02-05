@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,6 +21,12 @@ import com.dadomatch.shared.presentation.ui.navigation.Screen
 import com.dadomatch.shared.presentation.ui.theme.NeonCyan
 import com.dadomatch.shared.presentation.ui.theme.NeonPink
 import com.dadomatch.shared.presentation.ui.theme.TextWhite
+import com.dadomatch.shared.shared.generated.resources.Res
+import com.dadomatch.shared.shared.generated.resources.nav_home
+import com.dadomatch.shared.shared.generated.resources.nav_profile
+import com.dadomatch.shared.shared.generated.resources.nav_settings
+import com.dadomatch.shared.shared.generated.resources.nav_success
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun LiquidFooterMenu(
@@ -27,13 +34,14 @@ fun LiquidFooterMenu(
     onNavigate: (String) -> Unit
 ) {
     val homeRoute = Screen.Home.route
+    val successesRoute = Screen.Successes.route
     val profileRoute = Screen.Profile.route
     val settingsRoute = Screen.Settings.route
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 32.dp, vertical = 24.dp)
+            .padding(horizontal = 16.dp, vertical = 24.dp)
             .height(72.dp)
             .background(
                 color = Color.White.copy(alpha = 0.05f),
@@ -48,19 +56,25 @@ fun LiquidFooterMenu(
         ) {
             FooterItem(
                 icon = Icons.Default.Home,
-                label = "Home",
+                label = stringResource(Res.string.nav_home),
                 isSelected = currentRoute == homeRoute,
                 onClick = { onNavigate(homeRoute) }
             )
             FooterItem(
+                icon = Icons.Default.Star,
+                label = stringResource(Res.string.nav_success),
+                isSelected = currentRoute == successesRoute,
+                onClick = { onNavigate(successesRoute) }
+            )
+            FooterItem(
                 icon = Icons.Default.Person,
-                label = "Profile",
+                label = stringResource(Res.string.nav_profile),
                 isSelected = currentRoute == profileRoute,
                 onClick = { onNavigate(profileRoute) }
             )
             FooterItem(
                 icon = Icons.Default.Settings,
-                label = "Settings",
+                label = stringResource(Res.string.nav_settings),
                 isSelected = currentRoute == settingsRoute,
                 onClick = { onNavigate(settingsRoute) }
             )
