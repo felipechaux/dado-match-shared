@@ -15,13 +15,15 @@ class SuccessesViewModel(
 
     init {
         getSuccessesUseCase()
+            .onStart { _uiState.update { it.copy(isLoading = true) } }
             .onEach { successes ->
-                _uiState.update { it.copy(successes = successes) }
+                _uiState.update { it.copy(successes = successes, isLoading = false) }
             }
             .launchIn(viewModelScope)
     }
 }
 
 data class SuccessesUiState(
-    val successes: List<SuccessRecord> = emptyList()
+    val successes: List<SuccessRecord> = emptyList(),
+    val isLoading: Boolean = true
 )

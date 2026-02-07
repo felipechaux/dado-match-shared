@@ -13,6 +13,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.parcelize")
     alias(libs.plugins.org.jlleitschuh.gradle.ktlint)
     alias(libs.plugins.buildkonfig)
+    alias(libs.plugins.ksp)
 }
 
 
@@ -90,6 +91,10 @@ kotlin {
                 implementation(libs.calf.file.picker)
                 implementation(libs.generative.ai)
                 implementation(libs.compottie)
+                
+                // Room
+                implementation(libs.room.runtime)
+                implementation(libs.sqlite.bundled)
             }
         }
         commonTest {
@@ -103,6 +108,15 @@ kotlin {
             }
         }
     }
+}
+
+// KSP Configuration
+dependencies {
+    // Don't add kspCommonMainMetadata - it conflicts with platform-specific actuals
+    add("kspAndroid", libs.room.compiler)
+    add("kspIosX64", libs.room.compiler)
+    add("kspIosArm64", libs.room.compiler)
+    add("kspIosSimulatorArm64", libs.room.compiler)
 }
 
 android {

@@ -19,6 +19,8 @@ coilCompose3Version = "3.0.4"
 gemini-common = "0.9.0-1.1.0"
 buildkonfig = "0.17.1"
 compottie = "2.0.0-rc01"
+room = "2.8.4"
+ksp = "2.3.0"
 
 
  [libraries]
@@ -61,6 +63,10 @@ compottie-dot-lottie = { module = "io.github.alexzhirkevich:compottie-dotlottie"
 compottie-resources = { module = "io.github.alexzhirkevich:compottie-resources", version.ref = "compottie" }
 generative-ai = { module = "dev.shreyaspatil.generativeai:generativeai-google", version.ref = "gemini-common" }
 
+room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version = "2.5.0" }
+
  [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePluginVersion" }
 android-library = { id = "com.android.library", version.ref = "androidGradlePluginVersion" }
@@ -74,4 +80,5 @@ kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlinVersion" }
 compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 

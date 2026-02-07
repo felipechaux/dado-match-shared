@@ -1,7 +1,10 @@
 package com.dadomatch.shared.di
 
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.dadomatch.shared.presentation.viewmodel.HomeViewModel
 import com.dadomatch.shared.BuildKonfig
+import com.dadomatch.shared.data.local.AppDatabase
+import com.dadomatch.shared.data.local.getDatabaseBuilder
 import com.dadomatch.shared.data.remote.GeminiService
 import com.dadomatch.shared.data.repository.IcebreakerRepositoryImpl
 import com.dadomatch.shared.data.repository.SuccessRepositoryImpl
@@ -21,6 +24,17 @@ val appModule = module {
             apiKey = BuildKonfig.GEMINI_API_KEY,
             modelName = BuildKonfig.GEMINI_MODEL_NAME
         ) 
+    }
+    
+    // Database
+    single { 
+        getDatabaseBuilder()
+            .setDriver(BundledSQLiteDriver())
+            .build()
+    }
+    
+    single { 
+        get<AppDatabase>().successDao() 
     }
     
     // Repository
