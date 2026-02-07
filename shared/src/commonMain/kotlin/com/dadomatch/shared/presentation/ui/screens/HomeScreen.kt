@@ -46,6 +46,8 @@ import com.dadomatch.shared.presentation.ui.theme.NeonCyan
 import com.dadomatch.shared.presentation.ui.theme.NeonPink
 import com.dadomatch.shared.presentation.ui.theme.TextWhite
 import com.dadomatch.shared.presentation.viewmodel.HomeViewModel
+import com.dadomatch.shared.presentation.ui.components.EmptyState
+import com.dadomatch.shared.presentation.ui.theme.TextGray
 import com.dadomatch.shared.shared.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -70,10 +72,10 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
-                .padding(24.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             
             // Logo & Title
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -141,7 +143,7 @@ fun HomeScreen(
                     val currentLanguage = Locale.current.language
                     viewModel.onRollComplete(selectedEnvironment, selectedIntensity, currentLanguage)
                 },
-                modifier = Modifier.size(250.dp)
+                modifier = Modifier.size(180.dp)
             )
 
             Spacer(modifier = Modifier.weight(1f))
@@ -167,7 +169,7 @@ fun HomeScreen(
                 isRestricted = { option -> option == "int_spicy" && !uiState.isPremium }
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
             // Lanzar Button
             Button(
@@ -235,17 +237,30 @@ fun HomeScreen(
         }
 
         if (uiState.error != null) {
-            AlertDialog(
-                onDismissRequest = { /* Handle error dismissal */ },
-                confirmButton = {
-                    TextButton(onClick = { /* Handle retry or dismiss */ }) {
-                        Text(stringResource(Res.string.ok_button), color = NeonPink)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(DeepDarkBlue.copy(alpha = 0.95f))
+                    .statusBarsPadding(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    EmptyState(
+                        title = stringResource(Res.string.error_title),
+                        description = stringResource(Res.string.error_message_generic),
+                        icon = "😵‍💫",
+                        buttonText = stringResource(Res.string.error_button_retry),
+                        onButtonClick = {
+                            viewModel.dismissError()
+                            viewModel.onRetryRoll()
+                        }
+                    )
+                    
+                    TextButton(onClick = { viewModel.dismissError() }) {
+                        Text(stringResource(Res.string.ok_button), color = TextGray)
                     }
-                },
-                title = { Text(stringResource(Res.string.error_title), color = NeonPink) },
-                text = { Text(uiState.error!!, color = TextWhite) },
-                containerColor = DarkSurface
-            )
+                }
+            }
         }
 
         if (uiState.isLoading) {

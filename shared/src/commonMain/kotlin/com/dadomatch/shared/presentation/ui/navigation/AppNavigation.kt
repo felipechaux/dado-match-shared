@@ -3,6 +3,7 @@ package com.dadomatch.shared.presentation.ui.navigation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -31,7 +32,7 @@ fun AppNavigation(
     val showBottomBar = currentRoute != Screen.Splash.route && currentRoute != Screen.Paywall.route
 
     Scaffold(
-        containerColor = com.dadomatch.shared.presentation.ui.theme.DeepDarkBlue,
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             if (showBottomBar) {
                 LiquidFooterMenu(

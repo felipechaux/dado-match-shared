@@ -41,43 +41,50 @@ fun LiquidFooterMenu(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 24.dp)
-            .height(72.dp)
-            .background(
-                color = Color.White.copy(alpha = 0.05f),
-                shape = RoundedCornerShape(36.dp)
-            ),
+            .navigationBarsPadding()
+            .padding(start = 16.dp, end = 16.dp, bottom = 24.dp, top = 16.dp),
         contentAlignment = Alignment.Center
     ) {
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(72.dp)
+                .background(
+                    color = Color.White.copy(alpha = 0.05f),
+                    shape = RoundedCornerShape(36.dp)
+                ),
+            contentAlignment = Alignment.Center
         ) {
-            FooterItem(
-                icon = Icons.Default.Home,
-                label = stringResource(Res.string.nav_home),
-                isSelected = currentRoute == homeRoute,
-                onClick = { onNavigate(homeRoute) }
-            )
-            FooterItem(
-                icon = Icons.Default.Star,
-                label = stringResource(Res.string.nav_success),
-                isSelected = currentRoute == successesRoute,
-                onClick = { onNavigate(successesRoute) }
-            )
-            FooterItem(
-                icon = Icons.Default.Person,
-                label = stringResource(Res.string.nav_profile),
-                isSelected = currentRoute == profileRoute,
-                onClick = { onNavigate(profileRoute) }
-            )
-            FooterItem(
-                icon = Icons.Default.Settings,
-                label = stringResource(Res.string.nav_settings),
-                isSelected = currentRoute == settingsRoute,
-                onClick = { onNavigate(settingsRoute) }
-            )
+            Row(
+                modifier = Modifier.fillMaxSize(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                FooterItem(
+                    icon = Icons.Default.Home,
+                    label = stringResource(Res.string.nav_home),
+                    isSelected = currentRoute == homeRoute,
+                    onClick = { onNavigate(homeRoute) }
+                )
+                FooterItem(
+                    icon = Icons.Default.Star,
+                    label = stringResource(Res.string.nav_success),
+                    isSelected = currentRoute == successesRoute,
+                    onClick = { onNavigate(successesRoute) }
+                )
+                FooterItem(
+                    icon = Icons.Default.Person,
+                    label = stringResource(Res.string.nav_profile),
+                    isSelected = currentRoute == profileRoute,
+                    onClick = { onNavigate(profileRoute) }
+                )
+                FooterItem(
+                    icon = Icons.Default.Settings,
+                    label = stringResource(Res.string.nav_settings),
+                    isSelected = currentRoute == settingsRoute,
+                    onClick = { onNavigate(settingsRoute) }
+                )
+            }
         }
     }
 }

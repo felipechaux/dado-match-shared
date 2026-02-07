@@ -42,10 +42,12 @@ class HomeViewModel(
 
     private var currentEnvironment: String = ""
     private var currentIntensity: String = ""
+    private var currentLanguage: String = "en"
 
     fun onRollComplete(environment: String, intensity: String, language: String) {
         currentEnvironment = environment
         currentIntensity = intensity
+        currentLanguage = language
         _uiState.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
             // First check if user can roll
@@ -142,6 +144,14 @@ class HomeViewModel(
 
     fun dismissIcebreaker() {
         _uiState.update { it.copy(showIcebreaker = false) }
+    }
+
+    fun dismissError() {
+        _uiState.update { it.copy(error = null) }
+    }
+
+    fun onRetryRoll() {
+        onRollComplete(currentEnvironment, currentIntensity, currentLanguage)
     }
 
     private fun resetDialogs() {

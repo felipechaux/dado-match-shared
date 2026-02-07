@@ -13,6 +13,6 @@ fun ProfileScreen() {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = "Profile Screen")
+        Text(text = "Profile Screen", color = androidx.compose.ui.graphics.Color.White)
     }
 }

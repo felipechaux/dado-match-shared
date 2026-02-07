@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -44,6 +45,7 @@ import com.dadomatch.shared.presentation.ui.theme.NeonPink
 import com.dadomatch.shared.presentation.ui.theme.TextGray
 import com.dadomatch.shared.presentation.ui.theme.TextWhite
 import com.dadomatch.shared.presentation.viewmodel.SuccessesViewModel
+import com.dadomatch.shared.presentation.ui.components.EmptyState
 import com.dadomatch.shared.shared.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -105,38 +107,15 @@ fun SuccessesScreen() {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp)
                             .clip(RoundedCornerShape(16.dp))
                             .background(DarkSurface),
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 24.dp, vertical = 16.dp)
-                        ) {
-                            Text(
-                                text = "🎲",
-                                fontSize = 48.sp
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = stringResource(Res.string.no_successes_yet),
-                                color = TextWhite,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = stringResource(Res.string.start_rolling),
-                                color = TextGray,
-                                fontSize = 14.sp,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth(0.9f)
-                            )
-                        }
+                        EmptyState(
+                            title = stringResource(Res.string.no_successes_yet),
+                            description = stringResource(Res.string.start_rolling),
+                            icon = "🎲"
+                        )
                     }
                 }
                 else -> {

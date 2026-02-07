@@ -35,6 +35,7 @@ import com.dadomatch.shared.shared.generated.resources.int_romantic
 import com.dadomatch.shared.shared.generated.resources.int_spicy
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -51,21 +52,27 @@ fun SelectorGroup(
     selectionColorProvider: (String) -> Color,
     isRestricted: (String) -> Boolean = { false }
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Text(
             text = title,
             color = TextGray,
             fontSize = 14.sp,
             modifier = Modifier.padding(bottom = 8.dp)
         )
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            items(options) { option ->
+            options.forEach { option ->
                 val isSelected = option == selectedOption
                 val selectionColor = selectionColorProvider(option)
                 Box(
                     modifier = Modifier
+                        .weight(1f)
+                        .width(0.dp)
                         .clip(RoundedCornerShape(20.dp))
                         .background(if (isSelected) selectionColor.copy(alpha = 0.2f) else DarkSurface)
                         .border(
@@ -74,7 +81,8 @@ fun SelectorGroup(
                             shape = RoundedCornerShape(20.dp)
                         )
                         .clickable { onOptionSelected(option) }
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .padding(horizontal = 4.dp, vertical = 8.dp),
+                    contentAlignment = Alignment.Center
                 ) {
 
                     val resource = when(option) {
@@ -104,8 +112,10 @@ fun SelectorGroup(
                         Text(
                             text = if (resource != null) stringResource(resource) else option,
                             color = if (isSelected) TextWhite else TextGray,
-                            fontSize = 14.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                            fontSize = 11.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            maxLines = 1
                         )
                     }
                 }

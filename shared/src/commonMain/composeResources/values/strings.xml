@@ -10,6 +10,8 @@
     <string name="rolling_rizz">Cooking your Rizz...</string>
     <string name="error_title">Oops!</string>
     <string name="ok_button">OK</string>
+    <string name="error_message_generic">Something went wrong with the AI</string>
+    <string name="error_button_retry">Try Again</string>
     
     <!-- Environments -->
     <string name="env_gym">Gym</string>
