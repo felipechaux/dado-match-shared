@@ -21,10 +21,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.rememberNavController
 import com.dadomatch.shared.presentation.ui.components.LiquidFooterMenu
-import com.dadomatch.shared.presentation.ui.screens.HomeScreen
-import com.dadomatch.shared.presentation.ui.screens.PaywallScreen
-import com.dadomatch.shared.presentation.ui.screens.ProfileScreen
-import com.dadomatch.shared.presentation.ui.screens.SettingsScreen
+import com.dadomatch.shared.feature.icebreaker.presentation.ui.HomeScreen
+import com.dadomatch.shared.feature.subscription.presentation.ui.PaywallScreen
+import com.dadomatch.shared.feature.subscription.presentation.ui.ProfileScreen
+import com.dadomatch.shared.feature.subscription.presentation.ui.SettingsScreen
 import com.dadomatch.shared.presentation.ui.screens.SplashScreen
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -72,7 +72,7 @@ fun AppNavigation(
                         )
                     }
                     composable(Screen.Successes.route) {
-                        com.dadomatch.shared.presentation.ui.screens.SuccessesScreen()
+                        com.dadomatch.shared.feature.success.presentation.ui.SuccessesScreen()
                     }
                     composable(Screen.Profile.route) {
                         ProfileScreen()

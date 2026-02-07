@@ -1,8 +1,8 @@
 package com.dadomatch.shared
 
 import android.content.Context
-import com.dadomatch.shared.data.local.initializeDataStore
-import com.dadomatch.shared.data.local.initializeDatabase
+import com.dadomatch.shared.core.data.initializeDataStore
+import com.dadomatch.shared.core.data.initializeDatabase
 
 fun initKoinAndroid(context: Context) {
     initializeDatabase(context)

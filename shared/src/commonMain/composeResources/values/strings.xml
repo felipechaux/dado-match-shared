@@ -80,4 +80,9 @@
     <string name="period_monthly">Monthly</string>
     <string name="period_yearly">Yearly</string>
     <string name="period_weekly">Weekly</string>
+    
+    <!-- Onboarding -->
+    <string name="onboarding_title">Welcome to DadoMatch!</string>
+    <string name="onboarding_description">Select an environment and intensity, then roll the dice to get the perfect icebreaker for any situation.</string>
+    <string name="onboarding_button">LET'S START!</string>
 </resources>

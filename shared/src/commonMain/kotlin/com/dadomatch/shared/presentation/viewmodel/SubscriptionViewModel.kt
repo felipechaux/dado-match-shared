@@ -2,13 +2,13 @@ package com.dadomatch.shared.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dadomatch.shared.domain.model.Product
-import com.dadomatch.shared.domain.model.SubscriptionStatus
-import com.dadomatch.shared.domain.model.SubscriptionTier
-import com.dadomatch.shared.domain.usecase.GetAvailableProductsUseCase
-import com.dadomatch.shared.domain.usecase.GetSubscriptionStatusUseCase
-import com.dadomatch.shared.domain.usecase.PurchaseSubscriptionUseCase
-import com.dadomatch.shared.domain.usecase.RestorePurchasesUseCase
+import com.dadomatch.shared.feature.subscription.domain.model.Product
+import com.dadomatch.shared.feature.subscription.domain.model.SubscriptionStatus
+import com.dadomatch.shared.feature.subscription.domain.model.SubscriptionTier
+import com.dadomatch.shared.feature.subscription.domain.usecase.GetAvailableProductsUseCase
+import com.dadomatch.shared.feature.subscription.domain.usecase.GetSubscriptionStatusUseCase
+import com.dadomatch.shared.feature.subscription.domain.usecase.PurchaseSubscriptionUseCase
+import com.dadomatch.shared.feature.subscription.domain.usecase.RestorePurchasesUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

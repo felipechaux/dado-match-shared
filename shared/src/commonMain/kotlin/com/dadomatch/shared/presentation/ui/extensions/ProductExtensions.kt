@@ -1,7 +1,7 @@
 package com.dadomatch.shared.presentation.ui.extensions
 
 import androidx.compose.runtime.Composable
-import com.dadomatch.shared.domain.model.Product
+import com.dadomatch.shared.feature.subscription.domain.model.Product
 import com.dadomatch.shared.shared.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 

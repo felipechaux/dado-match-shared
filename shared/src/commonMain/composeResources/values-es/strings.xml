@@ -80,4 +80,9 @@
     <string name="period_monthly">Mensual</string>
     <string name="period_yearly">Anual</string>
     <string name="period_weekly">Semanal</string>
+    
+    <!-- Onboarding -->
+    <string name="onboarding_title">¡Bienvenido a DadoMatch!</string>
+    <string name="onboarding_description">Selecciona un ambiente e intensidad, luego lanza los dados para obtener el rompehielos perfecto para cualquier situación.</string>
+    <string name="onboarding_button">¡EMPECEMOS!</string>
 </resources>

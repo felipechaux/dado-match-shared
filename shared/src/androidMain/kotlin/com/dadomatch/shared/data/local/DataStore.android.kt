@@ -1,4 +1,4 @@
-package com.dadomatch.shared.data.local
+package com.dadomatch.shared.core.data
 
 import android.content.Context
 import androidx.datastore.core.DataStore
@@ -12,7 +12,7 @@ fun initializeDataStore(context: Context) {
 }
 
 actual fun createDataStore(): DataStore<Preferences> {
-    return com.dadomatch.shared.data.local.getDataStore {
+    return getDataStore {
         appContext.preferencesDataStoreFile(DATASTORE_FILE_NAME).absolutePath
     }
 }

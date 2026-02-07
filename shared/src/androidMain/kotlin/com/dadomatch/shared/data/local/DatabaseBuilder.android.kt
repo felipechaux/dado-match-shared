@@ -1,4 +1,4 @@
-package com.dadomatch.shared.data.local
+package com.dadomatch.shared.core.data
 
 import android.content.Context
 import androidx.room.Room

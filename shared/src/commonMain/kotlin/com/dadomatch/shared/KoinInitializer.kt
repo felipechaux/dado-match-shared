@@ -14,7 +14,7 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}) {
         
         // Initialize RevenueCat after Koin is started
         val koin = KoinPlatformTools.defaultContext().get()
-        val revenueCatService = koin.get<com.dadomatch.shared.data.remote.RevenueCatService>()
+        val revenueCatService = koin.get<com.dadomatch.shared.feature.subscription.data.remote.RevenueCatService>()
         revenueCatService.configure(BuildKonfig.REVENUECAT_API_KEY)
     }
 }
