@@ -9,13 +9,24 @@ let package = Package(
     products: [
         .library(
             name: "DadoMatchShared",
-            targets: ["DadoMatchShared"]
+            targets: ["DadoMatchSharedWrapper"]
         ),
+    ],
+    dependencies: [
+        .package(url: "https://github.com/RevenueCat/purchases-hybrid-common.git", exact: "17.32.0"),
     ],
     targets: [
         .binaryTarget(
-            name: "DadoMatchShared",
+            name: "DadoMatchSharedBinary",
             path: "./shared/build/XCFrameworks/debug/DadoMatchShared.xcframework"
+        ),
+        .target(
+            name: "DadoMatchSharedWrapper",
+            dependencies: [
+                "DadoMatchSharedBinary",
+                .product(name: "PurchasesHybridCommon", package: "purchases-hybrid-common"),
+                .product(name: "PurchasesHybridCommonUI", package: "purchases-hybrid-common"),
+            ]
         )
     ]
 )

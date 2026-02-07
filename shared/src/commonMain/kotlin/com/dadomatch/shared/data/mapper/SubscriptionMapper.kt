@@ -3,7 +3,6 @@ package com.dadomatch.shared.data.mapper
 import com.dadomatch.shared.domain.model.Entitlement
 import com.dadomatch.shared.domain.model.Product
 import com.dadomatch.shared.domain.model.SubscriptionStatus
-import com.dadomatch.shared.domain.model.SubscriptionTier
 import com.revenuecat.purchases.kmp.models.CustomerInfo
 import com.revenuecat.purchases.kmp.models.PeriodType
 import com.revenuecat.purchases.kmp.models.StoreProduct
