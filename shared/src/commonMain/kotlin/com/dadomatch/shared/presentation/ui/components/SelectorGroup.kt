@@ -32,6 +32,14 @@ import com.dadomatch.shared.shared.generated.resources.int_cringe
 import com.dadomatch.shared.shared.generated.resources.int_direct
 import com.dadomatch.shared.shared.generated.resources.int_funny
 import com.dadomatch.shared.shared.generated.resources.int_romantic
+import com.dadomatch.shared.shared.generated.resources.int_spicy
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.Icon
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -40,7 +48,8 @@ fun SelectorGroup(
     options: List<String>,
     selectedOption: String,
     onOptionSelected: (String) -> Unit,
-    selectionColorProvider: (String) -> Color
+    selectionColorProvider: (String) -> Color,
+    isRestricted: (String) -> Boolean = { false }
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
@@ -77,15 +86,28 @@ fun SelectorGroup(
                         "int_romantic" -> Res.string.int_romantic
                         "int_direct" -> Res.string.int_direct
                         "int_funny" -> Res.string.int_funny
+                        "int_spicy" -> Res.string.int_spicy
                         else -> null
                     }
                     
-                    Text(
-                        text = if (resource != null) stringResource(resource) else option,
-                        color = if (isSelected) TextWhite else TextGray,
-                        fontSize = 14.sp,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (isRestricted(option)) {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = "Restricted",
+                                tint = if (isSelected) TextWhite.copy(alpha = 0.6f) else TextGray,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                        }
+                        
+                        Text(
+                            text = if (resource != null) stringResource(resource) else option,
+                            color = if (isSelected) TextWhite else TextGray,
+                            fontSize = 14.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
                 }
             }
         }

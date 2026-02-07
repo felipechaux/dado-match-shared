@@ -5,7 +5,7 @@ import com.dadomatch.shared.presentation.ui.theme.*
 
 object AppConstants {
     val ENVIRONMENTS = listOf("env_gym", "env_party", "env_library", "env_cafe")
-    val INTENSITIES = listOf("int_cringe", "int_romantic", "int_direct", "int_funny")
+    val INTENSITIES = listOf("int_cringe", "int_romantic", "int_direct", "int_funny", "int_spicy")
     
     fun getEnvironmentColor(key: String): Color = when(key) {
         "env_gym" -> NeonOrange
@@ -20,6 +20,7 @@ object AppConstants {
         "int_romantic" -> NeonPink
         "int_direct" -> NeonMint
         "int_funny" -> NeonYellow
+        "int_spicy" -> NeonRed // Or another distinct color
         else -> NeonPink
     }
 
@@ -30,5 +31,6 @@ object AppConstants {
         const val SUCCESSES = "successes"
         const val PROFILE = "profile"
         const val SETTINGS = "settings"
+        const val PAYWALL = "paywall"
     }
 }

@@ -3,17 +3,22 @@ package com.dadomatch.shared.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dadomatch.shared.domain.model.SuccessRecord
+import com.dadomatch.shared.domain.usecase.CheckEntitlementUseCase
 import com.dadomatch.shared.domain.usecase.GetSuccessesUseCase
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
 class SuccessesViewModel(
-    getSuccessesUseCase: GetSuccessesUseCase
+    getSuccessesUseCase: GetSuccessesUseCase,
+    private val checkEntitlementUseCase: CheckEntitlementUseCase
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(SuccessesUiState())
     val uiState: StateFlow<SuccessesUiState> = _uiState.asStateFlow()
 
     init {
+        observeAnalyticsEntitlement()
+        
         getSuccessesUseCase()
             .onStart { _uiState.update { it.copy(isLoading = true) } }
             .onEach { successes ->
@@ -21,9 +26,19 @@ class SuccessesViewModel(
             }
             .launchIn(viewModelScope)
     }
+
+    private fun observeAnalyticsEntitlement() {
+        viewModelScope.launch {
+            checkEntitlementUseCase.subscriptionRepository.getSubscriptionStatus().collect { status ->
+                val hasAnalytics = status.entitlements.contains(com.dadomatch.shared.domain.model.Entitlement.SUCCESS_ANALYTICS)
+                _uiState.update { it.copy(isRestricted = !hasAnalytics) }
+            }
+        }
+    }
 }
 
 data class SuccessesUiState(
     val successes: List<SuccessRecord> = emptyList(),
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val isRestricted: Boolean = false
 )

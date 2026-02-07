@@ -22,6 +22,7 @@
     <string name="int_romantic">Romantic</string>
     <string name="int_direct">Direct</string>
     <string name="int_funny">Funny</string>
+    <string name="int_spicy">Spicy</string>
     
     <!-- Success Screen -->
     <string name="success_title">Your Successes</string>
@@ -52,4 +53,29 @@
     <!-- Error Fallbacks -->
     <string name="ai_error_fallback">Launch and say hello!</string>
     <string name="ai_connection_error">Error connecting with AI: %s</string>
+    
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_preferences">Preferences</string>
+    <string name="settings_item_notifications">Notifications</string>
+    <string name="settings_item_notifications_desc">Manage your reminders</string>
+    <string name="settings_section_support">Support</string>
+    <string name="settings_item_help">Help &amp; Support</string>
+    <string name="settings_item_help_desc">Visit our help center</string>
+    
+    <!-- Subscription Card -->
+    <string name="subs_current_plan">Current Plan</string>
+    <string name="subs_tier_lifetime">LIFETIME PRO</string>
+    <string name="subs_tier_pro">PRO ACCESS</string>
+    <string name="subs_tier_free">FREE TIER</string>
+    <string name="subs_pro_desc">You have unlimited daily icebreaker rolls and access to all premium categories.</string>
+    <string name="subs_free_desc">Limited to 10 rolls per day. Upgrade to Pro for unlimited rizz.</string>
+    <string name="subs_rolls_left">Daily rolls left: %d</string>
+    <string name="subs_manage_button">Manage Subscription</string>
+    <string name="subs_upgrade_button">Upgrade to Pro</string>
+    
+    <!-- Subscription Periods -->
+    <string name="period_monthly">Monthly</string>
+    <string name="period_yearly">Yearly</string>
+    <string name="period_weekly">Weekly</string>
 </resources>

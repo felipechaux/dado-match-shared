@@ -18,6 +18,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -170,6 +172,56 @@ fun SuccessesScreen() {
                 ) {
                     items(uiState.successes.reversed()) { record ->
                         SuccessItem(record)
+                    }
+                }
+            }
+        }
+        
+        // Premium Restriction Overlay
+        if (uiState.isRestricted && uiState.successes.size > 3) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(DeepDarkBlue.copy(alpha = 0.7f))
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(DarkSurface)
+                        .padding(24.dp)
+                ) {
+                    Text(
+                        text = "💎",
+                        fontSize = 48.sp
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        "PRO ANALYTICS",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = NeonCyan,
+                        fontWeight = FontWeight.ExtraBold,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "Unlock detailed success history and performance charts with DadoMatch Pro.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextWhite.copy(alpha = 0.8f),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    Button(
+                        onClick = { /* Navigation to Paywall will be handled via a callback or Navigator if available */ },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = NeonPink
+                        )
+                    ) {
+                        Text("Upgrade to Pro", color = TextWhite, fontWeight = FontWeight.Bold)
                     }
                 }
             }

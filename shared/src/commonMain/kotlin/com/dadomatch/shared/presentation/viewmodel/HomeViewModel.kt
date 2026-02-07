@@ -6,7 +6,10 @@ import com.dadomatch.shared.core.Resource
 import com.dadomatch.shared.domain.model.IcebreakerFeedback
 import com.dadomatch.shared.domain.model.SuccessRecord
 import com.dadomatch.shared.domain.usecase.AddSuccessUseCase
+import com.dadomatch.shared.domain.usecase.CheckEntitlementUseCase
 import com.dadomatch.shared.domain.usecase.GenerateIcebreakerUseCase
+import com.dadomatch.shared.domain.usecase.NoRollsRemainingException
+import com.dadomatch.shared.domain.usecase.RollDiceUseCase
 import com.dadomatch.shared.domain.usecase.SubmitFeedbackUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,11 +20,25 @@ import kotlinx.coroutines.launch
 class HomeViewModel(
     private val generateIcebreakerUseCase: GenerateIcebreakerUseCase,
     private val submitFeedbackUseCase: SubmitFeedbackUseCase,
-    private val addSuccessUseCase: AddSuccessUseCase
+    private val addSuccessUseCase: AddSuccessUseCase,
+    private val rollDiceUseCase: RollDiceUseCase,
+    private val checkEntitlementUseCase: CheckEntitlementUseCase
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+
+    init {
+        observeSubscriptionStatus()
+    }
+
+    private fun observeSubscriptionStatus() {
+        viewModelScope.launch {
+            checkEntitlementUseCase.subscriptionRepository.getSubscriptionStatus().collect { status ->
+                _uiState.update { it.copy(isPremium = status.tier == com.dadomatch.shared.domain.model.SubscriptionTier.PREMIUM) }
+            }
+        }
+    }
 
     private var currentEnvironment: String = ""
     private var currentIntensity: String = ""
@@ -31,6 +48,31 @@ class HomeViewModel(
         currentIntensity = intensity
         _uiState.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
+            // First check if user can roll
+            val rollResult = rollDiceUseCase()
+            if (rollResult.isFailure) {
+                val exception = rollResult.exceptionOrNull()
+                _uiState.update { 
+                    it.copy(
+                        isLoading = false, 
+                        showPaywallNavigation = exception is NoRollsRemainingException,
+                        error = if (exception is NoRollsRemainingException) null else exception?.message
+                    ) 
+                }
+                return@launch
+            }
+
+            // Check category entitlements (Spicy)
+            if (!checkEntitlementUseCase.canAccessCategory(intensity)) {
+                _uiState.update { 
+                    it.copy(
+                        isLoading = false,
+                        showPaywallNavigation = true
+                    )
+                }
+                return@launch
+            }
+
             when (val result = generateIcebreakerUseCase(environment, intensity, language)) {
                 is Resource.Success -> {
                     _uiState.update { 
@@ -54,6 +96,10 @@ class HomeViewModel(
                 }
             }
         }
+    }
+
+    fun onPaywallNavigated() {
+        _uiState.update { it.copy(showPaywallNavigation = false) }
     }
 
     fun onIcebreakerDismissed() {
@@ -114,6 +160,8 @@ data class HomeUiState(
     val showIcebreaker: Boolean = false,
     val showActionChoices: Boolean = false,
     val showFeedbackDialog: Boolean = false,
+    val showPaywallNavigation: Boolean = false,
+    val isPremium: Boolean = false,
     val currentIcebreaker: String = "",
     val error: String? = null
 )

@@ -22,6 +22,7 @@
     <string name="int_romantic">Romántico</string>
     <string name="int_direct">Directo</string>
     <string name="int_funny">Gracioso</string>
+    <string name="int_spicy">Picante</string>
     
     <!-- Success Screen -->
     <string name="success_title">Tus Éxitos</string>
@@ -49,7 +50,32 @@
     <string name="nav_profile">Perfil</string>
     <string name="nav_settings">Ajustes</string>
     
-     <!-- Error Fallbacks -->
+    <!-- Error Fallbacks -->
     <string name="ai_error_fallback">¡Lánzate y dile hola!</string>
     <string name="ai_connection_error">Error al conectar con la IA: %s</string>
+    
+    <!-- Settings Screen -->
+    <string name="settings_title">Ajustes</string>
+    <string name="settings_section_preferences">Preferencias</string>
+    <string name="settings_item_notifications">Notificaciones</string>
+    <string name="settings_item_notifications_desc">Gestiona tus recordatorios</string>
+    <string name="settings_section_support">Soporte</string>
+    <string name="settings_item_help">Ayuda y Soporte</string>
+    <string name="settings_item_help_desc">Visita nuestro centro de ayuda</string>
+    
+    <!-- Subscription Card -->
+    <string name="subs_current_plan">Plan Actual</string>
+    <string name="subs_tier_lifetime">PRO DE POR VIDA</string>
+    <string name="subs_tier_pro">ACCESO PRO</string>
+    <string name="subs_tier_free">NIVEL GRATUITO</string>
+    <string name="subs_pro_desc">Tienes lanzamientos ilimitados y acceso a todas las categorías premium.</string>
+    <string name="subs_free_desc">Limitado a 10 lanzamientos por día. Mejora a Pro para rizz ilimitado.</string>
+    <string name="subs_rolls_left">Lanzamientos restantes: %d</string>
+    <string name="subs_manage_button">Gestionar Suscripción</string>
+    <string name="subs_upgrade_button">Mejorar a Pro</string>
+    
+    <!-- Subscription Periods -->
+    <string name="period_monthly">Mensual</string>
+    <string name="period_yearly">Anual</string>
+    <string name="period_weekly">Semanal</string>
 </resources>

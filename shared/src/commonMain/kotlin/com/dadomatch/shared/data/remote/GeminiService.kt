@@ -40,6 +40,7 @@ class GeminiService(apiKey: String, modelName: String) {
             - El tono debe ser natural, no robótico.
             - Si la intensidad es 'Romántico', sé sutil y encantador.
             - Si es 'Gracioso', usa humor inteligente.
+            - Si es 'Picante', sé atrevido, directo y ligeramente provocativo pero siempre respetuoso.
             - Responde ÚNICAMENTE con la frase del rompehielos.
             - NO uses comillas ni etiquetas.
             - Idioma: $langName.
@@ -54,6 +55,7 @@ class GeminiService(apiKey: String, modelName: String) {
             - The tone should be natural, not robotic.
             - If intensity is 'Romantic', be subtle and charming.
             - If it's 'Funny', use clever humor.
+            - If it's 'Spicy', be bold, direct, and slightly provocative while remaining respectful.
             - Respond ONLY with the icebreaker phrase.
             - NO quotes or labels.
             - Language: $langName.

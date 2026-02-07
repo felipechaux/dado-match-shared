@@ -1,6 +1,6 @@
 package com.dadomatch.shared.domain.usecase
 
-import IcebreakerRepository
+import com.dadomatch.shared.domain.repository.IcebreakerRepository
 import com.dadomatch.shared.domain.model.IcebreakerFeedback
 
 class SubmitFeedbackUseCase(private val repository: IcebreakerRepository) {

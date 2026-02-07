@@ -95,6 +95,11 @@ kotlin {
                 // Room
                 implementation(libs.room.runtime)
                 implementation(libs.sqlite.bundled)
+                
+                // RevenueCat
+                implementation(libs.revenuecat.purchases.core)
+                implementation(libs.revenuecat.purchases.result)
+                implementation(libs.revenuecat.purchases.ui)
             }
         }
         commonTest {
@@ -105,6 +110,15 @@ kotlin {
         iosMain {
             dependencies {
                 implementation(libs.ktor.client.darwin)
+            }
+        }
+        
+        // Opt-in to ExperimentalForeignApi for RevenueCat iOS bindings
+        targets.withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget> {
+            compilations.all {
+                compilerOptions.configure {
+                    freeCompilerArgs.add("-opt-in=kotlinx.cinterop.ExperimentalForeignApi")
+                }
             }
         }
     }
@@ -197,8 +211,12 @@ buildkonfig {
         val geminiModelName = localProperties.getProperty("GEMINI_MODEL_NAME") 
             ?: System.getenv("GEMINI_MODEL_NAME") 
             ?: "gemini-2.0-flash-lite"
+        val revenueCatApiKey = localProperties.getProperty("REVENUECAT_API_KEY") 
+            ?: System.getenv("REVENUECAT_API_KEY") 
+            ?: ""
 
         buildConfigField(STRING, "GEMINI_API_KEY", geminiApiKey)
         buildConfigField(STRING, "GEMINI_MODEL_NAME", geminiModelName)
+        buildConfigField(STRING, "REVENUECAT_API_KEY", revenueCatApiKey)
     }
 }

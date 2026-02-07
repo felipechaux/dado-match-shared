@@ -21,12 +21,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -57,7 +52,9 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun  HomeScreen() {
+fun HomeScreen(
+    onNavigateToPaywall: () -> Unit = {}
+) {
     var selectedEnvironment by remember { mutableStateOf(AppConstants.ENVIRONMENTS[1]) } // Party/Fiesta
     var selectedIntensity by remember { mutableStateOf(AppConstants.INTENSITIES[3]) } // Funny/Gracioso
     var rolling by remember { mutableStateOf(false) }
@@ -125,53 +122,54 @@ fun  HomeScreen() {
                 )
             }
         
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        Text(
-            text = stringResource(Res.string.slogan),
-            style = MaterialTheme.typography.titleLarge,
-            color = TextWhite,
-            fontWeight = FontWeight.SemiBold
-        )
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = stringResource(Res.string.slogan),
+                style = MaterialTheme.typography.titleLarge,
+                color = TextWhite,
+                fontWeight = FontWeight.SemiBold
+            )
 
-        Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.weight(1f))
 
-        // Rizz Component
-        RizzDice(
-            rolling = rolling,
-            onRollComplete = { result ->
-                rolling = false
-                val currentLanguage = Locale.current.language
-                viewModel.onRollComplete(selectedEnvironment, selectedIntensity, currentLanguage)
-            },
-            modifier = Modifier.size(250.dp)
-        )
+            // Rizz Component
+            RizzDice(
+                rolling = rolling,
+                onRollComplete = { result ->
+                    rolling = false
+                    val currentLanguage = Locale.current.language
+                    viewModel.onRollComplete(selectedEnvironment, selectedIntensity, currentLanguage)
+                },
+                modifier = Modifier.size(250.dp)
+            )
 
-        Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.weight(1f))
 
-        // Environment Selector
-        SelectorGroup(
-            title = stringResource(Res.string.environment_label),
-            options = environments,
-            selectedOption = selectedEnvironment,
-            onOptionSelected = { selectedEnvironment = it },
-            selectionColorProvider = { AppConstants.getEnvironmentColor(it) }
-        )
+            // Environment Selector
+            SelectorGroup(
+                title = stringResource(Res.string.environment_label),
+                options = environments,
+                selectedOption = selectedEnvironment,
+                onOptionSelected = { selectedEnvironment = it },
+                selectionColorProvider = { AppConstants.getEnvironmentColor(it) }
+            )
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // Intensity Selector
-        SelectorGroup(
-            title = stringResource(Res.string.intensity_label),
-            options = intensities,
-            selectedOption = selectedIntensity,
-            onOptionSelected = { selectedIntensity = it },
-            selectionColorProvider = { AppConstants.getIntensityColor(it) }
-        )
+            // Intensity Selector
+            SelectorGroup(
+                title = stringResource(Res.string.intensity_label),
+                options = intensities,
+                selectedOption = selectedIntensity,
+                onOptionSelected = { selectedIntensity = it },
+                selectionColorProvider = { AppConstants.getIntensityColor(it) },
+                isRestricted = { option -> option == "int_spicy" && !uiState.isPremium }
+            )
 
-        Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-        // Lanzar Button
+            // Lanzar Button
             Button(
                 onClick = {
                     rolling = true
@@ -214,52 +212,59 @@ fun  HomeScreen() {
                         letterSpacing = 2.sp)
                 }
             }
-    }
-}
+        }
 
-    // Icebreaker Modal/Overlay
-    if (uiState.showIcebreaker) {
-        IcebreakerDialog(
-            text = uiState.currentIcebreaker,
-            onDismiss = { viewModel.onIcebreakerDismissed() }
-        )
-    }
+        // Icebreaker Modal/Overlay
+        if (uiState.showIcebreaker) {
+            IcebreakerDialog(
+                text = uiState.currentIcebreaker,
+                onDismiss = { viewModel.onIcebreakerDismissed() }
+            )
+        }
 
-    if (uiState.showActionChoices) {
-        ActionChoiceDialog(
-            onChoice = { used -> viewModel.onActionChoice(used) }
-        )
-    }
+        if (uiState.showActionChoices) {
+            ActionChoiceDialog(
+                onChoice = { used -> viewModel.onActionChoice(used) }
+            )
+        }
 
-    if (uiState.showFeedbackDialog) {
-        FeedbackDialog(
-            onSubmit = { feedback -> viewModel.onSubmitFeedback(feedback) }
-        )
-    }
+        if (uiState.showFeedbackDialog) {
+            FeedbackDialog(
+                onSubmit = { feedback -> viewModel.onSubmitFeedback(feedback) }
+            )
+        }
 
-    if (uiState.error != null) {
-        AlertDialog(
-            onDismissRequest = { /* Handle error dismissal */ },
-            confirmButton = {
-                TextButton(onClick = { /* Handle retry or dismiss */ }) {
-                    Text(stringResource(Res.string.ok_button), color = NeonPink)
+        if (uiState.error != null) {
+            AlertDialog(
+                onDismissRequest = { /* Handle error dismissal */ },
+                confirmButton = {
+                    TextButton(onClick = { /* Handle retry or dismiss */ }) {
+                        Text(stringResource(Res.string.ok_button), color = NeonPink)
+                    }
+                },
+                title = { Text(stringResource(Res.string.error_title), color = NeonPink) },
+                text = { Text(uiState.error!!, color = TextWhite) },
+                containerColor = DarkSurface
+            )
+        }
+
+        if (uiState.isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    CircularProgressIndicator(color = NeonCyan)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(stringResource(Res.string.rolling_rizz), color = TextWhite, fontWeight = FontWeight.Bold)
                 }
-            },
-            title = { Text(stringResource(Res.string.error_title), color = NeonPink) },
-            text = { Text(uiState.error!!, color = TextWhite) },
-            containerColor = DarkSurface
-        )
-    }
-
-    if (uiState.isLoading) {
-        Box(
-            modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                CircularProgressIndicator(color = NeonCyan)
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(stringResource(Res.string.rolling_rizz), color = TextWhite, fontWeight = FontWeight.Bold)
+            }
+        }
+        
+        if (uiState.showPaywallNavigation) {
+            LaunchedEffect(uiState.showPaywallNavigation) {
+                onNavigateToPaywall()
+                viewModel.onPaywallNavigated()
             }
         }
     }

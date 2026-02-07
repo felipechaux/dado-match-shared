@@ -15,10 +15,12 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.rememberNavController
 import com.dadomatch.shared.presentation.ui.components.LiquidFooterMenu
 import com.dadomatch.shared.presentation.ui.screens.HomeScreen
+import com.dadomatch.shared.presentation.ui.screens.PaywallScreen
 import com.dadomatch.shared.presentation.ui.screens.ProfileScreen
 import com.dadomatch.shared.presentation.ui.screens.SettingsScreen
 import com.dadomatch.shared.presentation.ui.screens.SplashScreen
 import org.jetbrains.compose.ui.tooling.preview.Preview
+
 @Composable
 fun AppNavigation(
     navController: NavHostController = rememberNavController()
@@ -26,7 +28,7 @@ fun AppNavigation(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val showBottomBar = currentRoute != Screen.Splash.route
+    val showBottomBar = currentRoute != Screen.Splash.route && currentRoute != Screen.Paywall.route
 
     Scaffold(
         containerColor = com.dadomatch.shared.presentation.ui.theme.DeepDarkBlue,
@@ -68,7 +70,11 @@ fun AppNavigation(
                     )
                 }
                 composable(Screen.Home.route) {
-                    HomeScreen()
+                    HomeScreen(
+                        onNavigateToPaywall = {
+                            navController.navigate(Screen.Paywall.route)
+                        }
+                    )
                 }
                 composable(Screen.Successes.route) {
                     com.dadomatch.shared.presentation.ui.screens.SuccessesScreen()
@@ -77,7 +83,18 @@ fun AppNavigation(
                     ProfileScreen()
                 }
                 composable(Screen.Settings.route) {
-                    SettingsScreen()
+                    SettingsScreen(
+                        onNavigateToPaywall = {
+                            navController.navigate(Screen.Paywall.route)
+                        }
+                    )
+                }
+                composable(Screen.Paywall.route) {
+                    PaywallScreen(
+                        onDismiss = {
+                            navController.popBackStack()
+                        }
+                    )
                 }
             }
         }

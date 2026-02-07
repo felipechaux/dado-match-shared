@@ -1,6 +1,6 @@
 package com.dadomatch.shared.domain.usecase
 
-import IcebreakerRepository
+import com.dadomatch.shared.domain.repository.IcebreakerRepository
 import com.dadomatch.shared.core.Resource
 
 class GenerateIcebreakerUseCase(private val repository: IcebreakerRepository) {

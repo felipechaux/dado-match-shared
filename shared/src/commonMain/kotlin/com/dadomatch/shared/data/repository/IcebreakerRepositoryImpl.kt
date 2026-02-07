@@ -1,6 +1,6 @@
 package com.dadomatch.shared.data.repository
 
-import IcebreakerRepository
+import com.dadomatch.shared.domain.repository.IcebreakerRepository
 import com.dadomatch.shared.core.Resource
 import com.dadomatch.shared.data.remote.GeminiService
 import com.dadomatch.shared.domain.model.IcebreakerFeedback
