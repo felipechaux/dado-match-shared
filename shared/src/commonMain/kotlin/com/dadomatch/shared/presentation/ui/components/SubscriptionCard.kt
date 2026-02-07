@@ -116,7 +116,7 @@ fun SubscriptionCard(
             if (!isPro && rollsRemaining != null) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = stringResource(Res.string.subs_rolls_left, rollsRemaining),
+                    text = stringResource(Res.string.subs_rolls_left).replace("%d", (rollsRemaining).toString()),
                     style = MaterialTheme.typography.bodySmall,
                     color = NeonPink,
                     fontWeight = FontWeight.Bold

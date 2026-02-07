@@ -1,11 +1,17 @@
 package com.dadomatch.shared.presentation.ui.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -32,68 +38,78 @@ fun AppNavigation(
     val showBottomBar = currentRoute != Screen.Splash.route && currentRoute != Screen.Paywall.route
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        bottomBar = {
-            if (showBottomBar) {
-                LiquidFooterMenu(
-                    currentRoute = currentRoute,
-                    onNavigate = { route ->
-                        navController.navigate(route) {
-                            popUpTo(navController.graph.findStartDestination().route ?: Screen.Home.route) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
-                )
-            }
-        }
+        containerColor = com.dadomatch.shared.presentation.ui.theme.DeepDarkBlue,
     ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
+        // Use a Surface with the background color to prevent black flickering during screen transitions
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = com.dadomatch.shared.presentation.ui.theme.DeepDarkBlue
         ) {
-            NavHost(
-                navController = navController,
-                startDestination = Screen.Splash.route,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = if (showBottomBar) paddingValues.calculateBottomPadding() else 0.dp)
+            Box(
+                modifier = Modifier.fillMaxSize()
             ) {
-                composable(Screen.Splash.route) {
-                    SplashScreen(
-                        onNavigateToHome = {
-                            navController.navigate(Screen.Home.route) {
-                                popUpTo(Screen.Splash.route) { inclusive = true }
+                NavHost(
+                    navController = navController,
+                    startDestination = Screen.Splash.route,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = paddingValues.calculateTopPadding())
+                ) {
+                    composable(Screen.Splash.route) {
+                        SplashScreen(
+                            onNavigateToHome = {
+                                navController.navigate(Screen.Home.route) {
+                                    popUpTo(Screen.Splash.route) { inclusive = true }
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
+                    composable(Screen.Home.route) {
+                        HomeScreen(
+                            onNavigateToPaywall = {
+                                navController.navigate(Screen.Paywall.route)
+                            }
+                        )
+                    }
+                    composable(Screen.Successes.route) {
+                        com.dadomatch.shared.presentation.ui.screens.SuccessesScreen()
+                    }
+                    composable(Screen.Profile.route) {
+                        ProfileScreen()
+                    }
+                    composable(Screen.Settings.route) {
+                        SettingsScreen(
+                            onNavigateToPaywall = {
+                                navController.navigate(Screen.Paywall.route)
+                            }
+                        )
+                    }
+                    composable(Screen.Paywall.route) {
+                        PaywallScreen(
+                            onDismiss = {
+                                navController.popBackStack()
+                            }
+                        )
+                    }
                 }
-                composable(Screen.Home.route) {
-                    HomeScreen(
-                        onNavigateToPaywall = {
-                            navController.navigate(Screen.Paywall.route)
-                        }
-                    )
-                }
-                composable(Screen.Successes.route) {
-                    com.dadomatch.shared.presentation.ui.screens.SuccessesScreen()
-                }
-                composable(Screen.Profile.route) {
-                    ProfileScreen()
-                }
-                composable(Screen.Settings.route) {
-                    SettingsScreen(
-                        onNavigateToPaywall = {
-                            navController.navigate(Screen.Paywall.route)
-                        }
-                    )
-                }
-                composable(Screen.Paywall.route) {
-                    PaywallScreen(
-                        onDismiss = {
-                            navController.popBackStack()
+
+                // Floating Menu Overlay
+                AnimatedVisibility(
+                    visible = showBottomBar,
+                    enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
+                    exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 }),
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                ) {
+                    LiquidFooterMenu(
+                        currentRoute = currentRoute,
+                        onNavigate = { route ->
+                            navController.navigate(route) {
+                                popUpTo(navController.graph.findStartDestination().route ?: Screen.Home.route) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
                         }
                     )
                 }

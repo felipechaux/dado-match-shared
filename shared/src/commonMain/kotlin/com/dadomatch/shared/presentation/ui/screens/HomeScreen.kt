@@ -180,6 +180,7 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(64.dp)
+                    .padding(bottom = 4.dp) // Minor adjustment for shadow
                     .shadow(
                         elevation = 20.dp,
                         shape = RoundedCornerShape(32.dp),
@@ -213,6 +214,13 @@ fun HomeScreen(
                         fontWeight = FontWeight.ExtraBold,
                         letterSpacing = 2.sp)
                 }
+            }
+            
+            // Spacer to account for the floating footer menu
+            if (!uiState.isPremium) {
+                Spacer(modifier = Modifier.height(100.dp))
+            } else {
+                Spacer(modifier = Modifier.height(100.dp))
             }
         }
 

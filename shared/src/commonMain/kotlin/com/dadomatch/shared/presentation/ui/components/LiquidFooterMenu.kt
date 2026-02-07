@@ -41,8 +41,7 @@ fun LiquidFooterMenu(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .navigationBarsPadding()
-            .padding(start = 16.dp, end = 16.dp, bottom = 24.dp, top = 16.dp),
+            .padding(start = 16.dp, end = 16.dp, bottom = 32.dp),
         contentAlignment = Alignment.Center
     ) {
         Box(
