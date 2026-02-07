@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dadomatch.shared.domain.model.Product
 import com.dadomatch.shared.domain.model.SubscriptionStatus
+import com.dadomatch.shared.domain.model.SubscriptionTier
 import com.dadomatch.shared.domain.usecase.GetAvailableProductsUseCase
 import com.dadomatch.shared.domain.usecase.GetSubscriptionStatusUseCase
 import com.dadomatch.shared.domain.usecase.PurchaseSubscriptionUseCase
@@ -29,15 +30,29 @@ class SubscriptionViewModel(
     private val _subscriptionStatus = MutableStateFlow<SubscriptionStatus?>(null)
     val subscriptionStatus: StateFlow<SubscriptionStatus?> = _subscriptionStatus.asStateFlow()
     
+    // UI-only state for celebration animation
+    private val _showConfetti = MutableStateFlow(false)
+    val showConfetti: StateFlow<Boolean> = _showConfetti.asStateFlow()
+    
     init {
         loadSubscriptionData()
         observeSubscriptionStatus()
     }
     
+    /**
+     * Observe subscription status changes.
+     * Triggers confetti if the user upgrades from FREE to PREMIUM.
+     */
     private fun observeSubscriptionStatus() {
         viewModelScope.launch {
             getSubscriptionStatusUseCase().collect { status ->
+                val previousTier = _subscriptionStatus.value?.tier
                 _subscriptionStatus.value = status
+                
+                // Trigger confetti on upgrade
+                if (previousTier == SubscriptionTier.FREE && status.tier == SubscriptionTier.PREMIUM) {
+                    triggerConfetti()
+                }
             }
         }
     }
@@ -95,6 +110,18 @@ class SubscriptionViewModel(
                 )
             }
         }
+    }
+    
+    fun refreshStatus() {
+        loadSubscriptionData()
+    }
+    
+    fun triggerConfetti() {
+        _showConfetti.value = true
+    }
+    
+    fun onConfettiConsumed() {
+        _showConfetti.value = false
     }
     
     fun dismissError() {
