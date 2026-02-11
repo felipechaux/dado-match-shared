@@ -3,6 +3,7 @@ package com.dadomatch.shared.feature.icebreaker.presentation.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
@@ -47,8 +49,11 @@ fun SelectorGroup(
     selectedOption: String,
     onOptionSelected: (String) -> Unit,
     selectionColorProvider: (String) -> Color,
+    iconProvider: ((String) -> String)? = null,
     isRestricted: (String) -> Boolean = { false }
 ) {
+    val scrollState = rememberScrollState()
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -60,16 +65,17 @@ fun SelectorGroup(
             modifier = Modifier.padding(bottom = 8.dp)
         )
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(scrollState)
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             options.forEach { option ->
                 val isSelected = option == selectedOption
                 val selectionColor = selectionColorProvider(option)
                 Box(
                     modifier = Modifier
-                        .weight(1f)
-                        .width(0.dp)
                         .clip(RoundedCornerShape(20.dp))
                         .background(if (isSelected) selectionColor.copy(alpha = 0.2f) else DarkSurface)
                         .border(
@@ -78,10 +84,9 @@ fun SelectorGroup(
                             shape = RoundedCornerShape(20.dp)
                         )
                         .clickable { onOptionSelected(option) }
-                        .padding(horizontal = 4.dp, vertical = 8.dp),
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
                     contentAlignment = Alignment.Center
                 ) {
-
                     val resource = when(option) {
                         "env_gym" -> Res.string.env_gym
                         "env_party" -> Res.string.env_party
@@ -95,7 +100,9 @@ fun SelectorGroup(
                         else -> null
                     }
                     
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         if (isRestricted(option)) {
                             Icon(
                                 imageVector = Icons.Default.Lock,
@@ -106,10 +113,19 @@ fun SelectorGroup(
                             Spacer(modifier = Modifier.width(4.dp))
                         }
                         
+                        val icon = iconProvider?.invoke(option)
+                        if (icon != null) {
+                            Text(
+                                text = icon,
+                                fontSize = 14.sp,
+                                modifier = Modifier.padding(end = 6.dp)
+                            )
+                        }
+
                         Text(
                             text = if (resource != null) stringResource(resource) else option,
                             color = if (isSelected) TextWhite else TextGray,
-                            fontSize = 11.sp,
+                            fontSize = 13.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                             maxLines = 1

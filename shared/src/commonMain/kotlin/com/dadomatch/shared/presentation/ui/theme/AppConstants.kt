@@ -7,6 +7,23 @@ object AppConstants {
     val ENVIRONMENTS = listOf("env_gym", "env_party", "env_library", "env_cafe")
     val INTENSITIES = listOf("int_cringe", "int_romantic", "int_direct", "int_funny", "int_spicy")
     
+    fun getEnvironmentIcon(key: String): String = when(key) {
+        "env_gym" -> "🏋️"
+        "env_party" -> "🥳"
+        "env_library" -> "📚"
+        "env_cafe" -> "☕"
+        else -> "📍"
+    }
+
+    fun getIntensityIcon(key: String): String = when(key) {
+        "int_cringe" -> "🥴"
+        "int_romantic" -> "❤️"
+        "int_direct" -> "🎯"
+        "int_funny" -> "😂"
+        "int_spicy" -> "🔥"
+        else -> "✨"
+    }
+
     fun getEnvironmentColor(key: String): Color = when(key) {
         "env_gym" -> NeonOrange
         "env_party" -> NeonPurple

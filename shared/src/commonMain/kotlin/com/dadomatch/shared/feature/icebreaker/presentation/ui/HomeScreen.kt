@@ -112,7 +112,8 @@ fun HomeScreen(
                 options = environments,
                 selectedOption = selectedEnvironment,
                 onOptionSelected = { selectedEnvironment = it },
-                selectionColorProvider = { AppConstants.getEnvironmentColor(it) }
+                selectionColorProvider = { AppConstants.getEnvironmentColor(it) },
+                iconProvider = { AppConstants.getEnvironmentIcon(it) }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -124,6 +125,7 @@ fun HomeScreen(
                 selectedOption = selectedIntensity,
                 onOptionSelected = { selectedIntensity = it },
                 selectionColorProvider = { AppConstants.getIntensityColor(it) },
+                iconProvider = { AppConstants.getIntensityIcon(it) },
                 isRestricted = { option -> option == "int_spicy" && !uiState.isPremium }
             )
 

@@ -1,7 +1,6 @@
-import org.gradle.kotlin.dsl.invoke
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
-import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import java.util.Properties
 
 plugins {
@@ -151,6 +150,7 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    
     buildTypes {
         getByName("debug") {
             isMinifyEnabled = false
@@ -196,27 +196,74 @@ buildkonfig {
 
     val localProperties = Properties()
     val localPropertiesFile = rootProject.file("local.properties")
-    val parentPropertiesFile = rootProject.file("../local.properties")
-    
+
     if (localPropertiesFile.exists()) {
         localProperties.load(localPropertiesFile.inputStream())
-    } else if (parentPropertiesFile.exists()) {
-        localProperties.load(parentPropertiesFile.inputStream())
     }
-
+    
+    // Determine flavor from local.properties, project property, or default to stage
+    // Priority: 1. Command line (-Papp.flavor=production)
+    //           2. local.properties (app.flavor=production)
+    //           3. Default to stage
+    val appFlavor = project.findProperty("app.flavor")?.toString() 
+        ?: localProperties.getProperty("app.flavor") 
+        ?: "stage"
+    val isProduction = appFlavor == "production"
+    
+    println("BuildKonfig: Building for flavor: $appFlavor")
+    
     defaultConfigs {
-        val geminiApiKey = localProperties.getProperty("GEMINI_API_KEY") 
-            ?: System.getenv("GEMINI_API_KEY") 
-            ?: ""
-        val geminiModelName = localProperties.getProperty("GEMINI_MODEL_NAME") 
-            ?: System.getenv("GEMINI_MODEL_NAME") 
-            ?: "gemini-2.0-flash-lite"
-        val revenueCatApiKey = localProperties.getProperty("REVENUECAT_API_KEY") 
-            ?: System.getenv("REVENUECAT_API_KEY") 
-            ?: ""
+        val geminiApiKey = if (isProduction) {
+            localProperties.getProperty("PROD_GEMINI_API_KEY") 
+                ?: System.getenv("PROD_GEMINI_API_KEY") 
+                ?: ""
+        } else {
+            localProperties.getProperty("STAGE_GEMINI_API_KEY") 
+                ?: System.getenv("STAGE_GEMINI_API_KEY") 
+                ?: ""
+        }
+        
+        val geminiModelName = if (isProduction) {
+            localProperties.getProperty("PROD_GEMINI_MODEL_NAME") 
+                ?: System.getenv("PROD_GEMINI_MODEL_NAME") 
+                ?: "gemini-2.0-flash-lite"
+        } else {
+            localProperties.getProperty("STAGE_GEMINI_MODEL_NAME") 
+                ?: System.getenv("STAGE_GEMINI_MODEL_NAME") 
+                ?: "gemini-2.0-flash-lite"
+        }
+        
+        val revenueCatApiKey = if (isProduction) {
+            localProperties.getProperty("PROD_REVENUECAT_API_KEY") 
+                ?: System.getenv("PROD_REVENUECAT_API_KEY") 
+                ?: ""
+        } else {
+            localProperties.getProperty("STAGE_REVENUECAT_API_KEY") 
+                ?: System.getenv("STAGE_REVENUECAT_API_KEY") 
+                ?: ""
+        }
+        
+        val apiBaseUrl = if (isProduction) {
+            localProperties.getProperty("PROD_API_BASE_URL")
+                ?: System.getenv("PROD_API_BASE_URL")
+                ?: "https://api.dadomatch.com"
+        } else {
+            localProperties.getProperty("STAGE_API_BASE_URL")
+                ?: System.getenv("STAGE_API_BASE_URL")
+                ?: "https://api-stage.dadomatch.com"
+        }
+        
+        val environment = if (isProduction) "production" else "stage"
+        val isDebug = !isProduction
 
         buildConfigField(STRING, "GEMINI_API_KEY", geminiApiKey)
         buildConfigField(STRING, "GEMINI_MODEL_NAME", geminiModelName)
         buildConfigField(STRING, "REVENUECAT_API_KEY", revenueCatApiKey)
+        buildConfigField(STRING, "API_BASE_URL", apiBaseUrl)
+        buildConfigField(STRING, "ENVIRONMENT", environment)
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN, "IS_DEBUG", isDebug.toString())
     }
 }
+
+
+
