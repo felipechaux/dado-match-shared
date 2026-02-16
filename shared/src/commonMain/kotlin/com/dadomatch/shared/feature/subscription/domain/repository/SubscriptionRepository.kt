@@ -55,4 +55,14 @@ interface SubscriptionRepository {
      * Reset daily roll count (called at midnight)
      */
     suspend fun resetDailyRolls()
+
+    /**
+     * Link current user with RevenueCat ID
+     */
+    suspend fun logIn(userId: String): Result<SubscriptionStatus>
+
+    /**
+     * Unlink user from RevenueCat ID
+     */
+    suspend fun logOut(): Result<SubscriptionStatus>
 }

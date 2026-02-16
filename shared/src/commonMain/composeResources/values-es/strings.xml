@@ -85,4 +85,28 @@
     <string name="onboarding_title">¡Bienvenido a DadoMatch!</string>
     <string name="onboarding_description">Selecciona un ambiente e intensidad, luego lanza los dados para obtener el rompehielos perfecto para cualquier situación.</string>
     <string name="onboarding_button">¡EMPECEMOS!</string>
+    
+    <!-- Auth Bottom Sheet -->
+    <string name="auth_title">Guarda tu Rizz 🎲</string>
+    <string name="auth_description">Crea tu cuenta en un segundo para no perder tus frases favoritas y sincronizar tu suscripción.</string>
+    <string name="auth_apple_button">Iniciar sesión con Apple</string>
+    <string name="auth_google_button">Iniciar sesión con Google</string>
+    <string name="auth_terms_condition">Al continuar, aceptas los términos y condiciones</string>
+    
+    <!-- Profile Screen -->
+    <string name="profile_title">Perfil</string>
+    <string name="profile_display_name">Nombre</string>
+    <string name="profile_email">Correo</string>
+    <string name="profile_user_id">ID de Usuario</string>
+    <string name="profile_status_authenticated">Autenticado</string>
+    <string name="profile_status_anonymous">Anónimo</string>
+    <string name="profile_guest_user">Usuario Invitado</string>
+    <string name="profile_not_signed_in">Sin Sesión Iniciada</string>
+    <string name="profile_sign_in_message">Inicia sesión para acceder a tu perfil</string>
+    <string name="profile_not_set">No establecido</string>
+    <string name="profile_not_available">No disponible</string>
+    <string name="profile_sign_out">Cerrar Sesión</string>
+    <string name="profile_sign_out_confirm_title">¿Cerrar Sesión?</string>
+    <string name="profile_sign_out_confirm_message">¿Estás seguro de que quieres cerrar sesión?</string>
+    <string name="profile_cancel">Cancelar</string>
 </resources>

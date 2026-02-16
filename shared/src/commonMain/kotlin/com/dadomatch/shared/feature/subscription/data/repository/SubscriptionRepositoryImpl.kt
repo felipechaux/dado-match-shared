@@ -145,4 +145,30 @@ class SubscriptionRepositoryImpl(
             localDataSource.resetDailyRolls()
         }
     }
+
+    override suspend fun logIn(userId: String): Result<SubscriptionStatus> {
+        return try {
+            val loginResult = revenueCatService.logIn(userId)
+            val dailyRolls = localDataSource.getDailyRollsRemaining().first()
+            
+            loginResult.map { customerInfo ->
+                customerInfo.toSubscriptionStatus(dailyRolls)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun logOut(): Result<SubscriptionStatus> {
+        return try {
+            val logoutResult = revenueCatService.logOut()
+            val dailyRolls = localDataSource.getDailyRollsRemaining().first()
+            
+            logoutResult.map { customerInfo ->
+                customerInfo.toSubscriptionStatus(dailyRolls)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

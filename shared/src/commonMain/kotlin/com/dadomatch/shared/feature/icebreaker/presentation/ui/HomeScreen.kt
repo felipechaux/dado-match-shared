@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -55,6 +56,17 @@ import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
 
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
+import com.dadomatch.shared.feature.auth.presentation.ui.AuthBottomSheet
+import com.dadomatch.shared.feature.auth.presentation.viewmodel.AuthViewModel
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onNavigateToPaywall: () -> Unit = {}
@@ -67,7 +79,11 @@ fun HomeScreen(
     val intensities = AppConstants.INTENSITIES
     
     val viewModel: HomeViewModel = koinViewModel()
+    val authViewModel: AuthViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
+    val authUiState by authViewModel.uiState.collectAsState()
+
+    val sheetState = rememberModalBottomSheetState()
 
     Box(modifier = Modifier.fillMaxSize().background(DeepDarkBlue)) {
         Column(
@@ -80,7 +96,20 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(8.dp))
             
             // Logo & Title
-            AppLogo()
+            Box(modifier = Modifier.fillMaxWidth()) {
+                AppLogo(modifier = Modifier.align(Alignment.Center))
+                
+                IconButton(
+                    onClick = { viewModel.showAuth() },
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AccountCircle,
+                        contentDescription = "Profile",
+                        tint = TextGray
+                    )
+                }
+            }
         
             Spacer(modifier = Modifier.height(8.dp))
             
@@ -215,6 +244,20 @@ fun HomeScreen(
             }
         }
         
+        if (uiState.showAuth) {
+            ModalBottomSheet(
+                onDismissRequest = { viewModel.hideAuth() },
+                sheetState = sheetState,
+                containerColor = Color.Transparent,
+                scrimColor = Color.Black.copy(alpha = 0.5f)
+            ) {
+                AuthBottomSheet(
+                    viewModel = authViewModel,
+                    onDismiss = { viewModel.hideAuth() }
+                )
+            }
+        }
+
         if (uiState.showPaywallNavigation) {
             LaunchedEffect(uiState.showPaywallNavigation) {
                 onNavigateToPaywall()

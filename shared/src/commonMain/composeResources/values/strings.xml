@@ -85,4 +85,28 @@
     <string name="onboarding_title">Welcome to DadoMatch!</string>
     <string name="onboarding_description">Select an environment and intensity, then roll the dice to get the perfect icebreaker for any situation.</string>
     <string name="onboarding_button">LET'S START!</string>
+    
+    <!-- Auth Bottom Sheet -->
+    <string name="auth_title">Save your Rizz 🎲</string>
+    <string name="auth_description">Create your account in a second to keep your favorite phrases and sync your subscription.</string>
+    <string name="auth_apple_button">Sign in with Apple</string>
+    <string name="auth_google_button">Sign in with Google</string>
+    <string name="auth_terms_condition">By continuing, you agree to the terms and conditions</string>
+    
+    <!-- Profile Screen -->
+    <string name="profile_title">Profile</string>
+    <string name="profile_display_name">Display Name</string>
+    <string name="profile_email">Email</string>
+    <string name="profile_user_id">User ID</string>
+    <string name="profile_status_authenticated">Authenticated</string>
+    <string name="profile_status_anonymous">Anonymous</string>
+    <string name="profile_guest_user">Guest User</string>
+    <string name="profile_not_signed_in">Not Signed In</string>
+    <string name="profile_sign_in_message">Sign in to access your profile</string>
+    <string name="profile_not_set">Not set</string>
+    <string name="profile_not_available">Not available</string>
+    <string name="profile_sign_out">Sign Out</string>
+    <string name="profile_sign_out_confirm_title">Sign Out?</string>
+    <string name="profile_sign_out_confirm_message">Are you sure you want to sign out?</string>
+    <string name="profile_cancel">Cancel</string>
 </resources>

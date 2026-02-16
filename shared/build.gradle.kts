@@ -57,7 +57,11 @@ kotlin {
                 implementation(compose.components.uiToolingPreview)
                 api(libs.koin.android)
                 api(libs.koin.androidx.compose)
-
+                
+                // Native Auth Dependencies
+                implementation(libs.credentials)
+                implementation(libs.credentials.play.services.auth)
+                implementation(libs.googleid)
             }
         }
         commonMain {
@@ -99,6 +103,10 @@ kotlin {
                 implementation(libs.revenuecat.purchases.core)
                 implementation(libs.revenuecat.purchases.result)
                 implementation(libs.revenuecat.purchases.ui)
+
+                // Firebase
+                implementation(libs.firebase.auth)
+                implementation(libs.firebase.common)
             }
         }
         commonTest {
@@ -253,6 +261,16 @@ buildkonfig {
                 ?: "https://api-stage.dadomatch.com"
         }
         
+        val googleWebClientId = if (isProduction) {
+            localProperties.getProperty("PROD_GOOGLE_WEB_CLIENT_ID")
+                ?: System.getenv("PROD_GOOGLE_WEB_CLIENT_ID")
+                ?: ""
+        } else {
+            localProperties.getProperty("STAGE_GOOGLE_WEB_CLIENT_ID")
+                ?: System.getenv("STAGE_GOOGLE_WEB_CLIENT_ID")
+                ?: ""
+        }
+        
         val environment = if (isProduction) "production" else "stage"
         val isDebug = !isProduction
 
@@ -260,6 +278,7 @@ buildkonfig {
         buildConfigField(STRING, "GEMINI_MODEL_NAME", geminiModelName)
         buildConfigField(STRING, "REVENUECAT_API_KEY", revenueCatApiKey)
         buildConfigField(STRING, "API_BASE_URL", apiBaseUrl)
+        buildConfigField(STRING, "GOOGLE_WEB_CLIENT_ID", googleWebClientId)
         buildConfigField(STRING, "ENVIRONMENT", environment)
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN, "IS_DEBUG", isDebug.toString())
     }

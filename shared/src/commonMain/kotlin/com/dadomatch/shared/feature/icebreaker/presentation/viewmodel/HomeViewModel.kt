@@ -170,6 +170,14 @@ class HomeViewModel(
         _uiState.update { it.copy(error = null) }
     }
 
+    fun showAuth() {
+        _uiState.update { it.copy(showAuth = true) }
+    }
+
+    fun hideAuth() {
+        _uiState.update { it.copy(showAuth = false) }
+    }
+
     fun onRetryRoll() {
         onRollComplete(currentEnvironment, currentIntensity, currentLanguage)
     }
@@ -194,5 +202,6 @@ data class HomeUiState(
     val isPremium: Boolean = false,
     val currentIcebreaker: String = "",
     val error: String? = null,
-    val showOnboarding: Boolean = false
+    val showOnboarding: Boolean = false,
+    val showAuth: Boolean = false
 )

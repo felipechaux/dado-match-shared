@@ -1,5 +1,6 @@
 package com.dadomatch.shared.feature.subscription.data.remote
 
+import com.dadomatch.shared.feature.subscription.domain.model.Entitlement
 import com.revenuecat.purchases.kmp.Purchases
 import com.revenuecat.purchases.kmp.PurchasesConfiguration
 import com.revenuecat.purchases.kmp.models.CustomerInfo
@@ -120,9 +121,48 @@ class RevenueCatService {
     }
     
     /**
+     * Link current user with an identifier (e.g. Firebase UID)
+     */
+    suspend fun logIn(userId: String): Result<CustomerInfo> = suspendCancellableCoroutine { continuation ->
+        try {
+            Purchases.sharedInstance.logIn(
+                onError = { error ->
+                    continuation.resume(Result.failure(Exception(error.message)))
+                },
+                onSuccess = { customerInfo, _ ->
+                    _customerInfoFlow.value = customerInfo
+                    continuation.resume(Result.success(customerInfo))
+                },
+                newAppUserID = userId
+            )
+        } catch (e: Exception) {
+            continuation.resume(Result.failure(e))
+        }
+    }
+
+    /**
+     * Unlink user (log out)
+     */
+    suspend fun logOut(): Result<CustomerInfo> = suspendCancellableCoroutine { continuation ->
+        try {
+            Purchases.sharedInstance.logOut(
+                onError = { error ->
+                    continuation.resume(Result.failure(Exception(error.message)))
+                },
+                onSuccess = { customerInfo ->
+                    _customerInfoFlow.value = customerInfo
+                    continuation.resume(Result.success(customerInfo))
+                }
+            )
+        } catch (e: Exception) {
+            continuation.resume(Result.failure(e))
+        }
+    }
+
+    /**
      * Check if user has premium access
      */
     fun hasPremiumAccess(customerInfo: CustomerInfo?): Boolean {
-        return hasEntitlement(customerInfo, com.dadomatch.shared.feature.subscription.domain.model.Entitlement.PRO.identifier)
+        return hasEntitlement(customerInfo, Entitlement.PRO.identifier)
     }
 }
