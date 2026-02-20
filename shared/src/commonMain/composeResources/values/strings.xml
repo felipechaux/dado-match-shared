@@ -75,6 +75,10 @@
     <string name="subs_rolls_left">Daily rolls left: %d</string>
     <string name="subs_manage_button">Manage Subscription</string>
     <string name="subs_upgrade_button">Upgrade to Pro</string>
+    <string name="subs_login_required_title">Sign In Required</string>
+    <string name="subs_login_required_desc">Please sign in to safely link your subscription to your account.</string>
+    <string name="subs_login_button">Sign In Now</string>
+    <string name="subs_maybe_later">Maybe Later</string>
     
     <!-- Subscription Periods -->
     <string name="period_monthly">Monthly</string>

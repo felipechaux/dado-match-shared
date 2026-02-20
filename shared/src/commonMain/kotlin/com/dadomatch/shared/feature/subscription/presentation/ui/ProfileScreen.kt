@@ -76,10 +76,10 @@ fun ProfileScreen() {
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
-                .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 120.dp),
+                .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Profile Header
             Text(
@@ -92,12 +92,12 @@ fun ProfileScreen() {
                 fontWeight = FontWeight.ExtraBold
             )
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Avatar
             Box(
                 modifier = Modifier
-                    .size(120.dp)
+                    .size(90.dp)
                     .clip(CircleShape)
                     .background(
                         Brush.radialGradient(
@@ -128,7 +128,7 @@ fun ProfileScreen() {
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // User Name
             Text(
@@ -154,7 +154,7 @@ fun ProfileScreen() {
                 )
             }
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // User Info Cards
             if (currentUser != null) {
@@ -180,7 +180,7 @@ fun ProfileScreen() {
                     value = currentUser?.id?.take(20) + "..."
                 )
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 // Sign Out Button
                 if (currentUser?.isAnonymous == false) {
@@ -220,6 +220,9 @@ fun ProfileScreen() {
                     }
                 }
             }
+            
+            // Add spacer explicitly at the bottom to avoid the footer nav mapping over elements
+            Spacer(modifier = Modifier.height(140.dp))
         }
     }
 
@@ -318,7 +321,7 @@ fun InfoCard(
                 color = Color.White.copy(alpha = 0.1f),
                 shape = RoundedCornerShape(16.dp)
             )
-            .padding(20.dp)
+            .padding(16.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -388,7 +391,7 @@ fun SignOutButton(
                 shape = RoundedCornerShape(16.dp)
             )
             .clickable { onClick() }
-            .padding(20.dp)
+            .padding(16.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

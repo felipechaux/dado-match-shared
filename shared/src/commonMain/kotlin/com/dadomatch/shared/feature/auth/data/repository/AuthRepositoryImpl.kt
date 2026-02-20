@@ -51,9 +51,14 @@ class AuthRepositoryImpl : AuthRepository {
 
     override suspend fun signInWithApple(idToken: String, nonce: String?): Result<AuthUser> = try {
         val auth = getAuthSafe() ?: throw IllegalStateException(ERROR_FIREBASE_NOT_INITIALIZED)
-        val result = auth.signInWithCredential(OAuthProvider.credential(PROVIDER_APPLE, idToken, null, nonce))
-        val user = result.user!!
-        Result.success(AuthUser(user.uid, user.email, user.displayName, user.isAnonymous))
+        if (idToken.isEmpty()) {
+            val user = auth.currentUser ?: throw IllegalStateException("User not signed in after web flow")
+            Result.success(AuthUser(user.uid, user.email, user.displayName, user.isAnonymous))
+        } else {
+            val result = auth.signInWithCredential(OAuthProvider.credential(PROVIDER_APPLE, idToken, null, nonce))
+            val user = result.user!!
+            Result.success(AuthUser(user.uid, user.email, user.displayName, user.isAnonymous))
+        }
     } catch (e: Exception) {
         Result.failure(Exception("$ERROR_MSG_APPLE_PREFIX${e.message}", e))
     }

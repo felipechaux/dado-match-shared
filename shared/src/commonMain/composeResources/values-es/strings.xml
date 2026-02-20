@@ -75,6 +75,10 @@
     <string name="subs_rolls_left">Lanzamientos restantes: %d</string>
     <string name="subs_manage_button">Gestionar Suscripción</string>
     <string name="subs_upgrade_button">Mejorar a Pro</string>
+    <string name="subs_login_required_title">Inicia sesión</string>
+    <string name="subs_login_required_desc">Por favor inicia sesión para enlazar tu suscripción de manera segura a tu cuenta.</string>
+    <string name="subs_login_button">Iniciar sesión</string>
+    <string name="subs_maybe_later">Quizás más tarde</string>
     
     <!-- Subscription Periods -->
     <string name="period_monthly">Mensual</string>

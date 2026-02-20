@@ -58,6 +58,18 @@ class AndroidAuthHandler(
     }
 
     override suspend fun signInWithApple(): Result<AuthTokens> {
-        return Result.failure(Exception("Apple Sign-In is not supported on Android"))
+        return try {
+            val deferred = kotlinx.coroutines.CompletableDeferred<Result<AuthTokens>>()
+            AppleSignInActivity.deferredResult = deferred
+            
+            val intent = android.content.Intent(context, AppleSignInActivity::class.java).apply {
+                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+            context.startActivity(intent)
+            
+            deferred.await()
+        } catch (e: Exception) {
+            Result.failure(Exception("Apple Sign-In launch failed on Android: ${e.message}", e))
+        }
     }
 }

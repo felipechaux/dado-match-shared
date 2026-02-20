@@ -118,15 +118,15 @@ fun AuthBottomSheet(
                 Spacer(modifier = Modifier.height(40.dp))
             } else {
                 // Apple Button (Strict guidelines usually require specific styling)
-                SocialAuthButton(
-                    text = stringResource(Res.string.auth_apple_button),
-                    icon = "",
-                    backgroundColor = Color.White,
-                    contentColor = Color.Black,
-                    onClick = { viewModel.triggerAppleSignIn() }
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
+//                SocialAuthButton(
+//                    text = stringResource(Res.string.auth_apple_button),
+//                    icon = "",
+//                    backgroundColor = Color.White,
+//                    contentColor = Color.Black,
+//                    onClick = { viewModel.triggerAppleSignIn() }
+//                )
+//
+//                Spacer(modifier = Modifier.height(16.dp))
 
                 // Google Button
                 SocialAuthButton(
