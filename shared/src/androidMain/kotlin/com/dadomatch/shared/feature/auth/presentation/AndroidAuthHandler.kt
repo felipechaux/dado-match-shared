@@ -14,7 +14,7 @@ class AndroidAuthHandler(
     private val context: Context
 ) : NativeAuthHandler {
 
-    override suspend fun signInWithGoogle(): Result<String> = withContext(Dispatchers.Main) {
+    override suspend fun signInWithGoogle(): Result<GoogleTokens> = withContext(Dispatchers.Main) {
         try {
             // Diagnostic logging
             println("🔍 Google Sign-In Debug Info:")
@@ -47,7 +47,9 @@ class AndroidAuthHandler(
             val idToken = googleIdTokenCredential.idToken
             
             println("✅ ID Token extracted successfully!")
-            Result.success(idToken)
+            // Android Credential Manager only provides an idToken — no accessToken.
+            // Firebase Android SDK accepts null for accessToken; only iOS requires it.
+            Result.success(GoogleTokens(idToken = idToken, accessToken = null))
         } catch (e: GetCredentialException) {
             Result.failure(Exception(e.message, e))
         } catch (e: Exception) {

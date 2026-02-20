@@ -35,9 +35,9 @@ class AuthRepositoryImpl : AuthRepository {
         }
     }
 
-    override suspend fun signInWithGoogle(idToken: String): Result<AuthUser> = try {
+    override suspend fun signInWithGoogle(idToken: String, accessToken: String?): Result<AuthUser> = try {
         val auth = getAuthSafe() ?: throw IllegalStateException(ERROR_FIREBASE_NOT_INITIALIZED)
-        val result = auth.signInWithCredential(GoogleAuthProvider.credential(idToken, null))
+        val result = auth.signInWithCredential(GoogleAuthProvider.credential(idToken, accessToken))
         val user = result.user!!
         Result.success(AuthUser(user.uid, user.email, user.displayName, user.isAnonymous))
     } catch (e: Exception) {

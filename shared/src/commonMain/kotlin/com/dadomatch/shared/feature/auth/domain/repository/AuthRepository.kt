@@ -4,7 +4,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface AuthRepository {
     val currentUser: Flow<AuthUser?>
-    suspend fun signInWithGoogle(idToken: String): Result<AuthUser>
+    suspend fun signInWithGoogle(idToken: String, accessToken: String? = null): Result<AuthUser>
     suspend fun signInWithApple(idToken: String, nonce: String? = null): Result<AuthUser>
     suspend fun signInAnonymously(): Result<AuthUser>
     suspend fun signOut()

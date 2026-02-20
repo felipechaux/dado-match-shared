@@ -22,12 +22,20 @@ class AuthViewModel(
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
+    init {
+        viewModelScope.launch {
+            authRepository.currentUser.collect { user ->
+                _uiState.update { it.copy(user = user) }
+            }
+        }
+    }
+
     fun triggerGoogleSignIn() {
         _uiState.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
             nativeAuthHandler.signInWithGoogle()
-                .onSuccess { idToken ->
-                    signInWithGoogle(idToken)
+                .onSuccess { tokens ->
+                    signInWithGoogle(tokens.idToken, tokens.accessToken)
                 }
                 .onFailure { error ->
                     _uiState.update { it.copy(isLoading = false, error = error.message) }
@@ -48,9 +56,9 @@ class AuthViewModel(
         }
     }
 
-    private fun signInWithGoogle(idToken: String) {
+    private fun signInWithGoogle(idToken: String, accessToken: String? = null) {
         viewModelScope.launch {
-            authRepository.signInWithGoogle(idToken)
+            authRepository.signInWithGoogle(idToken, accessToken)
                 .onSuccess { user ->
                     subscriptionRepository.logIn(user.id)
                     _uiState.update { it.copy(isLoading = false, user = user) }

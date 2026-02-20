@@ -62,6 +62,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberModalBottomSheetState
 import com.dadomatch.shared.feature.auth.presentation.ui.AuthBottomSheet
 import com.dadomatch.shared.feature.auth.presentation.viewmodel.AuthViewModel
@@ -83,7 +84,13 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsState()
     val authUiState by authViewModel.uiState.collectAsState()
 
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(
+        confirmValueChange = { targetValue ->
+            // Prevent swipe-to-dismiss while sign-in is in progress
+            if (authUiState.isLoading && targetValue == SheetValue.Hidden) false
+            else true
+        }
+    )
 
     Box(modifier = Modifier.fillMaxSize().background(DeepDarkBlue)) {
         Column(
@@ -99,15 +106,18 @@ fun HomeScreen(
             Box(modifier = Modifier.fillMaxWidth()) {
                 AppLogo(modifier = Modifier.align(Alignment.Center))
                 
-                IconButton(
-                    onClick = { viewModel.showAuth() },
-                    modifier = Modifier.align(Alignment.CenterEnd)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.AccountCircle,
-                        contentDescription = "Profile",
-                        tint = TextGray
-                    )
+                val isAnonymous = authUiState.user?.isAnonymous ?: true
+                if (isAnonymous) {
+                    IconButton(
+                        onClick = { viewModel.showAuth() },
+                        modifier = Modifier.align(Alignment.CenterEnd)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AccountCircle,
+                            contentDescription = "Profile",
+                            tint = TextGray
+                        )
+                    }
                 }
             }
         
@@ -246,7 +256,8 @@ fun HomeScreen(
         
         if (uiState.showAuth) {
             ModalBottomSheet(
-                onDismissRequest = { viewModel.hideAuth() },
+                // Block dismiss while sign-in is loading (e.g. Google web view is open)
+                onDismissRequest = { if (!authUiState.isLoading) viewModel.hideAuth() },
                 sheetState = sheetState,
                 containerColor = Color.Transparent,
                 scrimColor = Color.Black.copy(alpha = 0.5f)
