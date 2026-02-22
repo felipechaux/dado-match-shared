@@ -62,12 +62,12 @@ data class SubscriptionStatus(
         /**
          * Default premium tier subscription status
          */
-        fun premium(): SubscriptionStatus {
+        fun premium(dailyRollsRemaining: Int? = null): SubscriptionStatus {
             return SubscriptionStatus(
                 tier = SubscriptionTier.PREMIUM,
                 isActive = true,
                 entitlements = Entitlement.forTier(SubscriptionTier.PREMIUM),
-                dailyRollsRemaining = null
+                dailyRollsRemaining = dailyRollsRemaining
             )
         }
     }

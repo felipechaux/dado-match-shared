@@ -15,9 +15,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -25,7 +22,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,13 +32,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.dadomatch.shared.feature.auth.presentation.viewmodel.AuthViewModel
+import com.dadomatch.shared.feature.subscription.presentation.ui.components.SubscriptionCard
+import com.dadomatch.shared.presentation.ui.components.ConfettiOverlay
 import com.dadomatch.shared.presentation.ui.theme.DeepDarkBlue
 import com.dadomatch.shared.presentation.ui.theme.NeonCyan
 import com.dadomatch.shared.presentation.ui.theme.TextWhite
-import com.dadomatch.shared.feature.subscription.presentation.ui.components.SubscriptionCard
-import com.dadomatch.shared.presentation.ui.components.ConfettiOverlay
 import com.dadomatch.shared.presentation.viewmodel.SubscriptionViewModel
-import com.dadomatch.shared.shared.generated.resources.*
+import com.dadomatch.shared.shared.generated.resources.Res
+import com.dadomatch.shared.shared.generated.resources.settings_title
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -49,8 +50,11 @@ fun SettingsScreen(
     onNavigateToPaywall: () -> Unit = {}
 ) {
     val viewModel: SubscriptionViewModel = koinViewModel()
+    val authViewModel: AuthViewModel = koinViewModel()
     val scrollState = rememberScrollState()
     val showConfetti by viewModel.showConfetti.collectAsState()
+    val authUiState by authViewModel.uiState.collectAsState()
+    val isAnonymous = authUiState.user?.isAnonymous ?: true
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -79,32 +83,16 @@ fun SettingsScreen(
                     .verticalScroll(scrollState)
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
-                
                 SubscriptionCard(
                     viewModel = viewModel,
+                    isAnonymous = isAnonymous,
                     onNavigateToPaywall = onNavigateToPaywall
                 )
                 
                 Spacer(modifier = Modifier.height(32.dp))
                 
-                // General Settings Section
-                SettingsSectionTitle(stringResource(Res.string.settings_section_preferences))
-                SettingsItem(
-                    icon = Icons.Default.Notifications,
-                    title = stringResource(Res.string.settings_item_notifications),
-                    subtitle = stringResource(Res.string.settings_item_notifications_desc),
-                    onClick = {}
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                SettingsSectionTitle(stringResource(Res.string.settings_section_support))
-                SettingsItem(
-                    icon = Icons.Default.Info,
-                    title = stringResource(Res.string.settings_item_help),
-                    subtitle = stringResource(Res.string.settings_item_help_desc),
-                    onClick = {}
-                )
+                // General Settings Section omitted for launch
+                // TODO: Re-add Settings and Support Sections once functionality is ready
                 
                 Spacer(modifier = Modifier.height(100.dp)) // Padding for bottom bar
             }

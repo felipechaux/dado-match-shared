@@ -8,35 +8,71 @@ import com.dadomatch.shared.feature.subscription.domain.model.Entitlement
 import com.dadomatch.shared.feature.subscription.domain.model.Product
 import com.dadomatch.shared.feature.subscription.domain.model.SubscriptionStatus
 import com.dadomatch.shared.feature.subscription.domain.repository.SubscriptionRepository
+import com.dadomatch.shared.feature.auth.domain.repository.AuthRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.transformLatest
 
 /**
  * Implementation of SubscriptionRepository
  */
 class SubscriptionRepositoryImpl(
     private val revenueCatService: RevenueCatService,
-    private val localDataSource: SubscriptionLocalDataSource
+    private val localDataSource: SubscriptionLocalDataSource,
+    private val authRepository: AuthRepository
 ) : SubscriptionRepository {
     
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun getSubscriptionStatus(): Flow<SubscriptionStatus> {
-        return combine(
-            revenueCatService.customerInfoFlow,
-            localDataSource.getDailyRollsRemaining()
-        ) { customerInfo, dailyRolls ->
-            customerInfo?.toSubscriptionStatus(dailyRolls) 
-                ?: SubscriptionStatus.free(dailyRolls)
+        // transformLatest reacts to every auth state change.
+        // null user = Firebase not yet loaded or unauthenticated — treat as guest.
+        return authRepository.currentUser.transformLatest { user ->
+            // null or anonymous → guest: drive status purely from local DataStore
+            val isLoggedIn = user != null && !user.isAnonymous
+
+            if (!isLoggedIn) {
+                // Guest/anonymous: roll counter lives entirely in local DataStore
+                localDataSource.getDailyRollsRemaining().collect { dailyRolls ->
+                    emit(SubscriptionStatus.free(dailyRolls))
+                }
+            } else {
+                // Logged-in identified user: combine cached RC info + live local roll count.
+                // No network calls inside the flow — counter must update instantly on decrement.
+                combine(
+                    revenueCatService.customerInfoFlow,
+                    localDataSource.getDailyRollsRemaining()
+                ) { customerInfo, dailyRolls ->
+                    if (customerInfo != null) {
+                        // Use cached RC data to determine Pro vs Free
+                        customerInfo.toSubscriptionStatus(dailyRolls)
+                    } else {
+                        // RC not fetched yet — emit Free immediately.
+                        // loadSubscriptionData() will call getCustomerInfo() on startup,
+                        // which updates customerInfoFlow and triggers an automatic re-emit.
+                        SubscriptionStatus.free(dailyRolls)
+                    }
+                }.collect { status -> emit(status) }
+            }
         }
     }
-    
+
     override suspend fun getCurrentSubscriptionStatus(): Result<SubscriptionStatus> {
         return try {
-            val customerInfoResult = revenueCatService.getCustomerInfo()
+            // Get current Firebase auth state — may be null if still loading
+            val user = authRepository.currentUser.first()
+            val isAnonymous = user?.isAnonymous ?: true
             val dailyRolls = localDataSource.getDailyRollsRemaining().first()
-            
-            customerInfoResult.map { customerInfo ->
-                customerInfo.toSubscriptionStatus(dailyRolls)
+
+            if (isAnonymous) {
+                Result.success(SubscriptionStatus.free(dailyRolls))
+            } else {
+                // Fetch fresh data from RevenueCat for this real user
+                val customerInfoResult = revenueCatService.getCustomerInfo()
+                customerInfoResult.map { customerInfo ->
+                    customerInfo.toSubscriptionStatus(dailyRolls)
+                }
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -116,24 +152,33 @@ class SubscriptionRepositoryImpl(
     
     override suspend fun decrementDailyRolls(): Result<SubscriptionStatus> {
         return try {
-            // Check if user is premium first
-            val customerInfoResult = revenueCatService.getCustomerInfo()
-            if (customerInfoResult.isFailure) {
-                return Result.failure(customerInfoResult.exceptionOrNull()!!)
+            val user = authRepository.currentUser.first()
+            val isAnonymous = user?.isAnonymous ?: true
+
+            // Use cached customerInfo to avoid a blocking network call on every roll
+            val cachedCustomerInfo = revenueCatService.customerInfoFlow.first()
+            val hasPremium = if (isAnonymous) {
+                false
+            } else {
+                revenueCatService.hasPremiumAccess(cachedCustomerInfo)
             }
-            
-            val customerInfo = customerInfoResult.getOrNull()
-            val hasPremium = revenueCatService.hasPremiumAccess(customerInfo)
-            
-            // Premium users don't have roll limits
+
+            val dailyRolls = localDataSource.getDailyRollsRemaining().first()
+
+            // Premium users have unlimited rolls — don't decrement
             if (hasPremium) {
-                val dailyRolls = localDataSource.getDailyRollsRemaining().first()
-                return Result.success(customerInfo!!.toSubscriptionStatus(null))
+                return Result.success(
+                    cachedCustomerInfo?.toSubscriptionStatus(dailyRolls)
+                        ?: SubscriptionStatus.free(dailyRolls)
+                )
             }
-            
+
             // Decrement for free users
             val newCount = localDataSource.decrementDailyRolls()
-            Result.success(customerInfo!!.toSubscriptionStatus(newCount))
+            Result.success(
+                cachedCustomerInfo?.toSubscriptionStatus(newCount)
+                    ?: SubscriptionStatus.free(newCount)
+            )
         } catch (e: Exception) {
             Result.failure(e)
         }

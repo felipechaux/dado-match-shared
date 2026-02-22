@@ -14,15 +14,15 @@ import kotlinx.coroutines.isActive
 import kotlin.random.Random
 
 data class ConfettiParticle(
-    val x: Float,
-    val y: Float,
+    var x: Float,
+    var y: Float,
     val size: Float,
     val color: Color,
     val speedX: Float,
     val speedY: Float,
-    val rotation: Float,
+    var rotation: Float,
     val rotationSpeed: Float,
-    val opacity: Float = 1f
+    var opacity: Float = 1f
 )
 
 @Composable
@@ -31,7 +31,9 @@ fun ConfettiOverlay(
     durationMillis: Long = 4000L,
     onAnimationEnd: () -> Unit = {}
 ) {
-    val particles = remember { mutableStateListOf<ConfettiParticle>() }
+    val particles = remember { mutableListOf<ConfettiParticle>() }
+    var triggerDraw by remember { mutableStateOf(0) }
+    var canvasSize by remember { mutableStateOf(Size.Zero) }
     val colors = listOf(
         NeonPink, 
         NeonCyan, 
@@ -41,12 +43,15 @@ fun ConfettiOverlay(
         Color(0xFFFF4500)  // Orange Red
     )
 
-    var canvasSize by remember { mutableStateOf(Size.Zero) }
-
-    LaunchedEffect(canvasSize) {
-        if (canvasSize == Size.Zero) return@LaunchedEffect
+    LaunchedEffect(Unit) {
+        // Wait for canvas to be sized
+        while (canvasSize == Size.Zero && isActive) {
+            withFrameMillis { }
+        }
         
-        val startTime = withFrameNanos { it } / 1_000_000
+        if (!isActive) return@LaunchedEffect
+        
+        val startTime = withFrameMillis { it }
         
         // Initial burst
         repeat(200) {
@@ -59,10 +64,11 @@ fun ConfettiOverlay(
                 
                 if (elapsed > durationMillis && particles.isEmpty()) {
                     onAnimationEnd()
+                    return@withFrameMillis
                 }
 
                 // Update particles
-                val iterator = particles.listIterator()
+                val iterator = particles.iterator()
                 while (iterator.hasNext()) {
                     val p = iterator.next()
                     
@@ -75,12 +81,10 @@ fun ConfettiOverlay(
                     if (nextY > canvasSize.height + 50f || nextOpacity <= 0f) {
                         iterator.remove()
                     } else {
-                        iterator.set(p.copy(
-                            x = nextX,
-                            y = nextY,
-                            rotation = p.rotation + p.rotationSpeed,
-                            opacity = nextOpacity
-                        ))
+                        p.x = nextX
+                        p.y = nextY
+                        p.rotation += p.rotationSpeed
+                        p.opacity = nextOpacity
                     }
                 }
                 
@@ -88,11 +92,14 @@ fun ConfettiOverlay(
                 if (elapsed < durationMillis * 0.6 && particles.size < 300) {
                     repeat(5) { particles.add(createParticle(colors, canvasSize.width)) }
                 }
+                
+                triggerDraw++
             }
         }
     }
 
     Canvas(modifier = modifier.fillMaxSize()) {
+        val currentDraw = triggerDraw // Read state to force redraw
         if (canvasSize != size) {
             canvasSize = size
         }

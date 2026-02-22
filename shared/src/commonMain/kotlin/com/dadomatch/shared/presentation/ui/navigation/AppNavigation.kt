@@ -72,7 +72,11 @@ fun AppNavigation(
                         )
                     }
                     composable(Screen.Successes.route) {
-                        com.dadomatch.shared.feature.success.presentation.ui.SuccessesScreen()
+                        com.dadomatch.shared.feature.success.presentation.ui.SuccessesScreen(
+                            onNavigateToPaywall = {
+                                navController.navigate(Screen.Paywall.route)
+                            }
+                        )
                     }
                     composable(Screen.Profile.route) {
                         ProfileScreen()

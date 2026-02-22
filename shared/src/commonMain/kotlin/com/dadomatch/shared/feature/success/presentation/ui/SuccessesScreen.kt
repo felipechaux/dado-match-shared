@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -64,7 +65,9 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun SuccessesScreen() {
+fun SuccessesScreen(
+    onNavigateToPaywall: () -> Unit = {}
+) {
     val viewModel: SuccessesViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
 
@@ -160,6 +163,7 @@ fun SuccessesScreen() {
 
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(bottom = 100.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     items(uiState.successes.reversed()) { record ->
@@ -207,7 +211,7 @@ fun SuccessesScreen() {
                     Spacer(modifier = Modifier.height(24.dp))
                     
                     Button(
-                        onClick = { /* Navigation to Paywall will be handled via a callback or Navigator if available */ },
+                        onClick = onNavigateToPaywall,
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = NeonPink

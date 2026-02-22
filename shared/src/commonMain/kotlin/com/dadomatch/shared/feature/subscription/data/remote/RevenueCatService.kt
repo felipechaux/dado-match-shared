@@ -15,15 +15,15 @@ import kotlin.coroutines.resume
 /**
  * Service wrapper around RevenueCat KMP SDK
  * Provides a clean interface for subscription operations.
- * 
+ *
  * Note: Manual StateFlow is used to ensure UI reactivity across the app
  * when subscription status changes.
  */
 class RevenueCatService {
-    
+
     private val _customerInfoFlow = MutableStateFlow<CustomerInfo?>(null)
     val customerInfoFlow: Flow<CustomerInfo?> = _customerInfoFlow.asStateFlow()
-    
+
     /**
      * Configure RevenueCat SDK
      * Should be called once at app startup
@@ -36,7 +36,7 @@ class RevenueCatService {
         }
         Purchases.configure(config)
     }
-    
+
     /**
      * Get current customer info
      */
@@ -55,7 +55,7 @@ class RevenueCatService {
             continuation.resume(Result.failure(e))
         }
     }
-    
+
     /**
      * Get available offerings (subscription products)
      */
@@ -73,7 +73,7 @@ class RevenueCatService {
             continuation.resume(Result.failure(e))
         }
     }
-    
+
     /**
      * Purchase a subscription product
      */
@@ -93,7 +93,7 @@ class RevenueCatService {
             continuation.resume(Result.failure(e))
         }
     }
-    
+
     /**
      * Restore previous purchases
      */
@@ -112,16 +112,19 @@ class RevenueCatService {
             continuation.resume(Result.failure(e))
         }
     }
-    
+
     /**
      * Check if user has a specific entitlement
      */
     fun hasEntitlement(customerInfo: CustomerInfo?, entitlementId: String): Boolean {
         return customerInfo?.entitlements?.active?.containsKey(entitlementId) == true
     }
-    
+
     /**
-     * Link current user with an identifier (e.g. Firebase UID)
+     * Link current user with an identifier (e.g. Firebase UID).
+     * If RevenueCat creates a brand-new user for this ID (created=true),
+     * it automatically restores purchases so any subscription made while anonymous
+     * is properly carried over to the identified user.
      */
     suspend fun logIn(userId: String): Result<CustomerInfo> = suspendCancellableCoroutine { continuation ->
         try {
@@ -129,9 +132,25 @@ class RevenueCatService {
                 onError = { error ->
                     continuation.resume(Result.failure(Exception(error.message)))
                 },
-                onSuccess = { customerInfo, _ ->
-                    _customerInfoFlow.value = customerInfo
-                    continuation.resume(Result.success(customerInfo))
+                onSuccess = { customerInfo, created ->
+                    if (created) {
+                        // New RC user was created — restore purchases to link any existing
+                        // store subscription (e.g. purchased while anonymous) to this ID.
+                        Purchases.sharedInstance.restorePurchases(
+                            onError = { _ ->
+                                // Restore failed — fall back to the bare customerInfo
+                                _customerInfoFlow.value = customerInfo
+                                continuation.resume(Result.success(customerInfo))
+                            },
+                            onSuccess = { restoredInfo ->
+                                _customerInfoFlow.value = restoredInfo
+                                continuation.resume(Result.success(restoredInfo))
+                            }
+                        )
+                    } else {
+                        _customerInfoFlow.value = customerInfo
+                        continuation.resume(Result.success(customerInfo))
+                    }
                 },
                 newAppUserID = userId
             )
