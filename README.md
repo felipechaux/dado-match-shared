@@ -141,24 +141,38 @@ cd dado-match-shared
 
 ### Creating a Release
 
-Create a release using the release script:
+Releases are fully automated via GitHub Actions. Simply push a version tag from `main`:
+
 ```bash
-./scripts/create-release.sh 1.1.0
+# Make sure main is up to date
+git checkout main && git pull
+
+# Tag and push — GitHub Actions does the rest
+git tag v1.1.0
+git push origin v1.1.0
 ```
 
-This will automatically:
-- Update version in `gradle.properties`
-- Create and push a git tag
-- Trigger CI/CD to build and publish the release
+The workflow will automatically:
+1. 🏗️ Build the **Release** XCFramework
+2. 📦 Zip and upload it as a GitHub Release asset
+3. 📝 Update `Package.swift` with the download URL and checksum
+4. 🔄 Commit the updated `Package.swift` and `VERSION` back to `main`
+
+#### Version naming convention
+
+| Change type | Example tag | When to use |
+|---|---|---|
+| Bug fix | `v1.0.3` | Backwards-compatible fixes |
+| New feature | `v1.1.0` | Backwards-compatible additions |
+| Breaking change | `v2.0.0` | Incompatible API changes |
 
 ## 🏗 CI/CD
 
-The project uses GitHub Actions for:
+The project uses GitHub Actions for automated releases (`.github/workflows/release.yml`):
 
-- **Continuous Integration**: Build and test on every PR
-- **Release Automation**: Automatically build and publish releases
-- **XCFramework Distribution**: Generate and upload iOS frameworks
-- **Package Publishing**: Publish to GitHub Packages
+- **Trigger**: Push a tag matching `v*.*.*` from the `main` branch
+- **Runner**: `macos-latest` (required for Xcode/Swift toolchain)
+- **Output**: GitHub Release with `DadoMatchShared.xcframework.zip` + auto-updated `Package.swift`
 
 ## 📄 License
 
