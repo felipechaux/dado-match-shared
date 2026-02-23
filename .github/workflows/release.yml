@@ -12,15 +12,14 @@ permissions:
 jobs:
   release:
     name: Build & Publish XCFramework
-    runs-on: macos-14  # Apple Silicon runner, 14 GB RAM — more predictable than macos-latest
+    runs-on: macos-14  # Apple Silicon runner, 14 GB RAM
 
-    # ── CI memory budget ─────────────────────────────────────────────────────
-    # macos-14 runner: ~14 GB total RAM
-    # GRADLE_OPTS caps the Gradle JVM at 3 GB (overrides gradle.properties on CI)
-    # This leaves ~8-9 GB for the Kotlin/Native compiler's separate JVM process,
-    # which is what causes OOM during devirtualization on large KMP projects.
-    env:
-      GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dorg.gradle.daemon=false"
+    # Memory profile on the 14GB macos-14 runner:
+    #   Gradle JVM:           ~1 GB  (set via kotlin.native.jvmArgs in gradle.properties)
+    #   Kotlin/Native compiler: 12 GB (set via kotlin.native.jvmArgs in gradle.properties)
+    #   OS + misc:            ~1 GB
+    #   Total:               ~14 GB  ✔️
+    # No GRADLE_OPTS override needed – gradle.properties already tuned for CI.
 
     steps:
       # ─────────────────────────────────────────────
@@ -80,16 +79,15 @@ jobs:
       - name: 🏗️ Build XCFramework (Release)
         run: |
           echo "🔨 Building DadoMatchShared XCFramework – Release build..."
-          echo "🧠 Available memory:"
+          echo "🧠 Available memory before build:"
           vm_stat | grep 'Pages free\|Pages active\|Pages wired' || true
-          
-          # --no-daemon     : avoids a persistent Gradle daemon competing for memory
-          # --max-workers 2 : limits parallel Kotlin/Native compilations
-          # --info          : verbose enough to debug future issues
+
+          # --no-daemon     : fresh JVM each run, no daemon competing for RAM
+          # --max-workers 1 : ONE Kotlin/Native compiler at a time (12g each)
+          #                   running 2 in parallel = 24g > 14g runner = OOM
           ./gradlew shared:assembleDadoMatchSharedReleaseXCFramework \
             --no-daemon \
-            --max-workers 2 \
-            --info
+            --max-workers 1
           echo "✅ Gradle build finished."
 
       # ─────────────────────────────────────────────
