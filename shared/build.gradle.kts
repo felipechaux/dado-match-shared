@@ -230,16 +230,11 @@ buildkonfig {
                 ?: System.getenv("STAGE_GEMINI_API_KEY") 
                 ?: ""
         }
-        
-        val geminiModelName = if (isProduction) {
-            localProperties.getProperty("PROD_GEMINI_MODEL_NAME") 
-                ?: System.getenv("PROD_GEMINI_MODEL_NAME") 
+
+        val geminiModelName = localProperties.getProperty("GEMINI_MODEL_NAME")
+                ?: System.getenv("GEMINI_MODEL_NAME")
                 ?: "gemini-2.0-flash-lite"
-        } else {
-            localProperties.getProperty("STAGE_GEMINI_MODEL_NAME") 
-                ?: System.getenv("STAGE_GEMINI_MODEL_NAME") 
-                ?: "gemini-2.0-flash-lite"
-        }
+
         
         val revenueCatApiKey = if (isProduction) {
             localProperties.getProperty("PROD_REVENUECAT_API_KEY") 
