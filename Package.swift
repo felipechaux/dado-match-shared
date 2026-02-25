@@ -19,8 +19,8 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "DadoMatchSharedBinary",
-            url: "https://github.com/felipechaux/dado-match-shared/releases/download/v1.0.0/DadoMatchShared.xcframework.zip",
-            checksum: "7c63ddaa0d48b9e16386008252066fdc96d6d6721b56fe408c7f8524c83aee2a"
+            url: "https://github.com/felipechaux/dado-match-shared/releases/download/v1.0.1/DadoMatchShared.xcframework.zip",
+            checksum: "45a076ca15ed4c6e39128e678aa610858acfe1291e4086f775f0f99ae6af23f8"
         ),
         .target(
             name: "DadoMatchSharedWrapper",
