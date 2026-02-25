@@ -213,13 +213,20 @@ buildkonfig {
     // Priority: 1. Command line (-Papp.flavor=production)
     //           2. local.properties (app.flavor=production)
     //           3. Default to stage
-    val appFlavor = project.findProperty("app.flavor")?.toString() 
+    // 1. Check for 'appFlavor' or 'app.flavor' project properties (passed via -P or ORG_GRADLE_PROJECT_ env vars)
+    // 2. Check for 'APP_FLAVOR' environment variable
+    // 3. Check for properties in local.properties
+    // 4. Default to 'stage'
+    val appFlavor = (project.findProperty("appFlavor") 
+        ?: project.findProperty("app.flavor")
         ?: System.getenv("APP_FLAVOR")
-        ?: localProperties.getProperty("app.flavor") 
-        ?: "stage"
-    val isProduction = appFlavor == "production"
+        ?: localProperties.getProperty("appFlavor")
+        ?: localProperties.getProperty("app.flavor")
+        ?: "stage").toString()
+
+    val isProduction = appFlavor.trim().lowercase() == "production"
     
-    println("BuildKonfig: Building for flavor: $appFlavor")
+    println("BuildKonfig: Flavor detected: '$appFlavor' (isProduction: $isProduction)")
     
     defaultConfigs {
         val geminiApiKey =
