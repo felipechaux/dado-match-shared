@@ -214,6 +214,7 @@ buildkonfig {
     //           2. local.properties (app.flavor=production)
     //           3. Default to stage
     val appFlavor = project.findProperty("app.flavor")?.toString() 
+        ?: System.getenv("APP_FLAVOR")
         ?: localProperties.getProperty("app.flavor") 
         ?: "stage"
     val isProduction = appFlavor == "production"
