@@ -9,6 +9,15 @@ on:
 permissions:
   contents: write
 
+env:
+  PROD_REVENUECAT_API_KEY: ${{ secrets.PROD_REVENUECAT_API_KEY }}
+  STAGE_REVENUECAT_API_KEY: ${{ secrets.STAGE_REVENUECAT_API_KEY }}
+  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+  GEMINI_MODEL_NAME: ${{ vars.GEMINI_MODEL_NAME }}
+  PROD_API_BASE_URL: ${{ vars.PROD_API_BASE_URL }}
+  STAGE_API_BASE_URL: ${{ vars.STAGE_API_BASE_URL }}
+  GOOGLE_WEB_CLIENT_ID: ${{ vars.GOOGLE_WEB_CLIENT_ID }}
+
 jobs:
   release:
     name: Build & Publish XCFramework

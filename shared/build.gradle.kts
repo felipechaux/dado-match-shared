@@ -252,15 +252,9 @@ buildkonfig {
                 ?: "https://api-stage.dadomatch.com"
         }
         
-        val googleWebClientId = if (isProduction) {
-            localProperties.getProperty("PROD_GOOGLE_WEB_CLIENT_ID")
-                ?: System.getenv("PROD_GOOGLE_WEB_CLIENT_ID")
+        val googleWebClientId = localProperties.getProperty("GOOGLE_WEB_CLIENT_ID")
+                ?: System.getenv("GOOGLE_WEB_CLIENT_ID")
                 ?: ""
-        } else {
-            localProperties.getProperty("STAGE_GOOGLE_WEB_CLIENT_ID")
-                ?: System.getenv("STAGE_GOOGLE_WEB_CLIENT_ID")
-                ?: ""
-        }
         
         val environment = if (isProduction) "production" else "stage"
         val isDebug = !isProduction
