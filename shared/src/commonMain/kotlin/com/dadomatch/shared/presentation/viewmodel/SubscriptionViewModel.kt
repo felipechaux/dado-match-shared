@@ -9,137 +9,127 @@ import com.dadomatch.shared.feature.subscription.domain.usecase.GetAvailableProd
 import com.dadomatch.shared.feature.subscription.domain.usecase.GetSubscriptionStatusUseCase
 import com.dadomatch.shared.feature.subscription.domain.usecase.PurchaseSubscriptionUseCase
 import com.dadomatch.shared.feature.subscription.domain.usecase.RestorePurchasesUseCase
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/**
- * ViewModel for subscription screen
- */
 class SubscriptionViewModel(
     private val getSubscriptionStatusUseCase: GetSubscriptionStatusUseCase,
     private val getAvailableProductsUseCase: GetAvailableProductsUseCase,
     private val purchaseSubscriptionUseCase: PurchaseSubscriptionUseCase,
     private val restorePurchasesUseCase: RestorePurchasesUseCase
 ) : ViewModel() {
-    
-    private val _uiState = MutableStateFlow<SubscriptionUiState>(SubscriptionUiState.Loading)
+
+    private val _uiState = MutableStateFlow(SubscriptionUiState())
     val uiState: StateFlow<SubscriptionUiState> = _uiState.asStateFlow()
-    
-    private val _subscriptionStatus = MutableStateFlow<SubscriptionStatus?>(null)
-    val subscriptionStatus: StateFlow<SubscriptionStatus?> = _subscriptionStatus.asStateFlow()
-    
-    // UI-only state for celebration animation
-    private val _showConfetti = MutableStateFlow(false)
-    val showConfetti: StateFlow<Boolean> = _showConfetti.asStateFlow()
-    
+
+    private val _events = MutableSharedFlow<SubscriptionEvent>(
+        extraBufferCapacity = 16,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    val events: SharedFlow<SubscriptionEvent> = _events.asSharedFlow()
+
     init {
         loadSubscriptionData()
         observeSubscriptionStatus()
     }
-    
-    /**
-     * Observe subscription status changes.
-     * Triggers confetti if the user upgrades from FREE to PREMIUM.
-     */
+
     private fun observeSubscriptionStatus() {
         viewModelScope.launch {
             getSubscriptionStatusUseCase().collect { status ->
-                val previousTier = _subscriptionStatus.value?.tier
-                _subscriptionStatus.value = status
-                
-                // Trigger confetti on upgrade
+                val previousTier = _uiState.value.subscriptionStatus?.tier
+                _uiState.update { it.copy(subscriptionStatus = status) }
                 if (previousTier == SubscriptionTier.FREE && status.tier == SubscriptionTier.PREMIUM) {
-                    triggerConfetti()
+                    _events.emit(SubscriptionEvent.ShowConfetti)
                 }
             }
         }
     }
-    
+
     private fun loadSubscriptionData() {
         viewModelScope.launch {
-            _uiState.value = SubscriptionUiState.Loading
-            
-            // Explicitly fetch latest status to ensure sync
+            _uiState.update { it.copy(isLoading = true, error = null) }
             getSubscriptionStatusUseCase.getCurrentStatus()
-            
             val productsResult = getAvailableProductsUseCase()
-            
             if (productsResult.isSuccess) {
-                val products = productsResult.getOrNull() ?: emptyList()
-                _uiState.value = SubscriptionUiState.Success(products)
+                _uiState.update {
+                    it.copy(isLoading = false, products = productsResult.getOrNull() ?: emptyList())
+                }
             } else {
-                _uiState.value = SubscriptionUiState.Error(
-                    productsResult.exceptionOrNull()?.message ?: "Failed to load products"
-                )
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = productsResult.exceptionOrNull()?.message ?: "Failed to load products"
+                    )
+                }
             }
         }
     }
-    
+
     fun purchaseProduct(productId: String) {
         viewModelScope.launch {
-            _uiState.value = SubscriptionUiState.Purchasing
-            
+            _uiState.update { it.copy(isPurchasing = true, error = null) }
             val result = purchaseSubscriptionUseCase(productId)
-            
             if (result.isSuccess) {
-                _uiState.value = SubscriptionUiState.PurchaseSuccess
-                // Reload products after successful purchase
+                _uiState.update { it.copy(isPurchasing = false) }
+                _events.emit(SubscriptionEvent.PurchaseSuccess)
                 loadSubscriptionData()
             } else {
-                _uiState.value = SubscriptionUiState.PurchaseError(
-                    result.exceptionOrNull()?.message ?: "Purchase failed"
-                )
+                _uiState.update {
+                    it.copy(
+                        isPurchasing = false,
+                        error = result.exceptionOrNull()?.message ?: "Purchase failed"
+                    )
+                }
             }
         }
     }
-    
+
     fun restorePurchases() {
         viewModelScope.launch {
-            _uiState.value = SubscriptionUiState.Restoring
-            
+            _uiState.update { it.copy(isRestoring = true, error = null) }
             val result = restorePurchasesUseCase()
-            
             if (result.isSuccess) {
-                _uiState.value = SubscriptionUiState.RestoreSuccess
+                _uiState.update { it.copy(isRestoring = false) }
+                _events.emit(SubscriptionEvent.RestoreSuccess)
                 loadSubscriptionData()
             } else {
-                _uiState.value = SubscriptionUiState.RestoreError(
-                    result.exceptionOrNull()?.message ?: "Restore failed"
-                )
+                _uiState.update {
+                    it.copy(
+                        isRestoring = false,
+                        error = result.exceptionOrNull()?.message ?: "Restore failed"
+                    )
+                }
             }
         }
     }
-    
+
     fun refreshStatus() {
         loadSubscriptionData()
     }
-    
-    fun triggerConfetti() {
-        _showConfetti.value = true
-    }
-    
-    fun onConfettiConsumed() {
-        _showConfetti.value = false
-    }
-    
+
     fun dismissError() {
-        loadSubscriptionData()
+        _uiState.update { it.copy(error = null) }
     }
 }
 
-/**
- * UI state for subscription screen
- */
-sealed class SubscriptionUiState {
-    data object Loading : SubscriptionUiState()
-    data class Success(val products: List<Product>) : SubscriptionUiState()
-    data class Error(val message: String) : SubscriptionUiState()
-    data object Purchasing : SubscriptionUiState()
-    data object PurchaseSuccess : SubscriptionUiState()
-    data class PurchaseError(val message: String) : SubscriptionUiState()
-    data object Restoring : SubscriptionUiState()
-    data object RestoreSuccess : SubscriptionUiState()
-    data class RestoreError(val message: String) : SubscriptionUiState()
+data class SubscriptionUiState(
+    val isLoading: Boolean = false,
+    val products: List<Product> = emptyList(),
+    val subscriptionStatus: SubscriptionStatus? = null,
+    val isPurchasing: Boolean = false,
+    val isRestoring: Boolean = false,
+    val error: String? = null
+)
+
+sealed class SubscriptionEvent {
+    data object PurchaseSuccess : SubscriptionEvent()
+    data object RestoreSuccess : SubscriptionEvent()
+    data object ShowConfetti : SubscriptionEvent()
 }

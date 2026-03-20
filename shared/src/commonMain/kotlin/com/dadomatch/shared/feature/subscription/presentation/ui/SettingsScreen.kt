@@ -23,9 +23,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import com.dadomatch.shared.presentation.viewmodel.SubscriptionEvent
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -52,8 +57,17 @@ fun SettingsScreen(
     val viewModel: SubscriptionViewModel = koinViewModel()
     val authViewModel: AuthViewModel = koinViewModel()
     val scrollState = rememberScrollState()
-    val showConfetti by viewModel.showConfetti.collectAsState()
+    var showConfetti by remember { mutableStateOf(false) }
     val authUiState by authViewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                SubscriptionEvent.ShowConfetti -> showConfetti = true
+                else -> Unit
+            }
+        }
+    }
     val isAnonymous = authUiState.user?.isAnonymous ?: true
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -100,9 +114,7 @@ fun SettingsScreen(
         
         if (showConfetti) {
             ConfettiOverlay(
-                onAnimationEnd = {
-                    viewModel.onConfettiConsumed()
-                }
+                onAnimationEnd = { showConfetti = false }
             )
         }
     }

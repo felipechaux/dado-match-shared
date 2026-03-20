@@ -2,23 +2,30 @@ package com.dadomatch.shared.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dadomatch.shared.feature.subscription.domain.model.Entitlement
+import com.dadomatch.shared.feature.subscription.domain.usecase.GetSubscriptionStatusUseCase
 import com.dadomatch.shared.feature.success.domain.model.SuccessRecord
-import com.dadomatch.shared.feature.subscription.domain.usecase.CheckEntitlementUseCase
 import com.dadomatch.shared.feature.success.domain.usecase.GetSuccessesUseCase
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class SuccessesViewModel(
     getSuccessesUseCase: GetSuccessesUseCase,
-    private val checkEntitlementUseCase: CheckEntitlementUseCase
+    private val getSubscriptionStatusUseCase: GetSubscriptionStatusUseCase
 ) : ViewModel() {
-    
+
     private val _uiState = MutableStateFlow(SuccessesUiState())
     val uiState: StateFlow<SuccessesUiState> = _uiState.asStateFlow()
 
     init {
         observeAnalyticsEntitlement()
-        
+
         getSuccessesUseCase()
             .onStart { _uiState.update { it.copy(isLoading = true) } }
             .onEach { successes ->
@@ -29,8 +36,8 @@ class SuccessesViewModel(
 
     private fun observeAnalyticsEntitlement() {
         viewModelScope.launch {
-            checkEntitlementUseCase.subscriptionRepository.getSubscriptionStatus().collect { status ->
-                val hasAnalytics = status.entitlements.contains(com.dadomatch.shared.feature.subscription.domain.model.Entitlement.SUCCESS_ANALYTICS)
+            getSubscriptionStatusUseCase().collect { status ->
+                val hasAnalytics = status.entitlements.contains(Entitlement.SUCCESS_ANALYTICS)
                 _uiState.update { it.copy(isRestricted = !hasAnalytics) }
             }
         }

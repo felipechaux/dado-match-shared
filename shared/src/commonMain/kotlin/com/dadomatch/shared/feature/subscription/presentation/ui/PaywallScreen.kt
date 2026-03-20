@@ -63,7 +63,8 @@ fun PaywallScreen(onDismiss: () -> Unit = {}) {
     val viewModel: SubscriptionViewModel = koinViewModel()
     val authViewModel: AuthViewModel = koinViewModel()
     
-    val status by viewModel.subscriptionStatus.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    val status = uiState.subscriptionStatus
     val authUiState by authViewModel.uiState.collectAsState()
     
     val isAnonymous = authUiState.user?.isAnonymous ?: true

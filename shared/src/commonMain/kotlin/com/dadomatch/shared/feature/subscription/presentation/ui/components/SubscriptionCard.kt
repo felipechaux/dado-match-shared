@@ -157,13 +157,13 @@ fun SubscriptionCard(
     @Suppress("UNUSED_PARAMETER") isAnonymous: Boolean = false,
     onNavigateToPaywall: () -> Unit
 ) {
-    val subscriptionStatus by viewModel.subscriptionStatus.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
 
     // The repository already handles anonymous/pro logic correctly.
     // We simply display whatever status the ViewModel provides — no local override.
     SubscriptionCard(
         modifier = modifier,
-        status = subscriptionStatus,
+        status = uiState.subscriptionStatus,
         onUpgradeClick = onNavigateToPaywall
     )
 }

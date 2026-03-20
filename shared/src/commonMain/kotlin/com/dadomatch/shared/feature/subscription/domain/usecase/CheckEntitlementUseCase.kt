@@ -7,7 +7,7 @@ import com.dadomatch.shared.feature.subscription.domain.repository.SubscriptionR
  * Use case to check if user has a specific entitlement
  */
 class CheckEntitlementUseCase(
-    val subscriptionRepository: SubscriptionRepository
+    private val subscriptionRepository: SubscriptionRepository
 ) {
     /**
      * Check if user has access to a specific feature

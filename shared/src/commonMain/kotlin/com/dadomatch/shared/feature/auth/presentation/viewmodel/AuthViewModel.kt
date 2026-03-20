@@ -4,23 +4,36 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dadomatch.shared.feature.auth.domain.repository.AuthRepository
 import com.dadomatch.shared.feature.auth.domain.repository.AuthUser
-import com.dadomatch.shared.feature.subscription.domain.repository.SubscriptionRepository
+import com.dadomatch.shared.feature.auth.domain.usecase.SignInAnonymouslyUseCase
+import com.dadomatch.shared.feature.auth.domain.usecase.SignInWithAppleUseCase
+import com.dadomatch.shared.feature.auth.domain.usecase.SignInWithGoogleUseCase
+import com.dadomatch.shared.feature.auth.presentation.NativeAuthHandler
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-import com.dadomatch.shared.feature.auth.presentation.NativeAuthHandler
-
 class AuthViewModel(
+    private val signInWithGoogleUseCase: SignInWithGoogleUseCase,
+    private val signInWithAppleUseCase: SignInWithAppleUseCase,
+    private val signInAnonymouslyUseCase: SignInAnonymouslyUseCase,
     private val authRepository: AuthRepository,
-    private val subscriptionRepository: SubscriptionRepository,
     private val nativeAuthHandler: NativeAuthHandler
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
+
+    private val _events = MutableSharedFlow<AuthEvent>(
+        extraBufferCapacity = 16,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    val events: SharedFlow<AuthEvent> = _events.asSharedFlow()
 
     init {
         viewModelScope.launch {
@@ -35,7 +48,11 @@ class AuthViewModel(
         viewModelScope.launch {
             nativeAuthHandler.signInWithGoogle()
                 .onSuccess { tokens ->
-                    signInWithGoogle(tokens.idToken, tokens.accessToken)
+                    signInWithGoogleUseCase(tokens.idToken, tokens.accessToken)
+                        .onSuccess { _events.emit(AuthEvent.SignInSuccess) }
+                        .onFailure { error ->
+                            _uiState.update { it.copy(isLoading = false, error = error.message) }
+                        }
                 }
                 .onFailure { error ->
                     _uiState.update { it.copy(isLoading = false, error = error.message) }
@@ -48,33 +65,11 @@ class AuthViewModel(
         viewModelScope.launch {
             nativeAuthHandler.signInWithApple()
                 .onSuccess { tokens ->
-                    signInWithApple(tokens.idToken, tokens.nonce)
-                }
-                .onFailure { error ->
-                    _uiState.update { it.copy(isLoading = false, error = error.message) }
-                }
-        }
-    }
-
-    private fun signInWithGoogle(idToken: String, accessToken: String? = null) {
-        viewModelScope.launch {
-            authRepository.signInWithGoogle(idToken, accessToken)
-                .onSuccess { user ->
-                    subscriptionRepository.logIn(user.id)
-                    _uiState.update { it.copy(isLoading = false, user = user) }
-                }
-                .onFailure { error ->
-                    _uiState.update { it.copy(isLoading = false, error = error.message) }
-                }
-        }
-    }
-
-    private fun signInWithApple(idToken: String, nonce: String? = null) {
-        viewModelScope.launch {
-            authRepository.signInWithApple(idToken, nonce)
-                .onSuccess { user ->
-                    subscriptionRepository.logIn(user.id)
-                    _uiState.update { it.copy(isLoading = false, user = user) }
+                    signInWithAppleUseCase(tokens.idToken, tokens.nonce)
+                        .onSuccess { _events.emit(AuthEvent.SignInSuccess) }
+                        .onFailure { error ->
+                            _uiState.update { it.copy(isLoading = false, error = error.message) }
+                        }
                 }
                 .onFailure { error ->
                     _uiState.update { it.copy(isLoading = false, error = error.message) }
@@ -85,10 +80,8 @@ class AuthViewModel(
     fun signInAnonymously() {
         _uiState.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
-            authRepository.signInAnonymously()
-                .onSuccess { user ->
-                    _uiState.update { it.copy(isLoading = false, user = user) }
-                }
+            signInAnonymouslyUseCase()
+                .onSuccess { _events.emit(AuthEvent.SignInSuccess) }
                 .onFailure { error ->
                     _uiState.update { it.copy(isLoading = false, error = error.message) }
                 }
@@ -105,3 +98,7 @@ data class AuthUiState(
     val user: AuthUser? = null,
     val error: String? = null
 )
+
+sealed class AuthEvent {
+    data object SignInSuccess : AuthEvent()
+}

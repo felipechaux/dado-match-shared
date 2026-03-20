@@ -269,10 +269,12 @@ fun HomeScreen(
             }
         }
 
-        if (uiState.showPaywallNavigation) {
-            LaunchedEffect(uiState.showPaywallNavigation) {
-                onNavigateToPaywall()
-                viewModel.onPaywallNavigated()
+        LaunchedEffect(Unit) {
+            viewModel.events.collect { event ->
+                when (event) {
+                    is com.dadomatch.shared.feature.icebreaker.presentation.viewmodel.HomeEvent.NavigateToPaywall ->
+                        onNavigateToPaywall()
+                }
             }
         }
     }
