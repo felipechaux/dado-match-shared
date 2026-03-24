@@ -31,10 +31,15 @@ import com.dadomatch.shared.presentation.ui.theme.DarkSurface
 import com.dadomatch.shared.presentation.ui.theme.TextGray
 import com.dadomatch.shared.presentation.ui.theme.TextWhite
 import com.dadomatch.shared.shared.generated.resources.Res
+import com.dadomatch.shared.shared.generated.resources.env_bar
+import com.dadomatch.shared.shared.generated.resources.env_beach
 import com.dadomatch.shared.shared.generated.resources.env_cafe
+import com.dadomatch.shared.shared.generated.resources.env_concert
 import com.dadomatch.shared.shared.generated.resources.env_gym
 import com.dadomatch.shared.shared.generated.resources.env_library
+import com.dadomatch.shared.shared.generated.resources.env_online
 import com.dadomatch.shared.shared.generated.resources.env_party
+import com.dadomatch.shared.shared.generated.resources.env_work
 import com.dadomatch.shared.shared.generated.resources.int_cringe
 import com.dadomatch.shared.shared.generated.resources.int_direct
 import com.dadomatch.shared.shared.generated.resources.int_funny
@@ -87,22 +92,25 @@ fun SelectorGroup(
                         .padding(horizontal = 16.dp, vertical = 10.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    val resource = when(option) {
-                        "env_gym" -> Res.string.env_gym
-                        "env_party" -> Res.string.env_party
-                        "env_library" -> Res.string.env_library
-                        "env_cafe" -> Res.string.env_cafe
-                        "int_cringe" -> Res.string.int_cringe
+                    val resource = when (option) {
+                        "env_gym"      -> Res.string.env_gym
+                        "env_party"    -> Res.string.env_party
+                        "env_bar"      -> Res.string.env_bar
+                        "env_cafe"     -> Res.string.env_cafe
+                        "env_beach"    -> Res.string.env_beach
+                        "env_work"     -> Res.string.env_work
+                        "env_online"   -> Res.string.env_online
+                        "env_concert"  -> Res.string.env_concert
+                        "env_library"  -> Res.string.env_library
+                        "int_cringe"   -> Res.string.int_cringe
                         "int_romantic" -> Res.string.int_romantic
-                        "int_direct" -> Res.string.int_direct
-                        "int_funny" -> Res.string.int_funny
-                        "int_spicy" -> Res.string.int_spicy
-                        else -> null
+                        "int_direct"   -> Res.string.int_direct
+                        "int_funny"    -> Res.string.int_funny
+                        "int_spicy"    -> Res.string.int_spicy
+                        else           -> null
                     }
-                    
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         if (isRestricted(option)) {
                             Icon(
                                 imageVector = Icons.Default.Lock,
@@ -112,7 +120,7 @@ fun SelectorGroup(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                         }
-                        
+
                         val icon = iconProvider?.invoke(option)
                         if (icon != null) {
                             Text(

@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dadomatch.shared.feature.auth.presentation.viewmodel.AuthViewModel
 import com.dadomatch.shared.presentation.ui.theme.DeepDarkBlue
+import org.koin.compose.viewmodel.koinViewModel
 import com.dadomatch.shared.presentation.ui.theme.NeonCyan
 import com.dadomatch.shared.presentation.ui.theme.TextGray
 import com.dadomatch.shared.presentation.ui.theme.TextWhite
@@ -40,8 +41,8 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun AuthBottomSheet(
-    viewModel: AuthViewModel,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    viewModel: AuthViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 

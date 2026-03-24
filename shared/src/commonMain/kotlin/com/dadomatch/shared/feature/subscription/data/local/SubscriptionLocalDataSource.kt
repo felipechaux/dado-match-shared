@@ -24,6 +24,7 @@ class SubscriptionLocalDataSource(
         private val IS_PREMIUM = stringPreferencesKey("is_premium")
         private val DAILY_AI_CALLS_REMAINING = intPreferencesKey("daily_ai_calls_remaining")
         private val LAST_AI_CALLS_RESET_DATE = longPreferencesKey("last_ai_calls_reset_date")
+        private val PREFERRED_LANGUAGE = stringPreferencesKey("preferred_language")
 
         const val DEFAULT_DAILY_ROLLS = 10
         // -1 sentinel means "not yet initialized — use tier default on first read"
@@ -156,6 +157,21 @@ class SubscriptionLocalDataSource(
     fun getPremiumStatus(): Flow<Boolean> {
         return dataStore.data.map { preferences ->
             preferences[IS_PREMIUM]?.toBoolean() ?: false
+        }
+    }
+
+    // ── Language Preference ────────────────────────────────────────────────
+
+    /** Returns the user's preferred language code ("en" or "es"). Defaults to device locale if unset. */
+    fun getLanguage(deviceLanguage: String): Flow<String> {
+        return dataStore.data.map { preferences ->
+            preferences[PREFERRED_LANGUAGE] ?: deviceLanguage
+        }
+    }
+
+    suspend fun setLanguage(language: String) {
+        dataStore.edit { preferences ->
+            preferences[PREFERRED_LANGUAGE] = language
         }
     }
 }

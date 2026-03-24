@@ -27,6 +27,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,17 +35,25 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.dadomatch.shared.feature.auth.presentation.viewmodel.AuthViewModel
+import com.dadomatch.shared.feature.subscription.domain.usecase.GetLanguageUseCase
+import com.dadomatch.shared.feature.subscription.domain.usecase.SetLanguageUseCase
 import com.dadomatch.shared.feature.subscription.presentation.ui.components.SubscriptionCard
 import com.dadomatch.shared.presentation.ui.components.ConfettiOverlay
 import com.dadomatch.shared.presentation.ui.theme.DeepDarkBlue
 import com.dadomatch.shared.presentation.ui.theme.NeonCyan
+import com.dadomatch.shared.presentation.ui.theme.TextGray
 import com.dadomatch.shared.presentation.ui.theme.TextWhite
 import com.dadomatch.shared.presentation.viewmodel.SubscriptionViewModel
 import com.dadomatch.shared.shared.generated.resources.Res
+import com.dadomatch.shared.shared.generated.resources.language_label
 import com.dadomatch.shared.shared.generated.resources.settings_title
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,10 +65,16 @@ fun SettingsScreen(
 ) {
     val viewModel: SubscriptionViewModel = koinViewModel()
     val authViewModel: AuthViewModel = koinViewModel()
+    val getLanguageUseCase: GetLanguageUseCase = koinInject()
+    val setLanguageUseCase: SetLanguageUseCase = koinInject()
     val scrollState = rememberScrollState()
     val authUiState by authViewModel.uiState.collectAsState()
     val isAnonymous = authUiState.user?.isAnonymous ?: true
     var showConfetti by remember(showConfettiOnEnter) { mutableStateOf(showConfettiOnEnter) }
+    val coroutineScope = rememberCoroutineScope()
+    val deviceLanguage = Locale.current.language.take(2)
+    val languageFlow = remember(getLanguageUseCase) { getLanguageUseCase(deviceLanguage) }
+    val selectedLanguage by languageFlow.collectAsState(initial = deviceLanguage)
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -95,10 +110,39 @@ fun SettingsScreen(
                 )
                 
                 Spacer(modifier = Modifier.height(32.dp))
-                
-                // General Settings Section omitted for launch
-                // TODO: Re-add Settings and Support Sections once functionality is ready
-                
+
+                // ── Language Section ──────────────────────────────────────
+                SettingsSectionTitle(title = stringResource(Res.string.language_label))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color.White.copy(alpha = 0.05f))
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    listOf("en" to "EN", "es" to "ES").forEach { (code, label) ->
+                        val isSelected = selectedLanguage.startsWith(code)
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (isSelected) NeonCyan.copy(alpha = 0.15f) else Color.Transparent)
+                                .clickable {
+                                    coroutineScope.launch { setLanguageUseCase(code) }
+                                }
+                                .padding(horizontal = 20.dp, vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = label,
+                                color = if (isSelected) NeonCyan else TextGray,
+                                fontSize = 14.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(100.dp)) // Padding for bottom bar
             }
         }

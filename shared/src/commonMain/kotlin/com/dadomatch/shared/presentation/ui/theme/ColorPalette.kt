@@ -10,6 +10,7 @@ val NeonRed = Color(0xFFFF3B30)
 val NeonYellow = Color(0xFFFFCC00)
 val NeonAmber = Color(0xFFFFBF00)
 val NeonMint = Color(0xFF00FFD4)
+val NeonSky  = Color(0xFF38BDF8)
 
 val DeepDarkBlue = Color(0xFF07070A)
 val GlowPink = Color(0xFFFF2D95).copy(alpha = 0.4f)

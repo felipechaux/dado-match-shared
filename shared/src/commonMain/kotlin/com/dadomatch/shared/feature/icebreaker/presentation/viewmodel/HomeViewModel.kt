@@ -2,7 +2,6 @@ package com.dadomatch.shared.feature.icebreaker.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dadomatch.shared.core.util.Resource
 import com.dadomatch.shared.feature.icebreaker.domain.model.IcebreakerFeedback
 import com.dadomatch.shared.feature.icebreaker.domain.usecase.GenerateIcebreakerUseCase
 import com.dadomatch.shared.feature.icebreaker.domain.usecase.NoRollsRemainingException
@@ -12,15 +11,13 @@ import com.dadomatch.shared.feature.onboarding.domain.usecase.GetOnboardingStatu
 import com.dadomatch.shared.feature.onboarding.domain.usecase.SetOnboardingStatusUseCase
 import com.dadomatch.shared.feature.subscription.domain.model.SubscriptionTier
 import com.dadomatch.shared.feature.subscription.domain.usecase.CheckEntitlementUseCase
+import com.dadomatch.shared.feature.subscription.domain.usecase.GetLanguageUseCase
 import com.dadomatch.shared.feature.subscription.domain.usecase.GetSubscriptionStatusUseCase
 import com.dadomatch.shared.feature.success.domain.model.SuccessRecord
 import com.dadomatch.shared.feature.success.domain.usecase.AddSuccessUseCase
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
+import com.dadomatch.shared.core.util.Resource
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -33,22 +30,29 @@ class HomeViewModel(
     private val checkEntitlementUseCase: CheckEntitlementUseCase,
     private val getSubscriptionStatusUseCase: GetSubscriptionStatusUseCase,
     private val getOnboardingStatusUseCase: GetOnboardingStatusUseCase,
-    private val setOnboardingStatusUseCase: SetOnboardingStatusUseCase
+    private val setOnboardingStatusUseCase: SetOnboardingStatusUseCase,
+    private val getLanguageUseCase: GetLanguageUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
-    private val _events = MutableSharedFlow<HomeEvent>(
-        extraBufferCapacity = 16,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
-    )
-    val events: SharedFlow<HomeEvent> = _events.asSharedFlow()
-
     init {
         observeSubscriptionStatus()
         observeOnboardingStatus()
     }
+
+    // ── Language ──────────────────────────────────────────────────────────────
+
+    fun loadLanguage(deviceLanguage: String) {
+        viewModelScope.launch {
+            getLanguageUseCase(deviceLanguage).collect { lang ->
+                _uiState.update { it.copy(selectedLanguage = lang) }
+            }
+        }
+    }
+
+    // ── Subscription / Onboarding ─────────────────────────────────────────────
 
     private fun observeOnboardingStatus() {
         viewModelScope.launch {
@@ -68,10 +72,17 @@ class HomeViewModel(
     private fun observeSubscriptionStatus() {
         viewModelScope.launch {
             getSubscriptionStatusUseCase().collect { status ->
-                _uiState.update { it.copy(isPremium = status.tier == SubscriptionTier.PREMIUM) }
+                _uiState.update {
+                    it.copy(
+                        isPremium = status.tier != SubscriptionTier.FREE,
+                        dailyRollsRemaining = if (status.tier == SubscriptionTier.FREE) status.dailyRollsRemaining else null
+                    )
+                }
             }
         }
     }
+
+    // ── Roll Flow ─────────────────────────────────────────────────────────────
 
     fun onRollComplete(environment: String, intensity: String, language: String) {
         _uiState.update {
@@ -87,87 +98,32 @@ class HomeViewModel(
             val rollResult = rollDiceUseCase()
             if (rollResult.isFailure) {
                 val exception = rollResult.exceptionOrNull()
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        error = if (exception is NoRollsRemainingException) null else exception?.message
-                    )
+                if (exception is NoRollsRemainingException) {
+                    _uiState.update { it.copy(isLoading = false, showPaywallNudge = true) }
+                } else {
+                    _uiState.update { it.copy(isLoading = false, error = exception?.message) }
                 }
-                if (exception is NoRollsRemainingException) _events.emit(HomeEvent.NavigateToPaywall)
                 return@launch
             }
 
             if (!checkEntitlementUseCase.canAccessCategory(intensity)) {
-                _uiState.update { it.copy(isLoading = false) }
-                _events.emit(HomeEvent.NavigateToPaywall)
+                _uiState.update { it.copy(isLoading = false, showPaywallNudge = true) }
                 return@launch
             }
 
             when (val result = generateIcebreakerUseCase(environment, intensity, language)) {
-                is Resource.Success -> {
-                    _uiState.update {
-                        it.copy(isLoading = false, currentIcebreaker = result.data, showIcebreaker = true)
-                    }
-                }
+                is Resource.Success ->
+                    _uiState.update { it.copy(isLoading = false, icebreaker = result.data) }
                 is Resource.Error -> {
                     if (result.message == "no_ai_calls_available" || result.message == "daily_ai_limit_reached") {
-                        _uiState.update { it.copy(isLoading = false) }
-                        _events.emit(HomeEvent.NavigateToPaywall)
+                        _uiState.update { it.copy(isLoading = false, showPaywallNudge = true) }
                     } else {
                         _uiState.update { it.copy(isLoading = false, error = result.message) }
                     }
                 }
-                Resource.Loading -> Unit // unreachable from a suspend call
+                Resource.Loading -> Unit
             }
         }
-    }
-
-    fun onIcebreakerDismissed() {
-        _uiState.update { it.copy(showIcebreaker = false, showActionChoices = true) }
-    }
-
-    fun onActionChoice(used: Boolean) {
-        if (used) {
-            _uiState.update { it.copy(showActionChoices = false, showFeedbackDialog = true) }
-        } else {
-            resetDialogs()
-        }
-    }
-
-    fun onSubmitFeedback(feedback: IcebreakerFeedback) {
-        _uiState.update { it.copy(showFeedbackDialog = false) }
-        viewModelScope.launch {
-            val state = _uiState.value
-            val now = kotlin.time.Clock.System.now()
-            submitFeedbackUseCase(state.currentIcebreaker, feedback)
-            addSuccessUseCase(
-                SuccessRecord(
-                    id = now.toEpochMilliseconds().toString(),
-                    date = now,
-                    environment = state.lastEnvironment,
-                    intensity = state.lastIntensity,
-                    icebreaker = state.currentIcebreaker,
-                    wasSuccessful = feedback == IcebreakerFeedback.GOOD || feedback == IcebreakerFeedback.USED
-                )
-            )
-            resetDialogs()
-        }
-    }
-
-    fun dismissIcebreaker() {
-        _uiState.update { it.copy(showIcebreaker = false) }
-    }
-
-    fun dismissError() {
-        _uiState.update { it.copy(error = null) }
-    }
-
-    fun showAuth() {
-        _uiState.update { it.copy(showAuth = true) }
-    }
-
-    fun hideAuth() {
-        _uiState.update { it.copy(showAuth = false) }
     }
 
     fun onRetryRoll() {
@@ -175,28 +131,95 @@ class HomeViewModel(
         onRollComplete(state.lastEnvironment, state.lastIntensity, state.lastLanguage)
     }
 
-    private fun resetDialogs() {
-        _uiState.update {
-            it.copy(showIcebreaker = false, showActionChoices = false, showFeedbackDialog = false)
+    // ── Icebreaker Dialog ─────────────────────────────────────────────────────
+
+    fun dismissIcebreaker() {
+        _uiState.update { it.copy(icebreaker = null) }
+    }
+
+    // ── Action Choice ─────────────────────────────────────────────────────────
+
+    fun dismissActionChoice() {
+        _uiState.update { it.copy(actionChoiceIcebreaker = null) }
+    }
+
+    fun copyToClipboard(@Suppress("UNUSED_PARAMETER") text: String) {
+        // Clipboard is handled by ActionChoiceDialog internally via LocalClipboardManager.
+        // This method signals completion and closes the action sheet.
+        _uiState.update { it.copy(actionChoiceIcebreaker = null) }
+    }
+
+    fun shareIcebreaker(@Suppress("UNUSED_PARAMETER") text: String) {
+        // Platform share intent is handled by expect/actual; dismiss the sheet.
+        _uiState.update { it.copy(actionChoiceIcebreaker = null) }
+    }
+
+    // ── Feedback Dialog ───────────────────────────────────────────────────────
+
+    fun showFeedbackDialog() {
+        _uiState.update { it.copy(showFeedbackDialog = true) }
+    }
+
+    fun dismissFeedbackDialog() {
+        _uiState.update { it.copy(showFeedbackDialog = false) }
+    }
+
+    fun submitFeedback(rating: Int, comment: String) {
+        viewModelScope.launch {
+            val state = _uiState.value
+            val feedback = if (rating >= 3) IcebreakerFeedback.GOOD else IcebreakerFeedback.BAD
+            val now = kotlin.time.Clock.System.now()
+            submitFeedbackUseCase(state.icebreaker ?: state.lastEnvironment, feedback)
+            addSuccessUseCase(
+                SuccessRecord(
+                    id = now.toEpochMilliseconds().toString(),
+                    date = now,
+                    environment = state.lastEnvironment,
+                    intensity = state.lastIntensity,
+                    icebreaker = state.icebreaker ?: "",
+                    wasSuccessful = feedback == IcebreakerFeedback.GOOD
+                )
+            )
+            _uiState.update { it.copy(showFeedbackDialog = false) }
         }
+    }
+
+    // ── Auth Sheet ────────────────────────────────────────────────────────────
+
+    fun showAuth() {
+        _uiState.update { it.copy(showAuthSheet = true) }
+    }
+
+    fun dismissAuth() {
+        _uiState.update { it.copy(showAuthSheet = false) }
+    }
+
+    // ── Paywall Nudge ─────────────────────────────────────────────────────────
+
+    fun dismissPaywallNudge() {
+        _uiState.update { it.copy(showPaywallNudge = false) }
+    }
+
+    // ── Error ─────────────────────────────────────────────────────────────────
+
+    fun clearError() {
+        _uiState.update { it.copy(error = null) }
     }
 }
 
 data class HomeUiState(
     val isLoading: Boolean = false,
-    val showIcebreaker: Boolean = false,
-    val showActionChoices: Boolean = false,
+    val icebreaker: String? = null,
+    val actionChoiceIcebreaker: String? = null,
     val showFeedbackDialog: Boolean = false,
     val isPremium: Boolean = false,
-    val currentIcebreaker: String = "",
+    val dailyRollsRemaining: Int? = null,
     val error: String? = null,
     val showOnboarding: Boolean = false,
-    val showAuth: Boolean = false,
+    val showAuthSheet: Boolean = false,
+    val showPaywallNudge: Boolean = false,
     val lastEnvironment: String = "",
     val lastIntensity: String = "",
-    val lastLanguage: String = "en"
+    val lastLanguage: String = "en",
+    val selectedLanguage: String = "en"
 )
-
-sealed class HomeEvent {
-    data object NavigateToPaywall : HomeEvent()
-}

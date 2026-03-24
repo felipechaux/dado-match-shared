@@ -7,18 +7,33 @@
     <string name="environment_label">Environment</string>
     <string name="intensity_label">Intensity</string>
     <string name="launch_button">LAUNCH</string>
+    <string name="surprise_me_button">Surprise me</string>
     <string name="rolling_rizz">Cooking your Rizz...</string>
+    <string name="rolling_rizz_2">Calibrating charisma...</string>
+    <string name="rolling_rizz_3">Warming up the rizz engine...</string>
+    <string name="rolling_rizz_4">Unlocking confidence mode...</string>
+    <string name="rolling_rizz_5">Analyzing your vibes...</string>
+    <string name="rolling_rizz_6">Generating social magic...</string>
     <string name="error_title">Oops!</string>
     <string name="ok_button">OK</string>
     <string name="error_message_generic">Something went wrong with the AI</string>
     <string name="error_button_retry">Try Again</string>
-    
+    <string name="rolls_left_today">%d rolls left today</string>
+    <string name="no_rolls_left">No rolls left — upgrade for more ✨</string>
+    <string name="sign_in_for_rolls">Sign in for 10 free daily rolls</string>
+    <string name="sign_in_nudge_subtitle">Tap to create your free account</string>
+
     <!-- Environments -->
     <string name="env_gym">Gym</string>
     <string name="env_party">Party</string>
-    <string name="env_library">Library</string>
+    <string name="env_bar">Bar</string>
     <string name="env_cafe">Cafe</string>
-    
+    <string name="env_beach">Beach</string>
+    <string name="env_work">Work</string>
+    <string name="env_online">Online</string>
+    <string name="env_concert">Concert</string>
+    <string name="env_library">Library</string>
+
     <!-- Intensities -->
     <string name="int_cringe">Cringe</string>
     <string name="int_romantic">Romantic</string>
@@ -37,14 +52,23 @@
     <!-- Dialogs -->
     <string name="icebreaker_title">Your Icebreaker!</string>
     <string name="got_it_button">I GOT IT!</string>
+    <string name="reroll_button">Try another</string>
+    <string name="copy_button">Copy</string>
+    <string name="copied_button">Copied!</string>
     <string name="did_you_use_it_title">Did you use it?</string>
     <string name="did_you_use_it_desc">Tell us if you launched it!</string>
     <string name="yes_button">YES!</string>
     <string name="not_yet_button">NOT YET</string>
     <string name="how_did_it_go_title">How did it go?</string>
-    <string name="feedback_desc">Your feedback helps us improve the Rizz.</string>
+    <string name="feedback_desc">Rate the icebreaker</string>
     <string name="top_feedback">Top</string>
     <string name="cringe_feedback">Cringe</string>
+    <string name="feedback_rating_cringe">Cringe</string>
+    <string name="feedback_rating_meh">Meh</string>
+    <string name="feedback_rating_good">Good</string>
+    <string name="feedback_rating_fire">Fire!</string>
+    <string name="feedback_submit_button">Submit</string>
+    <string name="feedback_skip_button">Skip</string>
     
     <!-- Navigation -->
     <string name="nav_home">Home</string>
@@ -97,6 +121,9 @@
     <string name="auth_google_button">Sign in with Google</string>
     <string name="auth_terms_condition">By continuing, you agree to the terms and conditions</string>
     
+    <!-- Settings - Language -->
+    <string name="language_label">Language</string>
+
     <!-- Profile Screen -->
     <string name="profile_title">Profile</string>
     <string name="profile_display_name">Display Name</string>

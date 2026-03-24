@@ -24,6 +24,8 @@ val subscriptionModule = module {
     factoryOf(::CheckEntitlementUseCase)
     factoryOf(::RestorePurchasesUseCase)
     factoryOf(::GetAvailableProductsUseCase)
+    factoryOf(::GetLanguageUseCase)
+    factoryOf(::SetLanguageUseCase)
     
     viewModelOf(::SubscriptionViewModel)
 }
