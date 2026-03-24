@@ -24,9 +24,12 @@ data class SubscriptionStatus(
     
     /** Whether this is a lifetime subscription */
     val isLifetime: Boolean = false,
-    
+
     /** Subscription renewal period identifier (e.g., "P1M") */
-    val renewalPeriod: String? = null
+    val renewalPeriod: String? = null,
+
+    /** Number of AI (Gemini) calls remaining today (0 for free users) */
+    val dailyAiCallsRemaining: Int = 0
 ) {
     /**
      * Check if user has a specific entitlement
@@ -35,6 +38,13 @@ data class SubscriptionStatus(
         return entitlements.contains(entitlement)
     }
     
+    /**
+     * Gemini model name to use for this user's tier.
+     * Lifetime users get the full flash model; everyone else gets flash-lite.
+     */
+    val geminiModelName: String
+        get() = if (isLifetime) "gemini-2.5-flash" else "gemini-2.5-flash-lite"
+
     /**
      * Check if user can roll dice
      */

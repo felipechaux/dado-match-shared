@@ -57,6 +57,17 @@ interface SubscriptionRepository {
     suspend fun resetDailyRolls()
 
     /**
+     * Decrement daily AI (Gemini) call count for premium users
+     * @return Updated subscription status
+     */
+    suspend fun decrementDailyAiCalls(): Result<SubscriptionStatus>
+
+    /**
+     * Reset daily AI call count (called at midnight or after tier upgrade)
+     */
+    suspend fun resetDailyAiCalls()
+
+    /**
      * Link current user with RevenueCat ID
      */
     suspend fun logIn(userId: String): Result<SubscriptionStatus>

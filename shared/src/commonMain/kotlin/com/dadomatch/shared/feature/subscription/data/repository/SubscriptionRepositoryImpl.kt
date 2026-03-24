@@ -7,6 +7,7 @@ import com.dadomatch.shared.feature.subscription.data.remote.RevenueCatService
 import com.dadomatch.shared.feature.subscription.domain.model.Entitlement
 import com.dadomatch.shared.feature.subscription.domain.model.Product
 import com.dadomatch.shared.feature.subscription.domain.model.SubscriptionStatus
+import com.dadomatch.shared.feature.subscription.domain.model.SubscriptionTier
 import com.dadomatch.shared.feature.subscription.domain.repository.SubscriptionRepository
 import com.dadomatch.shared.feature.auth.domain.repository.AuthRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -36,21 +37,19 @@ class SubscriptionRepositoryImpl(
                 // Anonymous/guest users have no trial — must sign in to get rolls
                 emit(SubscriptionStatus.free(0))
             } else {
-                // Logged-in identified user: combine cached RC info + live local roll count.
-                // No network calls inside the flow — counter must update instantly on decrement.
+                // Logged-in identified user: combine cached RC info + live local counters.
+                // No network calls inside the flow — counters must update instantly on decrement.
                 combine(
                     revenueCatService.customerInfoFlow,
-                    localDataSource.getDailyRollsRemaining()
-                ) { customerInfo, dailyRolls ->
-                    if (customerInfo != null) {
-                        // Use cached RC data to determine Pro vs Free
+                    localDataSource.getDailyRollsRemaining(),
+                    localDataSource.getDailyAiCallsRemaining()
+                ) { customerInfo, dailyRolls, rawAiCalls ->
+                    val status = if (customerInfo != null) {
                         customerInfo.toSubscriptionStatus(dailyRolls)
                     } else {
-                        // RC not fetched yet — emit Free immediately.
-                        // loadSubscriptionData() will call getCustomerInfo() on startup,
-                        // which updates customerInfoFlow and triggers an automatic re-emit.
                         SubscriptionStatus.free(dailyRolls)
                     }
+                    status.copy(dailyAiCallsRemaining = resolveAiCalls(status, rawAiCalls))
                 }.collect { status -> emit(status) }
             }
         }
@@ -58,19 +57,18 @@ class SubscriptionRepositoryImpl(
 
     override suspend fun getCurrentSubscriptionStatus(): Result<SubscriptionStatus> {
         return try {
-            // Get current Firebase auth state — may be null if still loading
             val user = authRepository.currentUser.first()
             val isAnonymous = user?.isAnonymous ?: true
             val dailyRolls = localDataSource.getDailyRollsRemaining().first()
 
             if (isAnonymous) {
-                // Anonymous users have no trial — must sign in
                 Result.success(SubscriptionStatus.free(0))
             } else {
-                // Fetch fresh data from RevenueCat for this real user
                 val customerInfoResult = revenueCatService.getCustomerInfo()
+                val rawAiCalls = localDataSource.getDailyAiCallsRemaining().first()
                 customerInfoResult.map { customerInfo ->
-                    customerInfo.toSubscriptionStatus(dailyRolls)
+                    val status = customerInfo.toSubscriptionStatus(dailyRolls)
+                    status.copy(dailyAiCallsRemaining = resolveAiCalls(status, rawAiCalls))
                 }
             }
         } catch (e: Exception) {
@@ -149,6 +147,56 @@ class SubscriptionRepositoryImpl(
         }
     }
     
+    // ── AI Call Helpers ────────────────────────────────────────────────────────
+
+    /** Max AI calls per day for a given subscription status. */
+    private fun maxAiCallsFor(status: SubscriptionStatus): Int = when {
+        status.tier == SubscriptionTier.FREE -> 0
+        status.isLifetime -> 100
+        else -> 50
+    }
+
+    /**
+     * Resolve raw stored AI calls to a concrete value:
+     *  - if unset (-1 sentinel), use the tier maximum so the first generation is not blocked
+     *  - otherwise cap at the tier max (guards against tier downgrade)
+     */
+    private fun resolveAiCalls(status: SubscriptionStatus, rawAiCalls: Int): Int {
+        val max = maxAiCallsFor(status)
+        if (max == 0) return 0
+        return if (rawAiCalls < 0) max else minOf(rawAiCalls, max)
+    }
+
+    override suspend fun decrementDailyAiCalls(): Result<SubscriptionStatus> {
+        return try {
+            val user = authRepository.currentUser.first()
+            val isAnonymous = user?.isAnonymous ?: true
+            if (isAnonymous) return Result.success(SubscriptionStatus.free(0))
+
+            val cachedCustomerInfo = revenueCatService.customerInfoFlow.first()
+            val hasPremium = revenueCatService.hasPremiumAccess(cachedCustomerInfo)
+            if (!hasPremium) return Result.success(SubscriptionStatus.free(0))
+
+            val newAiCalls = localDataSource.decrementDailyAiCalls()
+            val dailyRolls = localDataSource.getDailyRollsRemaining().first()
+            val status = cachedCustomerInfo?.toSubscriptionStatus(dailyRolls)
+                ?: SubscriptionStatus.premium()
+            Result.success(status.copy(dailyAiCallsRemaining = maxOf(0, newAiCalls)))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun resetDailyAiCalls() {
+        if (localDataSource.shouldResetDailyAiCalls()) {
+            val cachedInfo = revenueCatService.customerInfoFlow.first()
+            val dailyRolls = localDataSource.getDailyRollsRemaining().first()
+            val status = cachedInfo?.toSubscriptionStatus(dailyRolls) ?: return
+            val max = maxAiCallsFor(status)
+            if (max > 0) localDataSource.resetDailyAiCalls(max)
+        }
+    }
+
     override suspend fun decrementDailyRolls(): Result<SubscriptionStatus> {
         return try {
             val user = authRepository.currentUser.first()
@@ -195,9 +243,16 @@ class SubscriptionRepositoryImpl(
         return try {
             val loginResult = revenueCatService.logIn(userId)
             val dailyRolls = localDataSource.getDailyRollsRemaining().first()
-            
+
             loginResult.map { customerInfo ->
-                customerInfo.toSubscriptionStatus(dailyRolls)
+                val status = customerInfo.toSubscriptionStatus(dailyRolls)
+                // Initialise AI calls counter on login if it hasn't been set yet or needs a daily reset
+                val max = maxAiCallsFor(status)
+                if (max > 0 && localDataSource.shouldResetDailyAiCalls()) {
+                    localDataSource.resetDailyAiCalls(max)
+                }
+                val rawAiCalls = localDataSource.getDailyAiCallsRemaining().first()
+                status.copy(dailyAiCallsRemaining = resolveAiCalls(status, rawAiCalls))
             }
         } catch (e: Exception) {
             Result.failure(e)

@@ -22,8 +22,12 @@ class SubscriptionLocalDataSource(
         private val LAST_ROLL_RESET_DATE = longPreferencesKey("last_roll_reset_date")
         private val SUBSCRIPTION_TIER = stringPreferencesKey("subscription_tier")
         private val IS_PREMIUM = stringPreferencesKey("is_premium")
-        
+        private val DAILY_AI_CALLS_REMAINING = intPreferencesKey("daily_ai_calls_remaining")
+        private val LAST_AI_CALLS_RESET_DATE = longPreferencesKey("last_ai_calls_reset_date")
+
         const val DEFAULT_DAILY_ROLLS = 10
+        // -1 sentinel means "not yet initialized — use tier default on first read"
+        const val AI_CALLS_UNSET = -1
     }
     
     /**
@@ -93,6 +97,50 @@ class SubscriptionLocalDataSource(
         return millisDiff > dayInMillis
     }
     
+    // ── Daily AI Calls ─────────────────────────────────────────────────────────
+
+    /** Returns raw stored AI calls count. -1 means "not yet initialised — use tier default". */
+    fun getDailyAiCallsRemaining(): Flow<Int> {
+        return dataStore.data.map { preferences ->
+            preferences[DAILY_AI_CALLS_REMAINING] ?: AI_CALLS_UNSET
+        }
+    }
+
+    suspend fun setDailyAiCallsRemaining(count: Int) {
+        dataStore.edit { preferences ->
+            preferences[DAILY_AI_CALLS_REMAINING] = count
+        }
+    }
+
+    /** Decrements by 1 (floor 0) and returns the new count. */
+    suspend fun decrementDailyAiCalls(): Int {
+        var newCount = 0
+        dataStore.edit { preferences ->
+            val current = preferences[DAILY_AI_CALLS_REMAINING] ?: 0
+            newCount = maxOf(0, current - 1)
+            preferences[DAILY_AI_CALLS_REMAINING] = newCount
+        }
+        return newCount
+    }
+
+    /** Resets count to [maxCalls] and records the reset timestamp. */
+    suspend fun resetDailyAiCalls(maxCalls: Int) {
+        dataStore.edit { preferences ->
+            preferences[DAILY_AI_CALLS_REMAINING] = maxCalls
+            preferences[LAST_AI_CALLS_RESET_DATE] = kotlin.time.Clock.System.now().toEpochMilliseconds()
+        }
+    }
+
+    /** Returns true if more than 24 h have passed since the last AI calls reset (or never reset). */
+    suspend fun shouldResetDailyAiCalls(): Boolean {
+        val lastReset = dataStore.data.map { it[LAST_AI_CALLS_RESET_DATE] }.first()
+        if (lastReset == null) return true
+        val millisDiff = kotlin.time.Clock.System.now().toEpochMilliseconds() - lastReset
+        return millisDiff > 24L * 60L * 60L * 1000L
+    }
+
+    // ── Premium Status Cache ───────────────────────────────────────────────────
+
     /**
      * Cache premium status
      */

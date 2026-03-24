@@ -110,7 +110,12 @@ class HomeViewModel(
                     }
                 }
                 is Resource.Error -> {
-                    _uiState.update { it.copy(isLoading = false, error = result.message) }
+                    if (result.message == "no_ai_calls_available" || result.message == "daily_ai_limit_reached") {
+                        _uiState.update { it.copy(isLoading = false) }
+                        _events.emit(HomeEvent.NavigateToPaywall)
+                    } else {
+                        _uiState.update { it.copy(isLoading = false, error = result.message) }
+                    }
                 }
                 Resource.Loading -> Unit // unreachable from a suspend call
             }
