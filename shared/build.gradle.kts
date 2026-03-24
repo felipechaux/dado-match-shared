@@ -239,6 +239,10 @@ buildkonfig {
                 ?: System.getenv("GEMINI_MODEL_NAME")
                 ?: "gemini-2.5-flash-lite"
 
+        val geminiPremiumModelName = localProperties.getProperty("GEMINI_PREMIUM_MODEL_NAME")
+                ?: System.getenv("GEMINI_PREMIUM_MODEL_NAME")
+                ?: "gemini-2.5-flash"
+
         
         val revenueCatApiKey = if (isProduction) {
             localProperties.getProperty("PROD_REVENUECAT_API_KEY") 
@@ -269,6 +273,7 @@ buildkonfig {
 
         buildConfigField(STRING, "GEMINI_API_KEY", geminiApiKey)
         buildConfigField(STRING, "GEMINI_MODEL_NAME", geminiModelName)
+        buildConfigField(STRING, "GEMINI_PREMIUM_MODEL_NAME", geminiPremiumModelName)
         buildConfigField(STRING, "REVENUECAT_API_KEY", revenueCatApiKey)
         buildConfigField(STRING, "API_BASE_URL", apiBaseUrl)
         buildConfigField(STRING, "GOOGLE_WEB_CLIENT_ID", googleWebClientId)
