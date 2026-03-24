@@ -22,7 +22,6 @@ val subscriptionModule = module {
     
     factoryOf(::GetSubscriptionStatusUseCase)
     factoryOf(::CheckEntitlementUseCase)
-    factoryOf(::PurchaseSubscriptionUseCase)
     factoryOf(::RestorePurchasesUseCase)
     factoryOf(::GetAvailableProductsUseCase)
     

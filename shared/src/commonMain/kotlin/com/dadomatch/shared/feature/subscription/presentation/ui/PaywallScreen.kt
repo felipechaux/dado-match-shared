@@ -40,14 +40,14 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.SheetValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.background
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.style.TextAlign
 import com.revenuecat.purchases.kmp.models.CustomerInfo
 import com.revenuecat.purchases.kmp.models.StoreTransaction
@@ -59,7 +59,7 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PaywallScreen(onDismiss: () -> Unit = {}) {
+fun PaywallScreen(onDismiss: () -> Unit = {}, onPurchaseSuccess: () -> Unit = {}) {
     val viewModel: SubscriptionViewModel = koinViewModel()
     val authViewModel: AuthViewModel = koinViewModel()
     
@@ -136,13 +136,11 @@ fun PaywallScreen(onDismiss: () -> Unit = {}) {
                             customerInfo: CustomerInfo,
                             storeTransaction: StoreTransaction
                         ) {
-                            // Just refresh status; the ViewModel will detect the tier change 
-                            // and trigger the confetti celebration automatically.
-                            viewModel.refreshStatus()
+                            onPurchaseSuccess()
                         }
-                        
+
                         override fun onRestoreCompleted(customerInfo: CustomerInfo) {
-                            viewModel.refreshStatus()
+                            onPurchaseSuccess()
                         }
                     }
                 }

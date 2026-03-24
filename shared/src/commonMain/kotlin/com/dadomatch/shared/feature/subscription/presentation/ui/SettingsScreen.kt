@@ -23,14 +23,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import com.dadomatch.shared.presentation.viewmodel.SubscriptionEvent
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -52,23 +50,16 @@ import org.koin.compose.viewmodel.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onNavigateToPaywall: () -> Unit = {}
+    onNavigateToPaywall: () -> Unit = {},
+    showConfettiOnEnter: Boolean = false,
+    onConfettiConsumed: () -> Unit = {}
 ) {
     val viewModel: SubscriptionViewModel = koinViewModel()
     val authViewModel: AuthViewModel = koinViewModel()
     val scrollState = rememberScrollState()
-    var showConfetti by remember { mutableStateOf(false) }
     val authUiState by authViewModel.uiState.collectAsState()
-
-    LaunchedEffect(Unit) {
-        viewModel.events.collect { event ->
-            when (event) {
-                SubscriptionEvent.ShowConfetti -> showConfetti = true
-                else -> Unit
-            }
-        }
-    }
     val isAnonymous = authUiState.user?.isAnonymous ?: true
+    var showConfetti by remember(showConfettiOnEnter) { mutableStateOf(showConfettiOnEnter) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -114,7 +105,10 @@ fun SettingsScreen(
         
         if (showConfetti) {
             ConfettiOverlay(
-                onAnimationEnd = { showConfetti = false }
+                onAnimationEnd = {
+                    showConfetti = false
+                    onConfettiConsumed()
+                }
             )
         }
     }

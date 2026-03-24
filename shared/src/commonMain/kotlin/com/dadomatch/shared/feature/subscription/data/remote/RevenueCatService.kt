@@ -3,6 +3,7 @@ package com.dadomatch.shared.feature.subscription.data.remote
 import com.dadomatch.shared.feature.subscription.domain.model.Entitlement
 import com.revenuecat.purchases.kmp.Purchases
 import com.revenuecat.purchases.kmp.PurchasesConfiguration
+import com.revenuecat.purchases.kmp.models.CacheFetchPolicy
 import com.revenuecat.purchases.kmp.models.CustomerInfo
 import com.revenuecat.purchases.kmp.models.Offerings
 import com.revenuecat.purchases.kmp.models.StoreProduct
@@ -138,7 +139,6 @@ class RevenueCatService {
                         // store subscription (e.g. purchased while anonymous) to this ID.
                         Purchases.sharedInstance.restorePurchases(
                             onError = { _ ->
-                                // Restore failed — fall back to the bare customerInfo
                                 _customerInfoFlow.value = customerInfo
                                 continuation.resume(Result.success(customerInfo))
                             },
@@ -148,8 +148,19 @@ class RevenueCatService {
                             }
                         )
                     } else {
-                        _customerInfoFlow.value = customerInfo
-                        continuation.resume(Result.success(customerInfo))
+                        // Force a server fetch (bypass local cache) so we always reflect
+                        // the real subscription state from RC's servers after login.
+                        Purchases.sharedInstance.getCustomerInfo(
+                            fetchPolicy = CacheFetchPolicy.FETCH_CURRENT,
+                            onError = { _ ->
+                                _customerInfoFlow.value = customerInfo
+                                continuation.resume(Result.success(customerInfo))
+                            },
+                            onSuccess = { freshInfo ->
+                                _customerInfoFlow.value = freshInfo
+                                continuation.resume(Result.success(freshInfo))
+                            }
+                        )
                     }
                 },
                 newAppUserID = userId

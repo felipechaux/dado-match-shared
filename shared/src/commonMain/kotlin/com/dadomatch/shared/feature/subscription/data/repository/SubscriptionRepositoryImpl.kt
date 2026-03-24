@@ -33,10 +33,8 @@ class SubscriptionRepositoryImpl(
             val isLoggedIn = user != null && !user.isAnonymous
 
             if (!isLoggedIn) {
-                // Guest/anonymous: roll counter lives entirely in local DataStore
-                localDataSource.getDailyRollsRemaining().collect { dailyRolls ->
-                    emit(SubscriptionStatus.free(dailyRolls))
-                }
+                // Anonymous/guest users have no trial — must sign in to get rolls
+                emit(SubscriptionStatus.free(0))
             } else {
                 // Logged-in identified user: combine cached RC info + live local roll count.
                 // No network calls inside the flow — counter must update instantly on decrement.
@@ -66,7 +64,8 @@ class SubscriptionRepositoryImpl(
             val dailyRolls = localDataSource.getDailyRollsRemaining().first()
 
             if (isAnonymous) {
-                Result.success(SubscriptionStatus.free(dailyRolls))
+                // Anonymous users have no trial — must sign in
+                Result.success(SubscriptionStatus.free(0))
             } else {
                 // Fetch fresh data from RevenueCat for this real user
                 val customerInfoResult = revenueCatService.getCustomerInfo()
@@ -157,11 +156,12 @@ class SubscriptionRepositoryImpl(
 
             // Use cached customerInfo to avoid a blocking network call on every roll
             val cachedCustomerInfo = revenueCatService.customerInfoFlow.first()
-            val hasPremium = if (isAnonymous) {
-                false
-            } else {
-                revenueCatService.hasPremiumAccess(cachedCustomerInfo)
+            // Anonymous users cannot roll — return 0 immediately
+            if (isAnonymous) {
+                return Result.success(SubscriptionStatus.free(0))
             }
+
+            val hasPremium = revenueCatService.hasPremiumAccess(cachedCustomerInfo)
 
             val dailyRolls = localDataSource.getDailyRollsRemaining().first()
 
