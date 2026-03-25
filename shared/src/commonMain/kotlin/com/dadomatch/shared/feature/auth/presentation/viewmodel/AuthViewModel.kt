@@ -38,7 +38,7 @@ class AuthViewModel(
     init {
         viewModelScope.launch {
             authRepository.currentUser.collect { user ->
-                _uiState.update { it.copy(user = user) }
+                _uiState.update { it.copy(user = user, isInitialized = true) }
             }
         }
     }
@@ -95,6 +95,7 @@ class AuthViewModel(
 
 data class AuthUiState(
     val isLoading: Boolean = false,
+    val isInitialized: Boolean = false,
     val user: AuthUser? = null,
     val error: String? = null
 )

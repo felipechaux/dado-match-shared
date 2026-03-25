@@ -88,7 +88,8 @@ fun HomeScreen(
     val uiState     by viewModel.uiState.collectAsState()
     val authUiState by authViewModel.uiState.collectAsState()
 
-    val isAnonymous = authUiState.user?.isAnonymous ?: true
+    // Only show banner after auth is initialized to avoid flashing on load
+    val isAnonymous = authUiState.isInitialized && authUiState.user?.isAnonymous != false
 
     val deviceLanguage = Locale.current.language.take(2)
     LaunchedEffect(Unit) { viewModel.loadLanguage(deviceLanguage) }
