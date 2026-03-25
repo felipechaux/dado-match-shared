@@ -30,6 +30,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.dadomatch.shared.feature.icebreaker.presentation.ui.HomeScreen
+import com.dadomatch.shared.feature.icebreaker.presentation.viewmodel.HomeViewModel
 import com.dadomatch.shared.feature.subscription.domain.usecase.GetLanguageUseCase
 import com.dadomatch.shared.feature.subscription.presentation.ui.PaywallScreen
 import com.dadomatch.shared.feature.subscription.presentation.ui.ProfileScreen
@@ -40,6 +41,7 @@ import com.dadomatch.shared.presentation.ui.screens.SplashScreen
 import com.dadomatch.shared.presentation.ui.theme.DeepDarkBlue
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 
 // Tab order determines slide direction: higher index → slide from right, lower → from left
 private val TAB_ORDER = listOf(
@@ -66,7 +68,12 @@ fun AppNavigation(
     val currentRoute = navBackStackEntry?.destination?.route
     var showConfettiOnSettings by remember { mutableStateOf(false) }
 
-    val showBottomBar = currentRoute != Screen.Splash.route && currentRoute != Screen.Paywall.route
+    val homeViewModel: HomeViewModel = koinViewModel()
+    val homeUiState by homeViewModel.uiState.collectAsState()
+
+    val showBottomBar = currentRoute != Screen.Splash.route &&
+                        currentRoute != Screen.Paywall.route &&
+                        !homeUiState.showOnboarding
 
     LocaleProvider(languageCode = selectedLanguage) {
     Scaffold(containerColor = DeepDarkBlue) { paddingValues ->

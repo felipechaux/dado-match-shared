@@ -57,7 +57,7 @@ class HomeViewModel(
     private fun observeOnboardingStatus() {
         viewModelScope.launch {
             getOnboardingStatusUseCase().collect { isCompleted ->
-                _uiState.update { it.copy(showOnboarding = !isCompleted) }
+                _uiState.update { it.copy(showOnboarding = !isCompleted, isOnboardingReady = true) }
             }
         }
     }
@@ -231,6 +231,7 @@ data class HomeUiState(
     val error: String? = null,
     val rateLimitError: Boolean = false,
     val noInternetError: Boolean = false,
+    val isOnboardingReady: Boolean = false,
     val showOnboarding: Boolean = false,
     val showAuthSheet: Boolean = false,
     val showPaywallNudge: Boolean = false,

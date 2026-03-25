@@ -34,6 +34,7 @@ import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dadomatch.shared.feature.auth.presentation.ui.AuthBottomSheet
+import com.dadomatch.shared.feature.onboarding.presentation.ui.OnboardingScreen
 import com.dadomatch.shared.feature.auth.presentation.viewmodel.AuthViewModel
 import com.dadomatch.shared.feature.icebreaker.presentation.ui.components.ActionChoiceDialog
 import com.dadomatch.shared.feature.icebreaker.presentation.ui.components.FeedbackDialog
@@ -116,8 +117,8 @@ fun HomeScreen(
 
     Box(modifier = Modifier.fillMaxSize().background(DeepDarkBlue)) {
 
-        // ── Main content ──────────────────────────────────────────────────────
-        HomeContent(
+        // ── Main content — hidden until onboarding status is resolved ─────────
+        if (uiState.isOnboardingReady && !uiState.showOnboarding) HomeContent(
             environments       = environments,
             intensities        = intensities,
             selectedEnvironment = selectedEnvironment,
@@ -295,6 +296,11 @@ fun HomeScreen(
 
         if (uiState.isLoading && !rolling) {
             LoadingOverlay(message = loadingMessage)
+        }
+
+        // ── Onboarding overlay — shown once on first launch ───────────────────
+        if (uiState.showOnboarding) {
+            OnboardingScreen(onDismiss = { viewModel.completeOnboarding() })
         }
     }
 }

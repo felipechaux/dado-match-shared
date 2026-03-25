@@ -117,9 +117,15 @@
     <string name="period_weekly">Weekly</string>
     
     <!-- Onboarding -->
-    <string name="onboarding_title">Welcome to DadoMatch!</string>
-    <string name="onboarding_description">Select an environment and intensity, then roll the dice to get the perfect icebreaker for any situation.</string>
     <string name="onboarding_button">LET'S START!</string>
+    <string name="onboarding_next">NEXT</string>
+    <string name="onboarding_back">← Back</string>
+    <string name="onboarding_1_title">Welcome to DadoMatch!</string>
+    <string name="onboarding_1_desc">Your AI-powered icebreaker for any situation. Stop overthinking — just roll.</string>
+    <string name="onboarding_2_title">Pick your vibe</string>
+    <string name="onboarding_2_desc">Choose an environment and intensity that matches the moment. Gym, bar, party — we've got you covered.</string>
+    <string name="onboarding_3_title">Roll &amp; connect</string>
+    <string name="onboarding_3_desc">Hit launch, get your personalized line, and go talk to them. That's it.</string>
     
     <!-- Auth Bottom Sheet -->
     <string name="auth_title">Save your Rizz 🎲</string>
