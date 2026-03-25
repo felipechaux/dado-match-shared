@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dadomatch.shared.presentation.ui.theme.NeonCyan
 import com.dadomatch.shared.presentation.ui.theme.NeonPink
+import com.dadomatch.shared.presentation.haptic.rememberHapticEngine
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import com.dadomatch.shared.presentation.ui.theme.AppTheme
@@ -57,6 +59,7 @@ fun RizzDice(
     onRollComplete: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val haptic = rememberHapticEngine()
     val infiniteTransition = rememberInfiniteTransition()
     
     val baseRotX by infiniteTransition.animateFloat(
@@ -96,12 +99,28 @@ fun RizzDice(
             val targetX = rollX.value + (360f * 4) + (90f * (0..3).random())
             val targetY = rollY.value + (360f * 4) + (90f * (0..3).random())
             val targetZ = rollZ.value + (360f * 4) + (90f * (0..3).random())
-            
+
+            // Haptic pattern: medium kick → light bounces → heavy success
+            launch {
+                haptic.medium()           // initial throw
+                delay(600)
+                haptic.light()            // first bounce
+                delay(500)
+                haptic.light()            // second bounce
+                delay(400)
+                haptic.light()            // third bounce (shorter intervals = slowing down)
+                delay(300)
+                haptic.light()
+                delay(200)
+                haptic.heavy()            // lands
+                delay(80)
+                haptic.success()          // result confirmed
+            }
+
             launch {
                 jumpOffset.animateTo(-60f, tween(200, easing = FastOutSlowInEasing))
                 jumpOffset.animateTo(0f, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow))
             }
-            
             launch {
                 rollX.animateTo(targetX, tween(2500, easing = FastOutSlowInEasing))
             }

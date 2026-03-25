@@ -51,6 +51,7 @@ import com.dadomatch.shared.presentation.viewmodel.SubscriptionViewModel
 import com.dadomatch.shared.shared.generated.resources.Res
 import com.dadomatch.shared.shared.generated.resources.language_label
 import com.dadomatch.shared.shared.generated.resources.settings_title
+import com.dadomatch.shared.presentation.haptic.rememberHapticEngine
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -72,6 +73,7 @@ fun SettingsScreen(
     val isAnonymous = authUiState.user?.isAnonymous ?: true
     var showConfetti by remember(showConfettiOnEnter) { mutableStateOf(showConfettiOnEnter) }
     val coroutineScope = rememberCoroutineScope()
+    val haptic = rememberHapticEngine()
     val deviceLanguage = Locale.current.language.take(2)
     val languageFlow = remember(getLanguageUseCase) { getLanguageUseCase(deviceLanguage) }
     val selectedLanguage by languageFlow.collectAsState(initial = deviceLanguage)
@@ -128,6 +130,7 @@ fun SettingsScreen(
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(if (isSelected) NeonCyan.copy(alpha = 0.15f) else Color.Transparent)
                                 .clickable {
+                                    haptic.light()
                                     coroutineScope.launch { setLanguageUseCase(code) }
                                 }
                                 .padding(horizontal = 20.dp, vertical = 10.dp),

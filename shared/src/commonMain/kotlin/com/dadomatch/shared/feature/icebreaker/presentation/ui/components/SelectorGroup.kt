@@ -26,6 +26,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.dadomatch.shared.presentation.haptic.rememberHapticEngine
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -66,6 +67,7 @@ fun SelectorGroup(
     isRestricted: (String) -> Boolean = { false }
 ) {
     val scrollState = rememberScrollState()
+    val haptic = rememberHapticEngine()
     val itemOffsets = remember { mutableStateMapOf<String, Float>() }
     val itemWidths = remember { mutableStateMapOf<String, Int>() }
     // Track the viewport width via the outer Box (not the scrollable Row content width)
@@ -117,7 +119,7 @@ fun SelectorGroup(
                                 color = if (isSelected) selectionColor else Color.Transparent,
                                 shape = RoundedCornerShape(20.dp)
                             )
-                            .clickable { onOptionSelected(option) }
+                            .clickable { haptic.light(); onOptionSelected(option) }
                             .padding(horizontal = 16.dp, vertical = 10.dp),
                         contentAlignment = Alignment.Center
                     ) {

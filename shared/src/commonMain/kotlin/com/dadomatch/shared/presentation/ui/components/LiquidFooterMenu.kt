@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.dadomatch.shared.presentation.haptic.rememberHapticEngine
 import com.dadomatch.shared.presentation.ui.navigation.Screen
 import com.dadomatch.shared.presentation.ui.theme.NeonCyan
 import com.dadomatch.shared.presentation.ui.theme.NeonPink
@@ -37,6 +38,7 @@ fun LiquidFooterMenu(
     val successesRoute = Screen.Successes.route
     val profileRoute = Screen.Profile.route
     val settingsRoute = Screen.Settings.route
+    val haptic = rememberHapticEngine()
 
     Box(
         modifier = Modifier
@@ -63,25 +65,25 @@ fun LiquidFooterMenu(
                     icon = Icons.Default.Home,
                     label = stringResource(Res.string.nav_home),
                     isSelected = currentRoute == homeRoute,
-                    onClick = { onNavigate(homeRoute) }
+                    onClick = { haptic.light(); onNavigate(homeRoute) }
                 )
                 FooterItem(
                     icon = Icons.Default.Star,
                     label = stringResource(Res.string.nav_success),
                     isSelected = currentRoute == successesRoute,
-                    onClick = { onNavigate(successesRoute) }
+                    onClick = { haptic.light(); onNavigate(successesRoute) }
                 )
                 FooterItem(
                     icon = Icons.Default.Person,
                     label = stringResource(Res.string.nav_profile),
                     isSelected = currentRoute == profileRoute,
-                    onClick = { onNavigate(profileRoute) }
+                    onClick = { haptic.light(); onNavigate(profileRoute) }
                 )
                 FooterItem(
                     icon = Icons.Default.Settings,
                     label = stringResource(Res.string.nav_settings),
                     isSelected = currentRoute == settingsRoute,
-                    onClick = { onNavigate(settingsRoute) }
+                    onClick = { haptic.light(); onNavigate(settingsRoute) }
                 )
             }
         }
