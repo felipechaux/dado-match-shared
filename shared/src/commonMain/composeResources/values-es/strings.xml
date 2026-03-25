@@ -79,6 +79,13 @@
     <!-- Error Fallbacks -->
     <string name="ai_error_fallback">¡Lánzate y dile hola!</string>
     <string name="ai_connection_error">Error al conectar con la IA: %s</string>
+    <string name="no_internet_title">Sin conexión 📡</string>
+    <string name="no_internet_message">Revisa tu Wi-Fi o datos móviles e inténtalo de nuevo.</string>
+    <string name="rate_limit_title">La IA está ocupada ☕</string>
+    <string name="rate_limit_message_premium">Nuestros servidores están gestionando muchas solicitudes en este momento. Es temporal — espera unos segundos e inténtalo de nuevo.</string>
+    <string name="rate_limit_message_free">Nuestra IA está un poco saturada ahora mismo. Espera unos segundos e inténtalo de nuevo, o mejora a Pro para una cuota dedicada con más límites.</string>
+    <string name="rate_limit_retry">Reintentar</string>
+    <string name="rate_limit_upgrade">Mejorar a Pro</string>
     
     <!-- Settings Screen -->
     <string name="settings_title">Ajustes</string>

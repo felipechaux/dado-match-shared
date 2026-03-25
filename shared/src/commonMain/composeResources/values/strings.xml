@@ -79,6 +79,13 @@
     <!-- Error Fallbacks -->
     <string name="ai_error_fallback">Launch and say hello!</string>
     <string name="ai_connection_error">Error connecting with AI: %s</string>
+    <string name="no_internet_title">No connection 📡</string>
+    <string name="no_internet_message">Check your Wi-Fi or mobile data and try again.</string>
+    <string name="rate_limit_title">AI is busy right now ☕</string>
+    <string name="rate_limit_message_premium">Our servers are handling a lot of requests at the moment. This is temporary — just wait a few seconds and try again.</string>
+    <string name="rate_limit_message_free">Our AI is a bit overwhelmed right now. Wait a few seconds and try again, or upgrade to Pro for a dedicated quota with higher limits.</string>
+    <string name="rate_limit_retry">Try Again</string>
+    <string name="rate_limit_upgrade">Upgrade to Pro</string>
     
     <!-- Settings Screen -->
     <string name="settings_title">Settings</string>

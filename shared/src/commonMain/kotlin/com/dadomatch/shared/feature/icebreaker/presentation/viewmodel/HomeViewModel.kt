@@ -115,10 +115,16 @@ class HomeViewModel(
                 is Resource.Success ->
                     _uiState.update { it.copy(isLoading = false, icebreaker = result.data) }
                 is Resource.Error -> {
-                    if (result.message == "no_ai_calls_available" || result.message == "daily_ai_limit_reached") {
-                        _uiState.update { it.copy(isLoading = false, showPaywallNudge = true) }
-                    } else {
-                        _uiState.update { it.copy(isLoading = false, error = result.message) }
+                    val msg = result.message
+                    when {
+                        msg == "no_ai_calls_available" || msg == "daily_ai_limit_reached" ->
+                            _uiState.update { it.copy(isLoading = false, showPaywallNudge = true) }
+                        msg == "rate_limit_exceeded" ->
+                            _uiState.update { it.copy(isLoading = false, rateLimitError = true) }
+                        msg == "no_internet" ->
+                            _uiState.update { it.copy(isLoading = false, noInternetError = true) }
+                        else ->
+                            _uiState.update { it.copy(isLoading = false, error = msg) }
                     }
                 }
                 Resource.Loading -> Unit
@@ -205,6 +211,14 @@ class HomeViewModel(
     fun clearError() {
         _uiState.update { it.copy(error = null) }
     }
+
+    fun clearRateLimitError() {
+        _uiState.update { it.copy(rateLimitError = false) }
+    }
+
+    fun clearNoInternetError() {
+        _uiState.update { it.copy(noInternetError = false) }
+    }
 }
 
 data class HomeUiState(
@@ -215,6 +229,8 @@ data class HomeUiState(
     val isPremium: Boolean = false,
     val dailyRollsRemaining: Int? = null,
     val error: String? = null,
+    val rateLimitError: Boolean = false,
+    val noInternetError: Boolean = false,
     val showOnboarding: Boolean = false,
     val showAuthSheet: Boolean = false,
     val showPaywallNudge: Boolean = false,

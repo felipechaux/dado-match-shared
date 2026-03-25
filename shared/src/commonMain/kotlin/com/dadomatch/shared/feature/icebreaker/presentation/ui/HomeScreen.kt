@@ -54,6 +54,13 @@ import com.dadomatch.shared.shared.generated.resources.error_title
 import com.dadomatch.shared.shared.generated.resources.intensity_label
 import com.dadomatch.shared.shared.generated.resources.no_rolls_left
 import com.dadomatch.shared.shared.generated.resources.ok_button
+import com.dadomatch.shared.shared.generated.resources.no_internet_message
+import com.dadomatch.shared.shared.generated.resources.no_internet_title
+import com.dadomatch.shared.shared.generated.resources.rate_limit_message_free
+import com.dadomatch.shared.shared.generated.resources.rate_limit_message_premium
+import com.dadomatch.shared.shared.generated.resources.rate_limit_retry
+import com.dadomatch.shared.shared.generated.resources.rate_limit_title
+import com.dadomatch.shared.shared.generated.resources.rate_limit_upgrade
 import com.dadomatch.shared.shared.generated.resources.rolling_rizz
 import com.dadomatch.shared.shared.generated.resources.rolling_rizz_2
 import com.dadomatch.shared.shared.generated.resources.rolling_rizz_3
@@ -215,6 +222,71 @@ fun HomeScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(stringResource(Res.string.ok_button), color = NeonCyan)
+                    }
+                }
+            )
+        }
+
+        if (uiState.noInternetError) {
+            IcebreakerDialog(
+                icebreakerText = stringResource(Res.string.no_internet_message),
+                title          = stringResource(Res.string.no_internet_title),
+                onDismiss      = { viewModel.clearNoInternetError() },
+                customButton   = {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(
+                            onClick  = {
+                                viewModel.clearNoInternetError()
+                                viewModel.onRetryRoll()
+                            },
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                            shape    = RoundedCornerShape(24.dp),
+                            border   = BorderStroke(1.dp, NeonCyan.copy(alpha = 0.5f)),
+                            colors   = ButtonDefaults.outlinedButtonColors(contentColor = NeonCyan)
+                        ) {
+                            Text(stringResource(Res.string.rate_limit_retry), fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                }
+            )
+        }
+
+        if (uiState.rateLimitError) {
+            val rateLimitMsg = if (uiState.isPremium)
+                stringResource(Res.string.rate_limit_message_premium)
+            else
+                stringResource(Res.string.rate_limit_message_free)
+
+            IcebreakerDialog(
+                icebreakerText = rateLimitMsg,
+                title          = stringResource(Res.string.rate_limit_title),
+                onDismiss      = { viewModel.clearRateLimitError() },
+                customButton   = {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(
+                            onClick  = {
+                                viewModel.clearRateLimitError()
+                                viewModel.onRetryRoll()
+                            },
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                            shape    = RoundedCornerShape(24.dp),
+                            border   = BorderStroke(1.dp, NeonCyan.copy(alpha = 0.5f)),
+                            colors   = ButtonDefaults.outlinedButtonColors(contentColor = NeonCyan)
+                        ) {
+                            Text(stringResource(Res.string.rate_limit_retry), fontWeight = FontWeight.SemiBold)
+                        }
+                        if (!uiState.isPremium) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            TextButton(
+                                onClick  = {
+                                    viewModel.clearRateLimitError()
+                                    onNavigateToPaywall()
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(stringResource(Res.string.rate_limit_upgrade), color = NeonCyan)
+                            }
+                        }
                     }
                 }
             )
