@@ -96,12 +96,14 @@ private fun FooterItem(
     onClick: () -> Unit
 ) {
     val color = if (isSelected) NeonCyan else TextWhite.copy(alpha = 0.6f)
-    
+
     Column(
         modifier = Modifier
+            .fillMaxHeight()
+            .widthIn(min = 72.dp)
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
-            .padding(8.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {

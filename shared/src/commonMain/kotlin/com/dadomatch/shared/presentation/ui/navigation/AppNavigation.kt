@@ -1,9 +1,13 @@
 package com.dadomatch.shared.presentation.ui.navigation
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,6 +41,16 @@ import com.dadomatch.shared.presentation.ui.theme.DeepDarkBlue
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.koinInject
 
+// Tab order determines slide direction: higher index → slide from right, lower → from left
+private val TAB_ORDER = listOf(
+    Screen.Home.route,
+    Screen.Successes.route,
+    Screen.Profile.route,
+    Screen.Settings.route
+)
+
+private fun tabIndex(route: String?) = TAB_ORDER.indexOf(route)
+
 @Composable
 fun AppNavigation(
     navController: NavHostController = rememberNavController()
@@ -66,7 +80,43 @@ fun AppNavigation(
                     startDestination = Screen.Splash.route,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(top = paddingValues.calculateTopPadding())
+                        .padding(top = paddingValues.calculateTopPadding()),
+                    enterTransition = {
+                        val from = tabIndex(initialState.destination.route)
+                        val to   = tabIndex(targetState.destination.route)
+                        val dir  = if (from == -1 || to == -1 || to >= from) 1 else -1
+                        slideInHorizontally(
+                            initialOffsetX = { (it * 0.35f * dir).toInt() },
+                            animationSpec  = tween(300, easing = FastOutSlowInEasing)
+                        ) + fadeIn(tween(300))
+                    },
+                    exitTransition = {
+                        val from = tabIndex(initialState.destination.route)
+                        val to   = tabIndex(targetState.destination.route)
+                        val dir  = if (from == -1 || to == -1 || to >= from) -1 else 1
+                        slideOutHorizontally(
+                            targetOffsetX = { (it * 0.35f * dir).toInt() },
+                            animationSpec  = tween(300, easing = FastOutSlowInEasing)
+                        ) + fadeOut(tween(200))
+                    },
+                    popEnterTransition = {
+                        val from = tabIndex(initialState.destination.route)
+                        val to   = tabIndex(targetState.destination.route)
+                        val dir  = if (from == -1 || to == -1 || to <= from) -1 else 1
+                        slideInHorizontally(
+                            initialOffsetX = { (it * 0.35f * dir).toInt() },
+                            animationSpec  = tween(300, easing = FastOutSlowInEasing)
+                        ) + fadeIn(tween(300))
+                    },
+                    popExitTransition = {
+                        val from = tabIndex(initialState.destination.route)
+                        val to   = tabIndex(targetState.destination.route)
+                        val dir  = if (from == -1 || to == -1 || to <= from) 1 else -1
+                        slideOutHorizontally(
+                            targetOffsetX = { (it * 0.35f * dir).toInt() },
+                            animationSpec  = tween(300, easing = FastOutSlowInEasing)
+                        ) + fadeOut(tween(200))
+                    }
                 ) {
                     composable(Screen.Splash.route) {
                         SplashScreen(
@@ -97,7 +147,27 @@ fun AppNavigation(
                             onConfettiConsumed = { showConfettiOnSettings = false }
                         )
                     }
-                    composable(Screen.Paywall.route) {
+                    composable(
+                        route = Screen.Paywall.route,
+                        enterTransition = {
+                            slideInVertically(
+                                initialOffsetY = { it },
+                                animationSpec  = tween(380, easing = FastOutSlowInEasing)
+                            ) + fadeIn(tween(300))
+                        },
+                        exitTransition = {
+                            slideOutVertically(
+                                targetOffsetY = { it },
+                                animationSpec  = tween(320, easing = FastOutSlowInEasing)
+                            ) + fadeOut(tween(250))
+                        },
+                        popExitTransition = {
+                            slideOutVertically(
+                                targetOffsetY = { it },
+                                animationSpec  = tween(320, easing = FastOutSlowInEasing)
+                            ) + fadeOut(tween(250))
+                        }
+                    ) {
                         PaywallScreen(
                             onDismiss = {
                                 if (showConfettiOnSettings) {
