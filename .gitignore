@@ -45,3 +45,6 @@ build/
 .kotlin/
 .vscode/
 build_debug.txt
+
+# Package.swift is auto-managed by CI and by `make dev`/`make remote`.
+# Never manually edit it. Use `make remote` to restore before committing.

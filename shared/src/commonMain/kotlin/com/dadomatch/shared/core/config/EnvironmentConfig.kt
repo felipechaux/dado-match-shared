@@ -39,9 +39,14 @@ object EnvironmentConfig {
     val geminiModelName: String = BuildKonfig.GEMINI_MODEL_NAME
     
     /**
-     * RevenueCat API Key for current environment
+     * RevenueCat API Key for Android (goog_ for prod, test_ for stage)
      */
     val revenueCatApiKey: String = BuildKonfig.REVENUECAT_API_KEY
+
+    /**
+     * RevenueCat API Key for iOS (appl_ for prod, test_ for stage)
+     */
+    val revenueCatApiKeyIos: String = BuildKonfig.REVENUECAT_API_KEY_IOS
     
     /**
      * API Base URL for current environment

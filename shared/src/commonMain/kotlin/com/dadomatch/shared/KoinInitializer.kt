@@ -1,5 +1,6 @@
 package com.dadomatch.shared
 
+import com.dadomatch.shared.core.config.platformRevenueCatApiKey
 import com.dadomatch.shared.di.getAllModules
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.auth.auth
@@ -20,7 +21,7 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}) {
         // Initialize RevenueCat after Koin is started
         val koin = KoinPlatformTools.defaultContext().get()
         val revenueCatService = koin.get<com.dadomatch.shared.feature.subscription.data.remote.RevenueCatService>()
-        revenueCatService.configure(BuildKonfig.REVENUECAT_API_KEY)
+        revenueCatService.configure(platformRevenueCatApiKey())
 
         // If user is already logged in (non-anonymous), sync their ID with RevenueCat
         // so that their Pro subscription is correctly restored on startup.

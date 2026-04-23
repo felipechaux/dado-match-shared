@@ -245,12 +245,23 @@ buildkonfig {
 
         
         val revenueCatApiKey = if (isProduction) {
-            localProperties.getProperty("PROD_REVENUECAT_API_KEY") 
-                ?: System.getenv("PROD_REVENUECAT_API_KEY") 
+            localProperties.getProperty("PROD_REVENUECAT_API_KEY")
+                ?: System.getenv("PROD_REVENUECAT_API_KEY")
                 ?: ""
         } else {
-            localProperties.getProperty("STAGE_REVENUECAT_API_KEY") 
-                ?: System.getenv("STAGE_REVENUECAT_API_KEY") 
+            localProperties.getProperty("STAGE_REVENUECAT_API_KEY")
+                ?: System.getenv("STAGE_REVENUECAT_API_KEY")
+                ?: ""
+        }
+
+        // iOS uses a separate appl_ key for production; stage reuses the same test key
+        val revenueCatApiKeyIos = if (isProduction) {
+            localProperties.getProperty("PROD_REVENUECAT_API_KEY_IOS")
+                ?: System.getenv("PROD_REVENUECAT_API_KEY_IOS")
+                ?: ""
+        } else {
+            localProperties.getProperty("STAGE_REVENUECAT_API_KEY")
+                ?: System.getenv("STAGE_REVENUECAT_API_KEY")
                 ?: ""
         }
         
@@ -275,6 +286,7 @@ buildkonfig {
         buildConfigField(STRING, "GEMINI_MODEL_NAME", geminiModelName)
         buildConfigField(STRING, "GEMINI_PREMIUM_MODEL_NAME", geminiPremiumModelName)
         buildConfigField(STRING, "REVENUECAT_API_KEY", revenueCatApiKey)
+        buildConfigField(STRING, "REVENUECAT_API_KEY_IOS", revenueCatApiKeyIos)
         buildConfigField(STRING, "API_BASE_URL", apiBaseUrl)
         buildConfigField(STRING, "GOOGLE_WEB_CLIENT_ID", googleWebClientId)
         buildConfigField(STRING, "ENVIRONMENT", environment)
