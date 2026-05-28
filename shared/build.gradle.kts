@@ -107,6 +107,8 @@ kotlin {
                 // Firebase
                 implementation(libs.firebase.auth)
                 implementation(libs.firebase.common)
+                implementation(libs.firebase.crashlytics)
+                implementation(libs.firebase.analytics)
             }
         }
         commonTest {
@@ -243,7 +245,20 @@ buildkonfig {
                 ?: System.getenv("GEMINI_PREMIUM_MODEL_NAME")
                 ?: "gemini-2.5-flash"
 
-        
+        // NVIDIA NIM (OpenAI-compatible) — primary fast provider for icebreaker generation
+        val nvidiaApiKey = localProperties.getProperty("NVIDIA_API_KEY")
+                ?: System.getenv("NVIDIA_API_KEY")
+                ?: ""
+
+        val nvidiaModelName = localProperties.getProperty("NVIDIA_MODEL_NAME")
+                ?: System.getenv("NVIDIA_MODEL_NAME")
+                ?: "meta/llama-3.3-70b-instruct"
+
+        val nvidiaBaseUrl = localProperties.getProperty("NVIDIA_BASE_URL")
+                ?: System.getenv("NVIDIA_BASE_URL")
+                ?: "https://integrate.api.nvidia.com/v1"
+
+
         val revenueCatApiKey = if (isProduction) {
             localProperties.getProperty("PROD_REVENUECAT_API_KEY")
                 ?: System.getenv("PROD_REVENUECAT_API_KEY")
@@ -285,6 +300,9 @@ buildkonfig {
         buildConfigField(STRING, "GEMINI_API_KEY", geminiApiKey)
         buildConfigField(STRING, "GEMINI_MODEL_NAME", geminiModelName)
         buildConfigField(STRING, "GEMINI_PREMIUM_MODEL_NAME", geminiPremiumModelName)
+        buildConfigField(STRING, "NVIDIA_API_KEY", nvidiaApiKey)
+        buildConfigField(STRING, "NVIDIA_MODEL_NAME", nvidiaModelName)
+        buildConfigField(STRING, "NVIDIA_BASE_URL", nvidiaBaseUrl)
         buildConfigField(STRING, "REVENUECAT_API_KEY", revenueCatApiKey)
         buildConfigField(STRING, "REVENUECAT_API_KEY_IOS", revenueCatApiKeyIos)
         buildConfigField(STRING, "API_BASE_URL", apiBaseUrl)

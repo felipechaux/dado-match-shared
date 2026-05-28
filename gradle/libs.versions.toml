@@ -78,6 +78,8 @@ revenuecat-purchases-result = { module = "com.revenuecat.purchases:purchases-kmp
 revenuecat-purchases-ui = { module = "com.revenuecat.purchases:purchases-kmp-ui", version.ref = "revenuecat-kmp" }
 firebase-auth = { module = "dev.gitlive:firebase-auth", version.ref = "firebase-auth" }
 firebase-common = { module = "dev.gitlive:firebase-common", version.ref = "firebase-auth" }
+firebase-crashlytics = { module = "dev.gitlive:firebase-crashlytics", version.ref = "firebase-auth" }
+firebase-analytics = { module = "dev.gitlive:firebase-analytics", version.ref = "firebase-auth" }
 credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
 credentials-play-services-auth = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentials" }
 googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleid" }

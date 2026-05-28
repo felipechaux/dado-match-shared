@@ -2,11 +2,11 @@ package com.dadomatch.shared.feature.icebreaker.data.repository
 
 import com.dadomatch.shared.feature.icebreaker.domain.repository.IcebreakerRepository
 import com.dadomatch.shared.core.util.Resource
-import com.dadomatch.shared.feature.icebreaker.data.remote.GeminiService
+import com.dadomatch.shared.feature.icebreaker.data.remote.IcebreakerAiService
 import com.dadomatch.shared.feature.icebreaker.domain.model.IcebreakerFeedback
 
 class IcebreakerRepositoryImpl(
-    private val geminiService: GeminiService
+    private val aiService: IcebreakerAiService
 ) : IcebreakerRepository {
     override suspend fun generateIcebreaker(
         environment: String,
@@ -14,7 +14,7 @@ class IcebreakerRepositoryImpl(
         language: String,
         usePremiumModel: Boolean
     ): Resource<String> {
-        return geminiService.generateIcebreaker(environment, intensity, language, usePremiumModel)
+        return aiService.generateIcebreaker(environment, intensity, language, usePremiumModel)
     }
 
     override suspend fun submitFeedback(icebreaker: String, feedback: IcebreakerFeedback) {
