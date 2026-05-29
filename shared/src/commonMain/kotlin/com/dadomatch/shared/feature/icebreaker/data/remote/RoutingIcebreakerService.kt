@@ -4,6 +4,7 @@ import com.dadomatch.shared.core.util.Resource
 import com.dadomatch.shared.feature.icebreaker.data.telemetry.AiTelemetry
 import com.dadomatch.shared.feature.icebreaker.data.telemetry.NoOpAiTelemetry
 import kotlin.time.TimeSource
+import kotlinx.coroutines.CancellationException
 
 /**
  * Tries [primary] first (fast path); on any failure transparently retries with
@@ -29,7 +30,26 @@ class RoutingIcebreakerService(
         language: String,
         usePremiumModel: Boolean,
     ): Resource<String> {
-        val primaryResult = timed { primary.generateIcebreaker(environment, intensity, language, usePremiumModel) }
+        // Top-level safety net: if either leaf service throws something its own try/catch
+        // missed (e.g. a serialization crash, Ktor null, OOM, Firebase init failure), make
+        // sure it lands in Crashlytics before we rethrow / surface a generic error.
+        return try {
+            route(environment, intensity, language, usePremiumModel)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            telemetry.onUnexpectedError(stage = "routing", cause = e)
+            Resource.Error(e.message ?: "ai_unexpected_error", e)
+        }
+    }
+
+    private suspend fun route(
+        environment: String,
+        intensity: String,
+        language: String,
+        usePremiumModel: Boolean,
+    ): Resource<String> {
+        val primaryResult = safeAttempt(primary, environment, intensity, language, usePremiumModel)
         telemetry.onProviderAttempt(
             provider = primary.providerId,
             success = primaryResult.value is Resource.Success,
@@ -44,7 +64,7 @@ class RoutingIcebreakerService(
         val primaryError = primaryResult.value as Resource.Error
         telemetry.onProviderFailure(primary.providerId, primaryError.message, fellBack = false, cause = primaryError.throwable)
 
-        val fallbackResult = timed { fallback.generateIcebreaker(environment, intensity, language, usePremiumModel) }
+        val fallbackResult = safeAttempt(fallback, environment, intensity, language, usePremiumModel)
         telemetry.onProviderAttempt(
             provider = fallback.providerId,
             success = fallbackResult.value is Resource.Success,
@@ -62,11 +82,29 @@ class RoutingIcebreakerService(
         return fallbackResult.value
     }
 
-    private data class Timed<T>(val value: T, val millis: Long)
-
-    private inline fun <T> timed(block: () -> T): Timed<T> {
+    /**
+     * Run a single provider attempt, timed. Cancellation propagates; everything else
+     * is funneled into telemetry as an unexpected error and turned into a Resource.Error
+     * so the router can still try the fallback.
+     */
+    private suspend fun safeAttempt(
+        service: IcebreakerAiService,
+        environment: String,
+        intensity: String,
+        language: String,
+        usePremiumModel: Boolean,
+    ): Timed<Resource<String>> {
         val start = TimeSource.Monotonic.markNow()
-        val value = block()
+        val value: Resource<String> = try {
+            service.generateIcebreaker(environment, intensity, language, usePremiumModel)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            telemetry.onUnexpectedError(stage = "provider:${service.providerId}", cause = e)
+            Resource.Error(e.message ?: "ai_unexpected_error", e)
+        }
         return Timed(value, start.elapsedNow().inWholeMilliseconds)
     }
+
+    private data class Timed<T>(val value: T, val millis: Long)
 }
