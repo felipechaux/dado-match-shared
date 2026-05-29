@@ -41,6 +41,14 @@ interface AiTelemetry {
 
     /** Both providers failed; the user got no icebreaker. High-signal non-fatal. */
     fun onTotalFailure(primaryError: String, fallbackError: String)
+
+    /**
+     * Catch-all for anything that escaped the provider try/catch (e.g. a serialization
+     * crash, a NullPointerException in Ktor, a Firebase init failure). The user explicitly
+     * asked that *every* exception in the icebreaker path be captured, so callers wrap the
+     * top of the routing service in a try/catch and route here before rethrowing.
+     */
+    fun onUnexpectedError(stage: String, cause: Throwable)
 }
 
 /** Default sink used until Firebase is wired in the consuming apps. Does nothing. */
@@ -62,4 +70,6 @@ object NoOpAiTelemetry : AiTelemetry {
     ) = Unit
 
     override fun onTotalFailure(primaryError: String, fallbackError: String) = Unit
+
+    override fun onUnexpectedError(stage: String, cause: Throwable) = Unit
 }

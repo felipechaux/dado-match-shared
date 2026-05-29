@@ -83,7 +83,7 @@ val icebreakerModule = module {
     }
 
     singleOf(::IcebreakerRepositoryImpl) bind IcebreakerRepository::class
-    factory { GenerateIcebreakerUseCase(get(), get<SubscriptionRepository>()) }
+    factory { GenerateIcebreakerUseCase(get(), get<SubscriptionRepository>(), get<AiTelemetry>()) }
     factoryOf(::SubmitFeedbackUseCase)
     factoryOf(::RollDiceUseCase)
     viewModelOf(::HomeViewModel)

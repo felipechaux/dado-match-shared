@@ -1,5 +1,6 @@
 package com.dadomatch.shared.feature.icebreaker.data.telemetry
 
+import com.dadomatch.shared.core.log.AppLogger
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.analytics.analytics
 import dev.gitlive.firebase.crashlytics.crashlytics
@@ -35,6 +36,8 @@ class CrashlyticsAiTelemetry : AiTelemetry {
                 errorCode?.let { put("error_code", it) }
             }
             Firebase.analytics.logEvent("ai_icebreaker", params)
+        }.onFailure {
+            AppLogger.warn(TAG, "Analytics logEvent(ai_icebreaker) failed — is Firebase initialised?", it)
         }
     }
 
@@ -49,9 +52,17 @@ class CrashlyticsAiTelemetry : AiTelemetry {
                 setCustomKey("ai_provider", provider)
                 setCustomKey("ai_error_code", errorCode)
                 setCustomKey("ai_fell_back", fellBack)
-                log("AI provider '$provider' failed: $errorCode (fellBack=$fellBack)")
-                recordException(cause ?: AiProviderException(provider, errorCode))
+                // Surface the raw upstream message too so things like NVIDIA's
+                // "method doesn't allow unregistered callers" land directly in the issue.
+                cause?.message?.take(500)?.let { setCustomKey("ai_cause_message", it) }
+                log("AI provider '$provider' failed: $errorCode (fellBack=$fellBack) cause=${cause?.message ?: "n/a"}")
+                // Chain the original cause so its stack trace is preserved alongside
+                // the readable summary in the synthetic exception.
+                recordException(AiProviderException(provider, errorCode, cause))
             }
+            AppLogger.debug(TAG, "Recorded provider failure → Crashlytics: provider=$provider code=$errorCode fellBack=$fellBack cause=${cause?.message ?: "n/a"}")
+        }.onFailure {
+            AppLogger.warn(TAG, "Failed to record provider failure to Crashlytics — is Firebase initialised?", it)
         }
     }
 
@@ -63,13 +74,34 @@ class CrashlyticsAiTelemetry : AiTelemetry {
                 log("AI total failure: primary=$primaryError fallback=$fallbackError")
                 recordException(AiTotalFailureException(primaryError, fallbackError))
             }
+            AppLogger.debug(TAG, "Recorded total failure → Crashlytics: primary=$primaryError fallback=$fallbackError")
+        }.onFailure {
+            AppLogger.warn(TAG, "Failed to record total failure to Crashlytics — is Firebase initialised?", it)
         }
+    }
+
+    override fun onUnexpectedError(stage: String, cause: Throwable) {
+        runCatching {
+            Firebase.crashlytics.apply {
+                setCustomKey("ai_stage", stage)
+                cause.message?.take(500)?.let { setCustomKey("ai_cause_message", it) }
+                log("AI unexpected error at stage=$stage: ${cause.message ?: cause::class.simpleName}")
+                recordException(cause)
+            }
+            AppLogger.debug(TAG, "Recorded unexpected error → Crashlytics: stage=$stage cause=${cause.message ?: cause::class.simpleName}")
+        }.onFailure {
+            AppLogger.warn(TAG, "Failed to record unexpected error to Crashlytics — is Firebase initialised?", it)
+        }
+    }
+
+    private companion object {
+        const val TAG = "AiTelemetry"
     }
 }
 
 /** Synthetic throwable so a provider failure shows up as a distinct Crashlytics issue. */
-class AiProviderException(provider: String, errorCode: String) :
-    Exception("AI provider '$provider' failed: $errorCode")
+class AiProviderException(provider: String, errorCode: String, cause: Throwable? = null) :
+    Exception("AI provider '$provider' failed: $errorCode", cause)
 
 /** Synthetic throwable for the worst case: every provider failed, user got nothing. */
 class AiTotalFailureException(primaryError: String, fallbackError: String) :

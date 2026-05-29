@@ -4,6 +4,7 @@ import com.dadomatch.shared.core.util.Resource
 import dev.shreyaspatil.ai.client.generativeai.GenerativeModel
 import dev.shreyaspatil.ai.client.generativeai.type.RequestOptions
 import dev.shreyaspatil.ai.client.generativeai.type.generationConfig
+import kotlinx.coroutines.CancellationException
 
 class GeminiService(
     private val apiKey: String,
@@ -63,6 +64,8 @@ class GeminiService(
         return try {
             val response = model.generateContent(fullPrompt)
             Resource.Success(response.text?.trim() ?: "fallback_icebreaker")
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             val msg = e.message ?: ""
             when {
@@ -72,6 +75,8 @@ class GeminiService(
                         try {
                             val fallbackResponse = defaultModel.generateContent(fullPrompt)
                             Resource.Success(fallbackResponse.text?.trim() ?: "fallback_icebreaker")
+                        } catch (fallbackEx: CancellationException) {
+                            throw fallbackEx
                         } catch (fallbackEx: Exception) {
                             val fallbackMsg = fallbackEx.message ?: ""
                             if (isRateLimitError(fallbackMsg, fallbackEx))

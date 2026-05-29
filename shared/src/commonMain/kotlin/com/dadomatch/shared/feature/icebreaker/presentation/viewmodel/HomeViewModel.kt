@@ -2,6 +2,8 @@ package com.dadomatch.shared.feature.icebreaker.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dadomatch.shared.feature.icebreaker.data.telemetry.AiTelemetry
+import com.dadomatch.shared.feature.icebreaker.data.telemetry.NoOpAiTelemetry
 import com.dadomatch.shared.feature.icebreaker.domain.model.IcebreakerFeedback
 import com.dadomatch.shared.feature.icebreaker.domain.usecase.GenerateIcebreakerUseCase
 import com.dadomatch.shared.feature.icebreaker.domain.usecase.NoRollsRemainingException
@@ -16,6 +18,9 @@ import com.dadomatch.shared.feature.subscription.domain.usecase.GetSubscriptionS
 import com.dadomatch.shared.feature.success.domain.model.SuccessRecord
 import com.dadomatch.shared.feature.success.domain.usecase.AddSuccessUseCase
 import com.dadomatch.shared.core.util.Resource
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,8 +36,27 @@ class HomeViewModel(
     private val getSubscriptionStatusUseCase: GetSubscriptionStatusUseCase,
     private val getOnboardingStatusUseCase: GetOnboardingStatusUseCase,
     private val setOnboardingStatusUseCase: SetOnboardingStatusUseCase,
-    private val getLanguageUseCase: GetLanguageUseCase
+    private val getLanguageUseCase: GetLanguageUseCase,
+    private val telemetry: AiTelemetry = NoOpAiTelemetry,
 ) : ViewModel() {
+
+    /**
+     * Wraps a coroutine launched on [viewModelScope] so any thrown [Throwable] is
+     * routed to Crashlytics via [AiTelemetry.onUnexpectedError] instead of being
+     * silently swallowed by the coroutine machinery. Cancellation still propagates.
+     * Also clears the loading flag so the UI never gets stuck on an error.
+     */
+    private fun CoroutineScope.safeLaunch(stage: String, block: suspend () -> Unit): Job =
+        launch {
+            try {
+                block()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                telemetry.onUnexpectedError(stage = stage, cause = e)
+                _uiState.update { it.copy(isLoading = false, error = e.message ?: "unexpected_error") }
+            }
+        }
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -94,7 +118,7 @@ class HomeViewModel(
                 lastLanguage = language
             )
         }
-        viewModelScope.launch {
+        viewModelScope.safeLaunch(stage = "home_vm.onRollComplete") {
             val rollResult = rollDiceUseCase()
             if (rollResult.isFailure) {
                 val exception = rollResult.exceptionOrNull()
@@ -103,12 +127,12 @@ class HomeViewModel(
                 } else {
                     _uiState.update { it.copy(isLoading = false, error = exception?.message) }
                 }
-                return@launch
+                return@safeLaunch
             }
 
             if (!checkEntitlementUseCase.canAccessCategory(intensity)) {
                 _uiState.update { it.copy(isLoading = false, showPaywallNudge = true) }
-                return@launch
+                return@safeLaunch
             }
 
             when (val result = generateIcebreakerUseCase(environment, intensity, language)) {
@@ -171,7 +195,7 @@ class HomeViewModel(
     }
 
     fun submitFeedback(rating: Int, comment: String) {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch(stage = "home_vm.submitFeedback") {
             val state = _uiState.value
             val feedback = if (rating >= 3) IcebreakerFeedback.GOOD else IcebreakerFeedback.BAD
             val now = kotlin.time.Clock.System.now()

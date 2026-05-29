@@ -7,10 +7,12 @@ import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -55,16 +57,26 @@ class NvidiaService(
             }
 
             if (!response.status.isSuccess()) {
-                return when (response.status.value) {
-                    429 -> Resource.Error("rate_limit_exceeded")
-                    401, 403 -> Resource.Error("nvidia_auth_error")
-                    else -> Resource.Error("ai_connection_error")
+                // Read the body so the upstream error text (e.g. "method doesn't allow
+                // unregistered callers...") is preserved for Crashlytics instead of
+                // being collapsed to an opaque code.
+                val status = response.status.value
+                val body = runCatching { response.bodyAsText() }.getOrNull().orEmpty().take(500)
+                val cause = NvidiaHttpException(status, body)
+                val code = when (status) {
+                    429 -> "rate_limit_exceeded"
+                    401, 403 -> "nvidia_auth_error"
+                    else -> "nvidia_http_$status"
                 }
+                return Resource.Error(code, cause)
             }
 
             val text = response.body<ChatResponse>().choices.firstOrNull()?.message?.content?.trim()
-            if (text.isNullOrEmpty()) Resource.Error("ai_connection_error")
+            if (text.isNullOrEmpty()) Resource.Error("ai_empty_response")
             else Resource.Success(text)
+        } catch (e: CancellationException) {
+            // Honor structured concurrency — never swallow cancellation as a fake error.
+            throw e
         } catch (e: Exception) {
             val msg = e.message ?: ""
             val networkLike = listOf(
@@ -77,6 +89,10 @@ class NvidiaService(
         }
     }
 }
+
+/** Synthetic throwable carrying the raw NVIDIA HTTP status + body for Crashlytics. */
+class NvidiaHttpException(val status: Int, val body: String) :
+    Exception("NVIDIA HTTP $status: ${body.ifBlank { "<empty body>" }}")
 
 // ── OpenAI-compatible request/response DTOs ───────────────────────────────────
 @Serializable
