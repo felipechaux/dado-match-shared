@@ -1,5 +1,6 @@
 package com.dadomatch.shared.feature.icebreaker.data.telemetry
 
+import com.dadomatch.shared.core.log.AppLogger
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.analytics.analytics
 import dev.gitlive.firebase.crashlytics.crashlytics
@@ -35,6 +36,8 @@ class CrashlyticsAiTelemetry : AiTelemetry {
                 errorCode?.let { put("error_code", it) }
             }
             Firebase.analytics.logEvent("ai_icebreaker", params)
+        }.onFailure {
+            AppLogger.warn(TAG, "Analytics logEvent(ai_icebreaker) failed — is Firebase initialised?", it)
         }
     }
 
@@ -57,6 +60,9 @@ class CrashlyticsAiTelemetry : AiTelemetry {
                 // the readable summary in the synthetic exception.
                 recordException(AiProviderException(provider, errorCode, cause))
             }
+            AppLogger.debug(TAG, "Recorded provider failure → Crashlytics: provider=$provider code=$errorCode fellBack=$fellBack cause=${cause?.message ?: "n/a"}")
+        }.onFailure {
+            AppLogger.warn(TAG, "Failed to record provider failure to Crashlytics — is Firebase initialised?", it)
         }
     }
 
@@ -68,6 +74,9 @@ class CrashlyticsAiTelemetry : AiTelemetry {
                 log("AI total failure: primary=$primaryError fallback=$fallbackError")
                 recordException(AiTotalFailureException(primaryError, fallbackError))
             }
+            AppLogger.debug(TAG, "Recorded total failure → Crashlytics: primary=$primaryError fallback=$fallbackError")
+        }.onFailure {
+            AppLogger.warn(TAG, "Failed to record total failure to Crashlytics — is Firebase initialised?", it)
         }
     }
 
@@ -79,7 +88,14 @@ class CrashlyticsAiTelemetry : AiTelemetry {
                 log("AI unexpected error at stage=$stage: ${cause.message ?: cause::class.simpleName}")
                 recordException(cause)
             }
+            AppLogger.debug(TAG, "Recorded unexpected error → Crashlytics: stage=$stage cause=${cause.message ?: cause::class.simpleName}")
+        }.onFailure {
+            AppLogger.warn(TAG, "Failed to record unexpected error to Crashlytics — is Firebase initialised?", it)
         }
+    }
+
+    private companion object {
+        const val TAG = "AiTelemetry"
     }
 }
 
