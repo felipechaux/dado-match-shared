@@ -3,6 +3,7 @@ package com.dadomatch.shared.feature.auth.presentation
 import android.content.Context
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
 import com.dadomatch.shared.BuildKonfig
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
@@ -50,6 +51,8 @@ class AndroidAuthHandler(
             // Android Credential Manager only provides an idToken — no accessToken.
             // Firebase Android SDK accepts null for accessToken; only iOS requires it.
             Result.success(GoogleTokens(idToken = idToken, accessToken = null))
+        } catch (e: GetCredentialCancellationException) {
+            Result.failure(SignInCancelledException())
         } catch (e: GetCredentialException) {
             Result.failure(Exception(e.message, e))
         } catch (e: Exception) {
