@@ -55,7 +55,13 @@ class AuthRepositoryImpl : AuthRepository {
             val user = auth.currentUser ?: throw IllegalStateException("User not signed in after web flow")
             Result.success(AuthUser(user.uid, user.email, user.displayName, user.isAnonymous))
         } else {
-            val result = auth.signInWithCredential(OAuthProvider.credential(PROVIDER_APPLE, idToken, null, nonce))
+            // Named args are required: the signature is
+            // credential(providerId, accessToken, idToken, rawNonce). Passing the
+            // identity token positionally lands it in accessToken, leaving idToken
+            // null, which Firebase rejects with INVALID_CREDENTIAL_OR_PROVIDER_ID.
+            val result = auth.signInWithCredential(
+                OAuthProvider.credential(providerId = PROVIDER_APPLE, idToken = idToken, rawNonce = nonce)
+            )
             val user = result.user!!
             Result.success(AuthUser(user.uid, user.email, user.displayName, user.isAnonymous))
         }
