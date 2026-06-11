@@ -14,6 +14,6 @@ interface GoogleSignInCallback {
  * Callback interface exposed to Swift for Apple Sign-In results.
  */
 interface AppleSignInCallback {
-    fun onSuccess(idToken: String, nonce: String?)
+    fun onSuccess(idToken: String, nonce: String?, displayName: String?)
     fun onFailure(error: String)
 }

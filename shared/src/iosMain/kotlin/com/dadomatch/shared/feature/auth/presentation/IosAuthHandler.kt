@@ -45,9 +45,9 @@ class IosAuthHandler : NativeAuthHandler {
 
         return suspendCoroutine { continuation ->
             provider(object : AppleSignInCallback {
-                override fun onSuccess(idToken: String, nonce: String?) {
+                override fun onSuccess(idToken: String, nonce: String?, displayName: String?) {
                     continuation.resumeWith(
-                        kotlin.Result.success(Result.success(AuthTokens(idToken, nonce)))
+                        kotlin.Result.success(Result.success(AuthTokens(idToken, nonce, displayName)))
                     )
                 }
 

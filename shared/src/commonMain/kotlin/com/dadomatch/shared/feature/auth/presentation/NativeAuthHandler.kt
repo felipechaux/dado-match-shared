@@ -31,5 +31,9 @@ data class GoogleTokens(
 
 data class AuthTokens(
     val idToken: String,
-    val nonce: String? = null
+    val nonce: String? = null,
+    // Apple only returns the user's name on the FIRST authorization, via the
+    // native credential (never in the idToken). Captured on iOS and persisted to
+    // the Firebase profile after sign-in. Null on Android (web flow sets it).
+    val displayName: String? = null
 )

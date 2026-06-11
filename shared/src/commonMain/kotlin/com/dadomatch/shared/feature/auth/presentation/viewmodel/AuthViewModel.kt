@@ -62,7 +62,7 @@ class AuthViewModel(
         viewModelScope.launch {
             nativeAuthHandler.signInWithApple()
                 .onSuccess { tokens ->
-                    signInWithAppleUseCase(tokens.idToken, tokens.nonce)
+                    signInWithAppleUseCase(tokens.idToken, tokens.nonce, tokens.displayName)
                         .onSuccess { _events.emit(AuthEvent.SignInSuccess) }
                         .onFailure { error -> handleSignInFailure(error) }
                 }

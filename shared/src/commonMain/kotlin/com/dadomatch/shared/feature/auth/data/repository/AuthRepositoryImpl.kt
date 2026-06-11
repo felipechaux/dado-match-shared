@@ -49,7 +49,7 @@ class AuthRepositoryImpl : AuthRepository {
         Result.failure(Exception(message, e))
     }
 
-    override suspend fun signInWithApple(idToken: String, nonce: String?): Result<AuthUser> = try {
+    override suspend fun signInWithApple(idToken: String, nonce: String?, displayName: String?): Result<AuthUser> = try {
         val auth = getAuthSafe() ?: throw IllegalStateException(ERROR_FIREBASE_NOT_INITIALIZED)
         if (idToken.isEmpty()) {
             val user = auth.currentUser ?: throw IllegalStateException("User not signed in after web flow")
@@ -63,7 +63,13 @@ class AuthRepositoryImpl : AuthRepository {
                 OAuthProvider.credential(providerId = PROVIDER_APPLE, idToken = idToken, rawNonce = nonce)
             )
             val user = result.user!!
-            Result.success(AuthUser(user.uid, user.email, user.displayName, user.isAnonymous))
+            // Apple delivers the name only on the first authorization and Firebase
+            // does not persist it from the credential, so set it ourselves when the
+            // profile has none yet.
+            if (user.displayName.isNullOrBlank() && !displayName.isNullOrBlank()) {
+                runCatching { user.updateProfile(displayName = displayName) }
+            }
+            Result.success(AuthUser(user.uid, user.email, user.displayName ?: displayName, user.isAnonymous))
         }
     } catch (e: Exception) {
         Result.failure(Exception("$ERROR_MSG_APPLE_PREFIX${e.message}", e))
