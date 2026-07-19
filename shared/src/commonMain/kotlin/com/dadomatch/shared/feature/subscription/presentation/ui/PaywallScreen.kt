@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -69,6 +70,21 @@ fun PaywallScreen(onDismiss: () -> Unit = {}, onPurchaseSuccess: () -> Unit = {}
     
     val isAnonymous = authUiState.user?.isAnonymous ?: true
     var showAuthSheet by remember { mutableStateOf(false) }
+
+    // The RevenueCat Paywall's PaywallListener does not reliably fire on iOS, so the
+    // purchase is detected from the shared subscription status instead: a FREE→PREMIUM
+    // transition while this screen is visible means the user just purchased.
+    var wasFree by remember { mutableStateOf(false) }
+    LaunchedEffect(status?.tier) {
+        when {
+            status == null -> Unit
+            status.tier == SubscriptionTier.FREE -> wasFree = true
+            status.tier == SubscriptionTier.PREMIUM && wasFree -> {
+                wasFree = false
+                onPurchaseSuccess()
+            }
+        }
+    }
 
     val sheetState = rememberModalBottomSheetState(
         confirmValueChange = { targetValue ->

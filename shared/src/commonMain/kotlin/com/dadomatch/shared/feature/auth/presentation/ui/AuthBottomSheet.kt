@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -37,6 +39,7 @@ import com.dadomatch.shared.presentation.ui.theme.NeonCyan
 import com.dadomatch.shared.presentation.ui.theme.TextGray
 import com.dadomatch.shared.presentation.ui.theme.TextWhite
 import com.dadomatch.shared.shared.generated.resources.*
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -118,16 +121,18 @@ fun AuthBottomSheet(
                 )
                 Spacer(modifier = Modifier.height(40.dp))
             } else {
-                // Apple Button (Strict guidelines usually require specific styling)
-//                SocialAuthButton(
-//                    text = stringResource(Res.string.auth_apple_button),
-//                    icon = "",
-//                    backgroundColor = Color.White,
-//                    contentColor = Color.Black,
-//                    onClick = { viewModel.triggerAppleSignIn() }
-//                )
-//
-//                Spacer(modifier = Modifier.height(16.dp))
+                // Apple Button — required by App Store guideline 4.8 as an
+                // equivalent privacy-preserving login option, shown first
+                SocialAuthButton(
+                    text = stringResource(Res.string.auth_apple_button),
+                    icon = "",
+                    backgroundColor = Color.White,
+                    contentColor = Color.Black,
+                    onClick = { viewModel.triggerAppleSignIn() },
+                    iconPainter = painterResource(Res.drawable.ic_apple)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Google Button
                 SocialAuthButton(
@@ -179,7 +184,8 @@ fun SocialAuthButton(
     backgroundColor: Color,
     contentColor: Color,
     onClick: () -> Unit,
-    isGoogle: Boolean = false
+    isGoogle: Boolean = false,
+    iconPainter: Painter? = null
 ) {
     Row(
         modifier = Modifier
@@ -192,7 +198,14 @@ fun SocialAuthButton(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
-        if (isGoogle) {
+        if (iconPainter != null) {
+            Icon(
+                painter = iconPainter,
+                contentDescription = null,
+                tint = contentColor,
+                modifier = Modifier.size(22.dp)
+            )
+        } else if (isGoogle) {
             // Google custom "G" or just the text icon for now
             Text(
                 text = icon,

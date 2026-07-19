@@ -20,7 +20,13 @@ class AppleSignInActivity : Activity() {
                 finish()
             }
             .addOnFailureListener { e ->
-                deferredResult?.complete(Result.failure(Exception("Apple Sign-In failed: ${e.message}", e)))
+                val cancelled = e.message?.contains("cancel", ignoreCase = true) == true
+                deferredResult?.complete(
+                    Result.failure(
+                        if (cancelled) SignInCancelledException()
+                        else Exception("Apple Sign-In failed: ${e.message}", e)
+                    )
+                )
                 finish()
             }
     }

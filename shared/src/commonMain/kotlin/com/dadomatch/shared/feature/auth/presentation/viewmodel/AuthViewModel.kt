@@ -8,6 +8,7 @@ import com.dadomatch.shared.feature.auth.domain.usecase.SignInAnonymouslyUseCase
 import com.dadomatch.shared.feature.auth.domain.usecase.SignInWithAppleUseCase
 import com.dadomatch.shared.feature.auth.domain.usecase.SignInWithGoogleUseCase
 import com.dadomatch.shared.feature.auth.presentation.NativeAuthHandler
+import com.dadomatch.shared.feature.auth.presentation.SignInCancelledException
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,13 +51,9 @@ class AuthViewModel(
                 .onSuccess { tokens ->
                     signInWithGoogleUseCase(tokens.idToken, tokens.accessToken)
                         .onSuccess { _events.emit(AuthEvent.SignInSuccess) }
-                        .onFailure { error ->
-                            _uiState.update { it.copy(isLoading = false, error = error.message) }
-                        }
+                        .onFailure { error -> handleSignInFailure(error) }
                 }
-                .onFailure { error ->
-                    _uiState.update { it.copy(isLoading = false, error = error.message) }
-                }
+                .onFailure { error -> handleSignInFailure(error) }
         }
     }
 
@@ -65,15 +62,20 @@ class AuthViewModel(
         viewModelScope.launch {
             nativeAuthHandler.signInWithApple()
                 .onSuccess { tokens ->
-                    signInWithAppleUseCase(tokens.idToken, tokens.nonce)
+                    signInWithAppleUseCase(tokens.idToken, tokens.nonce, tokens.displayName)
                         .onSuccess { _events.emit(AuthEvent.SignInSuccess) }
-                        .onFailure { error ->
-                            _uiState.update { it.copy(isLoading = false, error = error.message) }
-                        }
+                        .onFailure { error -> handleSignInFailure(error) }
                 }
-                .onFailure { error ->
-                    _uiState.update { it.copy(isLoading = false, error = error.message) }
-                }
+                .onFailure { error -> handleSignInFailure(error) }
+        }
+    }
+
+    private fun handleSignInFailure(error: Throwable) {
+        // A user-cancelled flow is a dismissal, not an error — don't show a message
+        if (error is SignInCancelledException) {
+            _uiState.update { it.copy(isLoading = false) }
+        } else {
+            _uiState.update { it.copy(isLoading = false, error = error.message) }
         }
     }
 

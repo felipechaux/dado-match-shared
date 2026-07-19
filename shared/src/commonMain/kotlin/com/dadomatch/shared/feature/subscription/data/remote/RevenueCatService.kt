@@ -3,10 +3,13 @@ package com.dadomatch.shared.feature.subscription.data.remote
 import com.dadomatch.shared.feature.subscription.domain.model.Entitlement
 import com.revenuecat.purchases.kmp.Purchases
 import com.revenuecat.purchases.kmp.PurchasesConfiguration
+import com.revenuecat.purchases.kmp.PurchasesDelegate
 import com.revenuecat.purchases.kmp.models.CacheFetchPolicy
 import com.revenuecat.purchases.kmp.models.CustomerInfo
 import com.revenuecat.purchases.kmp.models.Offerings
+import com.revenuecat.purchases.kmp.models.PurchasesError
 import com.revenuecat.purchases.kmp.models.StoreProduct
+import com.revenuecat.purchases.kmp.models.StoreTransaction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,6 +39,27 @@ class RevenueCatService {
             }
         }
         Purchases.configure(config)
+        // Purchases made outside this service (e.g. the RevenueCat Paywall UI composable
+        // performs them internally via the native SDK) never touch the suspend wrappers
+        // below, so the delegate is the only reliable source for keeping the flow current.
+        Purchases.sharedInstance.delegate = object : PurchasesDelegate {
+            override fun onCustomerInfoUpdated(customerInfo: CustomerInfo) {
+                _customerInfoFlow.value = customerInfo
+            }
+
+            override fun onPurchasePromoProduct(
+                product: StoreProduct,
+                startPurchase: (
+                    onError: (error: PurchasesError, userCancelled: Boolean) -> Unit,
+                    onSuccess: (storeTransaction: StoreTransaction, customerInfo: CustomerInfo) -> Unit
+                ) -> Unit
+            ) {
+                startPurchase(
+                    { _, _ -> },
+                    { _, customerInfo -> _customerInfoFlow.value = customerInfo }
+                )
+            }
+        }
     }
 
     /**

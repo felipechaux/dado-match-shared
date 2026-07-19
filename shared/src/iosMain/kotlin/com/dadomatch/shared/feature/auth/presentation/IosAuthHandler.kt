@@ -32,7 +32,7 @@ class IosAuthHandler : NativeAuthHandler {
 
                 override fun onFailure(error: String) {
                     continuation.resumeWith(
-                        kotlin.Result.success(Result.failure(Exception(error)))
+                        kotlin.Result.success(Result.failure(error.toSignInException()))
                     )
                 }
             })
@@ -45,18 +45,21 @@ class IosAuthHandler : NativeAuthHandler {
 
         return suspendCoroutine { continuation ->
             provider(object : AppleSignInCallback {
-                override fun onSuccess(idToken: String, nonce: String?) {
+                override fun onSuccess(idToken: String, nonce: String?, displayName: String?) {
                     continuation.resumeWith(
-                        kotlin.Result.success(Result.success(AuthTokens(idToken, nonce)))
+                        kotlin.Result.success(Result.success(AuthTokens(idToken, nonce, displayName)))
                     )
                 }
 
                 override fun onFailure(error: String) {
                     continuation.resumeWith(
-                        kotlin.Result.success(Result.failure(Exception(error)))
+                        kotlin.Result.success(Result.failure(error.toSignInException()))
                     )
                 }
             })
         }
     }
+
+    private fun String.toSignInException(): Exception =
+        if (this == NATIVE_SIGN_IN_CANCELLED) SignInCancelledException() else Exception(this)
 }

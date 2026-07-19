@@ -8,7 +8,7 @@ class SignInWithAppleUseCase(
     private val authRepository: AuthRepository,
     private val subscriptionRepository: SubscriptionRepository
 ) {
-    suspend operator fun invoke(idToken: String, nonce: String? = null): Result<AuthUser> =
-        authRepository.signInWithApple(idToken, nonce)
+    suspend operator fun invoke(idToken: String, nonce: String? = null, displayName: String? = null): Result<AuthUser> =
+        authRepository.signInWithApple(idToken, nonce, displayName)
             .onSuccess { user -> subscriptionRepository.logIn(user.id) }
 }
