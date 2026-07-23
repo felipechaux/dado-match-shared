@@ -153,4 +153,13 @@
     <string name="profile_sign_out_confirm_title">Sign Out?</string>
     <string name="profile_sign_out_confirm_message">Are you sure you want to sign out?</string>
     <string name="profile_cancel">Cancel</string>
+    <string name="profile_delete_account">Delete Account</string>
+    <string name="profile_delete_account_confirm_title">Delete Account?</string>
+    <string name="profile_delete_account_confirm_message">This permanently deletes your account and all associated data. This action cannot be undone. You may be asked to sign in again to confirm.</string>
+    <string name="profile_delete_account_confirm">Delete</string>
+    <string name="profile_delete_account_error">Couldn\'t delete your account. Please try again.</string>
+    <string name="profile_edit_name">Edit name</string>
+    <string name="profile_edit_name_title">Edit Name</string>
+    <string name="profile_edit_name_placeholder">Your name</string>
+    <string name="profile_edit_name_save">Save</string>
 </resources>

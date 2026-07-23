@@ -10,7 +10,12 @@ permissions:
   contents: write
 
 env:
+  # The published XCFramework is the one shipped to the App Store — it must be
+  # built with the production flavor. Without APP_FLAVOR the build silently
+  # defaults to "stage" and bakes in the test_ RevenueCat key (RC error 23).
+  APP_FLAVOR: production
   PROD_REVENUECAT_API_KEY: ${{ secrets.PROD_REVENUECAT_API_KEY }}
+  PROD_REVENUECAT_API_KEY_IOS: ${{ secrets.PROD_REVENUECAT_API_KEY_IOS }}
   STAGE_REVENUECAT_API_KEY: ${{ secrets.STAGE_REVENUECAT_API_KEY }}
   GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
   GEMINI_MODEL_NAME: ${{ vars.GEMINI_MODEL_NAME }}

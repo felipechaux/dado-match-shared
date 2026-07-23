@@ -20,14 +20,20 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -48,6 +54,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dadomatch.shared.feature.auth.domain.repository.AuthRepository
+import com.dadomatch.shared.feature.auth.domain.usecase.DeleteAccountUseCase
+import com.dadomatch.shared.feature.auth.presentation.SignInCancelledException
 import com.dadomatch.shared.presentation.ui.theme.DeepDarkBlue
 import com.dadomatch.shared.presentation.ui.theme.NeonCyan
 import com.dadomatch.shared.presentation.ui.theme.TextGray
@@ -61,9 +69,20 @@ import org.koin.compose.koinInject
 @Composable
 fun ProfileScreen() {
     val authRepository: AuthRepository = koinInject()
+    val deleteAccountUseCase: DeleteAccountUseCase = koinInject()
     val currentUser by authRepository.currentUser.collectAsState(initial = null)
     val scope = rememberCoroutineScope()
     var showSignOutDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var isDeleting by remember { mutableStateOf(false) }
+    var deleteError by remember { mutableStateOf<String?>(null) }
+    val deleteErrorText = stringResource(Res.string.profile_delete_account_error)
+    // updateProfile does not re-emit through authStateChanged, so keep an optimistic
+    // override of the name that wins until the user signs out.
+    var localDisplayName by remember { mutableStateOf<String?>(null) }
+    var showEditNameDialog by remember { mutableStateOf(false) }
+    var isSavingName by remember { mutableStateOf(false) }
+    val effectiveDisplayName = localDisplayName ?: currentUser?.displayName
     val scrollState = rememberScrollState()
 
     Box(
@@ -120,7 +139,7 @@ fun ProfileScreen() {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = currentUser?.displayName?.firstOrNull()?.uppercase() ?: "?",
+                    text = effectiveDisplayName?.firstOrNull()?.uppercase() ?: "?",
                     style = MaterialTheme.typography.displayLarge,
                     color = NeonCyan,
                     fontWeight = FontWeight.Bold,
@@ -130,14 +149,33 @@ fun ProfileScreen() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // User Name
-            Text(
-                text = currentUser?.displayName ?: stringResource(Res.string.profile_guest_user),
-                style = MaterialTheme.typography.headlineSmall,
-                color = TextWhite,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
+            // User Name (editable for signed-in, non-anonymous users)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = effectiveDisplayName ?: stringResource(Res.string.profile_guest_user),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = TextWhite,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+                if (currentUser != null && currentUser?.isAnonymous == false) {
+                    Spacer(modifier = Modifier.width(4.dp))
+                    IconButton(
+                        onClick = { showEditNameDialog = true },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = stringResource(Res.string.profile_edit_name),
+                            tint = NeonCyan,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -161,7 +199,7 @@ fun ProfileScreen() {
                 InfoCard(
                     icon = Icons.Default.Person,
                     label = stringResource(Res.string.profile_display_name),
-                    value = currentUser?.displayName ?: stringResource(Res.string.profile_not_set)
+                    value = effectiveDisplayName ?: stringResource(Res.string.profile_not_set)
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -187,6 +225,27 @@ fun ProfileScreen() {
                     SignOutButton(
                         onClick = { showSignOutDialog = true }
                     )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Delete Account (App Store guideline 5.1.1(v))
+                    DeleteAccountButton(
+                        enabled = !isDeleting,
+                        onClick = {
+                            deleteError = null
+                            showDeleteDialog = true
+                        }
+                    )
+
+                    deleteError?.let { message ->
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = message,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFFFF4D4D),
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             } else {
                 // Not signed in state
@@ -269,6 +328,146 @@ fun ProfileScreen() {
             containerColor = Color(0xFF1E1E2C),
             tonalElevation = 8.dp
         )
+    }
+
+    // Delete Account Confirmation Dialog
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = {
+                Text(
+                    text = stringResource(Res.string.profile_delete_account_confirm_title),
+                    color = TextWhite,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(Res.string.profile_delete_account_confirm_message),
+                    color = TextGray
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteDialog = false
+                        isDeleting = true
+                        scope.launch {
+                            deleteAccountUseCase()
+                                .onSuccess { isDeleting = false }
+                                .onFailure { error ->
+                                    isDeleting = false
+                                    // A cancelled reauth prompt is a dismissal, not an error.
+                                    if (error !is SignInCancelledException) {
+                                        deleteError = deleteErrorText
+                                    }
+                                }
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFF4D4D)
+                    )
+                ) {
+                    Text(stringResource(Res.string.profile_delete_account_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text(
+                        text = stringResource(Res.string.profile_cancel),
+                        color = TextGray
+                    )
+                }
+            },
+            containerColor = Color(0xFF1E1E2C),
+            tonalElevation = 8.dp
+        )
+    }
+
+    // Edit Display Name Dialog
+    if (showEditNameDialog) {
+        var nameInput by remember { mutableStateOf(effectiveDisplayName ?: "") }
+        AlertDialog(
+            onDismissRequest = { if (!isSavingName) showEditNameDialog = false },
+            title = {
+                Text(
+                    text = stringResource(Res.string.profile_edit_name_title),
+                    color = TextWhite,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                OutlinedTextField(
+                    value = nameInput,
+                    onValueChange = { nameInput = it },
+                    singleLine = true,
+                    enabled = !isSavingName,
+                    placeholder = {
+                        Text(
+                            text = stringResource(Res.string.profile_edit_name_placeholder),
+                            color = TextGray
+                        )
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = TextWhite,
+                        unfocusedTextColor = TextWhite,
+                        cursorColor = NeonCyan,
+                        focusedBorderColor = NeonCyan,
+                        unfocusedBorderColor = TextGray
+                    )
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val trimmed = nameInput.trim()
+                        if (trimmed.isEmpty()) return@Button
+                        isSavingName = true
+                        scope.launch {
+                            authRepository.updateDisplayName(trimmed)
+                                .onSuccess { user ->
+                                    localDisplayName = user.displayName
+                                }
+                            isSavingName = false
+                            showEditNameDialog = false
+                        }
+                    },
+                    enabled = !isSavingName && nameInput.trim().isNotEmpty(),
+                    colors = ButtonDefaults.buttonColors(containerColor = NeonCyan)
+                ) {
+                    Text(
+                        text = stringResource(Res.string.profile_edit_name_save),
+                        color = DeepDarkBlue,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showEditNameDialog = false },
+                    enabled = !isSavingName
+                ) {
+                    Text(
+                        text = stringResource(Res.string.profile_cancel),
+                        color = TextGray
+                    )
+                }
+            },
+            containerColor = Color(0xFF1E1E2C),
+            tonalElevation = 8.dp
+        )
+    }
+
+    // Blocking overlay while the account is being deleted
+    if (isDeleting) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(DeepDarkBlue.copy(alpha = 0.7f)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = NeonCyan)
+        }
     }
 }
 
@@ -366,6 +565,36 @@ fun InfoCard(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun DeleteAccountButton(
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(enabled = enabled) { onClick() }
+            .padding(vertical = 12.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Default.Delete,
+            contentDescription = null,
+            tint = Color(0xFFFF4D4D),
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = stringResource(Res.string.profile_delete_account),
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color(0xFFFF4D4D),
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }
 
