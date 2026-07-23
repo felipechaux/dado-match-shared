@@ -280,6 +280,17 @@ buildkonfig {
                 ?: ""
         }
         
+        // A production framework must never ship with a blank RevenueCat key:
+        // Purchases.configure("") fails at runtime with RC error 23 (configuration error).
+        if (isProduction) {
+            require(revenueCatApiKey.isNotBlank()) {
+                "PROD_REVENUECAT_API_KEY is not set (local.properties or env). Refusing to build a production framework without the Android RevenueCat key."
+            }
+            require(revenueCatApiKeyIos.isNotBlank()) {
+                "PROD_REVENUECAT_API_KEY_IOS is not set (local.properties or env). Refusing to build a production framework without the iOS RevenueCat key."
+            }
+        }
+
         val apiBaseUrl = if (isProduction) {
             localProperties.getProperty("PROD_API_BASE_URL")
                 ?: System.getenv("PROD_API_BASE_URL")

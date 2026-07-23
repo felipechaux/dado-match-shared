@@ -16,7 +16,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/RevenueCat/purchases-hybrid-common.git", exact: "17.32.0"),
+        .package(url: "https://github.com/RevenueCat/purchases-hybrid-common.git", exact: "17.55.1"),
     ],
     targets: [
         .binaryTarget(
