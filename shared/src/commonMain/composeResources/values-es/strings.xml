@@ -153,4 +153,13 @@
     <string name="profile_sign_out_confirm_title">¿Cerrar Sesión?</string>
     <string name="profile_sign_out_confirm_message">¿Estás seguro de que quieres cerrar sesión?</string>
     <string name="profile_cancel">Cancelar</string>
+    <string name="profile_delete_account">Eliminar Cuenta</string>
+    <string name="profile_delete_account_confirm_title">¿Eliminar Cuenta?</string>
+    <string name="profile_delete_account_confirm_message">Esto elimina permanentemente tu cuenta y todos los datos asociados. Esta acción no se puede deshacer. Es posible que debas iniciar sesión de nuevo para confirmar.</string>
+    <string name="profile_delete_account_confirm">Eliminar</string>
+    <string name="profile_delete_account_error">No se pudo eliminar tu cuenta. Inténtalo de nuevo.</string>
+    <string name="profile_edit_name">Editar nombre</string>
+    <string name="profile_edit_name_title">Editar Nombre</string>
+    <string name="profile_edit_name_placeholder">Tu nombre</string>
+    <string name="profile_edit_name_save">Guardar</string>
 </resources>

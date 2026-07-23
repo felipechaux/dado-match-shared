@@ -18,6 +18,9 @@ class IosAuthHandler : NativeAuthHandler {
     /** Set by Swift (AuthCoordinator) before any Apple Sign-In is triggered. */
     var appleSignInProvider: ((AppleSignInCallback) -> Unit)? = null
 
+    /** Set by Swift (AuthCoordinator) to revoke a Sign in with Apple token. */
+    var appleRevokeProvider: ((String, AppleRevokeCallback) -> Unit)? = null
+
     override suspend fun signInWithGoogle(): Result<GoogleTokens> {
         val provider = googleSignInProvider
             ?: return Result.failure(Exception("Google Sign-In provider not set. Ensure AuthCoordinator.setup() is called after initKoin()."))
@@ -45,9 +48,9 @@ class IosAuthHandler : NativeAuthHandler {
 
         return suspendCoroutine { continuation ->
             provider(object : AppleSignInCallback {
-                override fun onSuccess(idToken: String, nonce: String?, displayName: String?) {
+                override fun onSuccess(idToken: String, nonce: String?, displayName: String?, authorizationCode: String?) {
                     continuation.resumeWith(
-                        kotlin.Result.success(Result.success(AuthTokens(idToken, nonce, displayName)))
+                        kotlin.Result.success(Result.success(AuthTokens(idToken, nonce, displayName, authorizationCode)))
                     )
                 }
 
@@ -55,6 +58,23 @@ class IosAuthHandler : NativeAuthHandler {
                     continuation.resumeWith(
                         kotlin.Result.success(Result.failure(error.toSignInException()))
                     )
+                }
+            })
+        }
+    }
+
+    override suspend fun revokeAppleToken(authorizationCode: String): Result<Unit> {
+        val provider = appleRevokeProvider
+            ?: return Result.failure(Exception("Apple revoke provider not set. Ensure AuthCoordinator.setup() is called after initKoin()."))
+
+        return suspendCoroutine { continuation ->
+            provider(authorizationCode, object : AppleRevokeCallback {
+                override fun onSuccess() {
+                    continuation.resumeWith(kotlin.Result.success(Result.success(Unit)))
+                }
+
+                override fun onFailure(error: String) {
+                    continuation.resumeWith(kotlin.Result.success(Result.failure(Exception(error))))
                 }
             })
         }

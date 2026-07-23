@@ -3,6 +3,13 @@ package com.dadomatch.shared.feature.auth.presentation
 interface NativeAuthHandler {
     suspend fun signInWithGoogle(): Result<GoogleTokens>
     suspend fun signInWithApple(): Result<AuthTokens>
+
+    /**
+     * Revokes a Sign in with Apple token so a deleted account is fully detached
+     * from the app on Apple's side (App Store guideline 5.1.1(v)). Only iOS needs
+     * this; other platforms return success as a no-op.
+     */
+    suspend fun revokeAppleToken(authorizationCode: String): Result<Unit>
 }
 
 /**
@@ -35,5 +42,8 @@ data class AuthTokens(
     // Apple only returns the user's name on the FIRST authorization, via the
     // native credential (never in the idToken). Captured on iOS and persisted to
     // the Firebase profile after sign-in. Null on Android (web flow sets it).
-    val displayName: String? = null
+    val displayName: String? = null,
+    // Fresh Apple authorization code, used to revoke the token on account
+    // deletion. Provided per-authorization on iOS; null on Android.
+    val authorizationCode: String? = null
 )

@@ -2,6 +2,7 @@ package com.dadomatch.shared.feature.auth.di
 
 import com.dadomatch.shared.feature.auth.data.repository.AuthRepositoryImpl
 import com.dadomatch.shared.feature.auth.domain.repository.AuthRepository
+import com.dadomatch.shared.feature.auth.domain.usecase.DeleteAccountUseCase
 import com.dadomatch.shared.feature.auth.domain.usecase.SignInAnonymouslyUseCase
 import com.dadomatch.shared.feature.auth.domain.usecase.SignInWithAppleUseCase
 import com.dadomatch.shared.feature.auth.domain.usecase.SignInWithGoogleUseCase
@@ -18,6 +19,7 @@ val authModule = module {
     factoryOf(::SignInWithGoogleUseCase)
     factoryOf(::SignInWithAppleUseCase)
     factoryOf(::SignInAnonymouslyUseCase)
+    factoryOf(::DeleteAccountUseCase)
 
     viewModelOf(::AuthViewModel)
 }

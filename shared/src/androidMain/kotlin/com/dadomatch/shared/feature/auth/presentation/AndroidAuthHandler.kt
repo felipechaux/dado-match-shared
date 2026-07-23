@@ -75,4 +75,8 @@ class AndroidAuthHandler(
             Result.failure(Exception("Apple Sign-In launch failed on Android: ${e.message}", e))
         }
     }
+
+    // Apple token revocation is an iOS/App Store requirement; the Android build
+    // has nothing to revoke on Apple's side, so this is a no-op success.
+    override suspend fun revokeAppleToken(authorizationCode: String): Result<Unit> = Result.success(Unit)
 }
