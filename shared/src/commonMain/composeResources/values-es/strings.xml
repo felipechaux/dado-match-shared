@@ -114,6 +114,9 @@
     <string name="settings_restore_title">Restaurar compras</string>
     <string name="settings_restore_desc">¿Ya te suscribiste? Restáuralo aquí, sin cuenta</string>
     <string name="settings_restoring">Restaurando…</string>
+    <string name="settings_restore_success">Compras restauradas — Pro activo</string>
+    <string name="settings_restore_none">No encontramos compras con este Apple ID</string>
+    <string name="settings_restore_failed">No se pudo restaurar. Inténtalo de nuevo.</string>
     
     <!-- Subscription Periods -->
     <string name="period_monthly">Mensual</string>

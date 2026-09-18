@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dadomatch.shared.feature.subscription.domain.model.Product
 import com.dadomatch.shared.feature.subscription.domain.model.SubscriptionStatus
+import com.dadomatch.shared.feature.subscription.domain.model.SubscriptionTier
 import com.dadomatch.shared.feature.subscription.domain.usecase.GetAvailableProductsUseCase
 import com.dadomatch.shared.feature.subscription.domain.usecase.GetSubscriptionStatusUseCase
 import com.dadomatch.shared.feature.subscription.domain.usecase.RestorePurchasesUseCase
@@ -55,22 +56,43 @@ class SubscriptionViewModel(
         }
     }
 
+    /**
+     * Restoring is reachable without an account (App Store guideline 5.1.1(v)), so it has
+     * to report back on its own: a silent restore is indistinguishable from a dead button.
+     * A successful call that finds nothing is NOT an error — it means this Apple ID simply
+     * has no purchase to recover — so the three outcomes stay distinct.
+     */
     fun restorePurchases() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isRestoring = true, error = null) }
-            val result = restorePurchasesUseCase()
-            if (result.isSuccess) {
-                _uiState.update { it.copy(isRestoring = false) }
-                loadSubscriptionData()
-            } else {
-                _uiState.update {
-                    it.copy(
-                        isRestoring = false,
-                        error = result.exceptionOrNull()?.message ?: "Restore failed"
-                    )
+            _uiState.update { it.copy(isRestoring = true, error = null, restoreOutcome = null) }
+            restorePurchasesUseCase()
+                .onSuccess { status ->
+                    _uiState.update {
+                        it.copy(
+                            isRestoring = false,
+                            restoreOutcome = if (status.tier == SubscriptionTier.PREMIUM) {
+                                RestoreOutcome.RESTORED
+                            } else {
+                                RestoreOutcome.NOTHING_FOUND
+                            }
+                        )
+                    }
+                    loadSubscriptionData()
                 }
-            }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(
+                            isRestoring = false,
+                            restoreOutcome = RestoreOutcome.FAILED,
+                            error = error.message ?: "Restore failed"
+                        )
+                    }
+                }
         }
+    }
+
+    fun consumeRestoreOutcome() {
+        _uiState.update { it.copy(restoreOutcome = null) }
     }
 
     fun refreshStatus() {
@@ -82,10 +104,14 @@ class SubscriptionViewModel(
     }
 }
 
+/** Outcome of the last restore attempt, surfaced to the user exactly once. */
+enum class RestoreOutcome { RESTORED, NOTHING_FOUND, FAILED }
+
 data class SubscriptionUiState(
     val isLoading: Boolean = false,
     val products: List<Product> = emptyList(),
     val subscriptionStatus: SubscriptionStatus? = null,
     val isRestoring: Boolean = false,
+    val restoreOutcome: RestoreOutcome? = null,
     val error: String? = null
 )

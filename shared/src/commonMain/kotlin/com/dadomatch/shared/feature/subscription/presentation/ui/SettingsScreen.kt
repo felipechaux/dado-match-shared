@@ -25,10 +25,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetValue
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,11 +57,15 @@ import com.dadomatch.shared.presentation.ui.theme.DeepDarkBlue
 import com.dadomatch.shared.presentation.ui.theme.NeonCyan
 import com.dadomatch.shared.presentation.ui.theme.TextGray
 import com.dadomatch.shared.presentation.ui.theme.TextWhite
+import com.dadomatch.shared.presentation.viewmodel.RestoreOutcome
 import com.dadomatch.shared.presentation.viewmodel.SubscriptionViewModel
 import com.dadomatch.shared.shared.generated.resources.Res
 import com.dadomatch.shared.shared.generated.resources.language_label
 import com.dadomatch.shared.shared.generated.resources.settings_account_section
 import com.dadomatch.shared.shared.generated.resources.settings_restore_desc
+import com.dadomatch.shared.shared.generated.resources.settings_restore_failed
+import com.dadomatch.shared.shared.generated.resources.settings_restore_none
+import com.dadomatch.shared.shared.generated.resources.settings_restore_success
 import com.dadomatch.shared.shared.generated.resources.settings_restore_title
 import com.dadomatch.shared.shared.generated.resources.settings_restoring
 import com.dadomatch.shared.shared.generated.resources.settings_sign_in_optional_desc
@@ -90,6 +97,22 @@ fun SettingsScreen(
     val authSheetState = rememberModalBottomSheetState(
         confirmValueChange = { value -> !(authUiState.isLoading && value == SheetValue.Hidden) }
     )
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // A restore reachable without an account has to say what it did — otherwise it is
+    // indistinguishable from a button that does nothing.
+    val restoredMessage = stringResource(Res.string.settings_restore_success)
+    val nothingFoundMessage = stringResource(Res.string.settings_restore_none)
+    val failedMessage = stringResource(Res.string.settings_restore_failed)
+    LaunchedEffect(subsUiState.restoreOutcome) {
+        when (subsUiState.restoreOutcome) {
+            RestoreOutcome.RESTORED -> snackbarHostState.showSnackbar(restoredMessage)
+            RestoreOutcome.NOTHING_FOUND -> snackbarHostState.showSnackbar(nothingFoundMessage)
+            RestoreOutcome.FAILED -> snackbarHostState.showSnackbar(failedMessage)
+            null -> return@LaunchedEffect
+        }
+        viewModel.consumeRestoreOutcome()
+    }
     val coroutineScope = rememberCoroutineScope()
     val haptic = rememberHapticEngine()
     val deviceLanguage = Locale.current.language.take(2)
@@ -99,6 +122,7 @@ fun SettingsScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             containerColor = DeepDarkBlue,
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             topBar = {
                 CenterAlignedTopAppBar(
                     title = { 

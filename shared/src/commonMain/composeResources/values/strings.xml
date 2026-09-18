@@ -114,6 +114,9 @@
     <string name="settings_restore_title">Restore Purchases</string>
     <string name="settings_restore_desc">Already subscribed? Restore it here — no account needed</string>
     <string name="settings_restoring">Restoring…</string>
+    <string name="settings_restore_success">Purchases restored — Pro is active</string>
+    <string name="settings_restore_none">No purchases found for this Apple ID</string>
+    <string name="settings_restore_failed">Couldn't restore. Please try again.</string>
     
     <!-- Subscription Periods -->
     <string name="period_monthly">Monthly</string>
