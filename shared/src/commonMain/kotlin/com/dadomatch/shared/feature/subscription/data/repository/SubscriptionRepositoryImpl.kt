@@ -9,67 +9,49 @@ import com.dadomatch.shared.feature.subscription.domain.model.Product
 import com.dadomatch.shared.feature.subscription.domain.model.SubscriptionStatus
 import com.dadomatch.shared.feature.subscription.domain.model.SubscriptionTier
 import com.dadomatch.shared.feature.subscription.domain.repository.SubscriptionRepository
-import com.dadomatch.shared.feature.auth.domain.repository.AuthRepository
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.transformLatest
 
 /**
  * Implementation of SubscriptionRepository
  */
 class SubscriptionRepositoryImpl(
     private val revenueCatService: RevenueCatService,
-    private val localDataSource: SubscriptionLocalDataSource,
-    private val authRepository: AuthRepository
+    private val localDataSource: SubscriptionLocalDataSource
 ) : SubscriptionRepository {
-    
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override fun getSubscriptionStatus(): Flow<SubscriptionStatus> {
-        // transformLatest reacts to every auth state change.
-        // null user = Firebase not yet loaded or unauthenticated — treat as guest.
-        return authRepository.currentUser.transformLatest { user ->
-            // null or anonymous → guest: drive status purely from local DataStore
-            val isLoggedIn = user != null && !user.isAnonymous
 
-            if (!isLoggedIn) {
-                // Anonymous/guest users have no trial — must sign in to get rolls
-                emit(SubscriptionStatus.free(0))
+    /**
+     * Entitlements never depend on having a registered account (App Store guideline
+     * 5.1.1(v)): RevenueCat tracks guests under its own anonymous app user ID and
+     * aliases them into the Firebase uid on sign-in, so guests and signed-in users
+     * are served by the exact same flow.
+     *
+     * No network calls inside the flow — counters must update instantly on decrement.
+     */
+    override fun getSubscriptionStatus(): Flow<SubscriptionStatus> {
+        return combine(
+            revenueCatService.customerInfoFlow,
+            localDataSource.getDailyRollsRemaining(),
+            localDataSource.getDailyAiCallsRemaining()
+        ) { customerInfo, dailyRolls, rawAiCalls ->
+            val status = if (customerInfo != null) {
+                customerInfo.toSubscriptionStatus(dailyRolls)
             } else {
-                // Logged-in identified user: combine cached RC info + live local counters.
-                // No network calls inside the flow — counters must update instantly on decrement.
-                combine(
-                    revenueCatService.customerInfoFlow,
-                    localDataSource.getDailyRollsRemaining(),
-                    localDataSource.getDailyAiCallsRemaining()
-                ) { customerInfo, dailyRolls, rawAiCalls ->
-                    val status = if (customerInfo != null) {
-                        customerInfo.toSubscriptionStatus(dailyRolls)
-                    } else {
-                        SubscriptionStatus.free(dailyRolls)
-                    }
-                    status.copy(dailyAiCallsRemaining = resolveAiCalls(status, rawAiCalls))
-                }.collect { status -> emit(status) }
+                SubscriptionStatus.free(dailyRolls)
             }
+            status.copy(dailyAiCallsRemaining = resolveAiCalls(status, rawAiCalls))
         }
     }
 
     override suspend fun getCurrentSubscriptionStatus(): Result<SubscriptionStatus> {
         return try {
-            val user = authRepository.currentUser.first()
-            val isAnonymous = user?.isAnonymous ?: true
             val dailyRolls = localDataSource.getDailyRollsRemaining().first()
+            val rawAiCalls = localDataSource.getDailyAiCallsRemaining().first()
 
-            if (isAnonymous) {
-                Result.success(SubscriptionStatus.free(0))
-            } else {
-                val customerInfoResult = revenueCatService.getCustomerInfo()
-                val rawAiCalls = localDataSource.getDailyAiCallsRemaining().first()
-                customerInfoResult.map { customerInfo ->
-                    val status = customerInfo.toSubscriptionStatus(dailyRolls)
-                    status.copy(dailyAiCallsRemaining = resolveAiCalls(status, rawAiCalls))
-                }
+            revenueCatService.getCustomerInfo().map { customerInfo ->
+                val status = customerInfo.toSubscriptionStatus(dailyRolls)
+                status.copy(dailyAiCallsRemaining = resolveAiCalls(status, rawAiCalls))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -169,10 +151,6 @@ class SubscriptionRepositoryImpl(
 
     override suspend fun decrementDailyAiCalls(): Result<SubscriptionStatus> {
         return try {
-            val user = authRepository.currentUser.first()
-            val isAnonymous = user?.isAnonymous ?: true
-            if (isAnonymous) return Result.success(SubscriptionStatus.free(0))
-
             val cachedCustomerInfo = revenueCatService.customerInfoFlow.first()
             val hasPremium = revenueCatService.hasPremiumAccess(cachedCustomerInfo)
             if (!hasPremium) return Result.success(SubscriptionStatus.free(0))
@@ -199,16 +177,8 @@ class SubscriptionRepositoryImpl(
 
     override suspend fun decrementDailyRolls(): Result<SubscriptionStatus> {
         return try {
-            val user = authRepository.currentUser.first()
-            val isAnonymous = user?.isAnonymous ?: true
-
             // Use cached customerInfo to avoid a blocking network call on every roll
             val cachedCustomerInfo = revenueCatService.customerInfoFlow.first()
-            // Anonymous users cannot roll — return 0 immediately
-            if (isAnonymous) {
-                return Result.success(SubscriptionStatus.free(0))
-            }
-
             val hasPremium = revenueCatService.hasPremiumAccess(cachedCustomerInfo)
 
             val dailyRolls = localDataSource.getDailyRollsRemaining().first()

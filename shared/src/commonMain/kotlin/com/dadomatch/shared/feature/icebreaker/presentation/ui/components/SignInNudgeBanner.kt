@@ -24,7 +24,7 @@ import com.dadomatch.shared.presentation.ui.theme.NeonCyan
 import com.dadomatch.shared.presentation.ui.theme.TextGray
 import com.dadomatch.shared.presentation.ui.theme.TextWhite
 import com.dadomatch.shared.shared.generated.resources.Res
-import com.dadomatch.shared.shared.generated.resources.sign_in_for_rolls
+import com.dadomatch.shared.shared.generated.resources.sign_in_nudge_title
 import com.dadomatch.shared.shared.generated.resources.sign_in_nudge_subtitle
 import org.jetbrains.compose.resources.stringResource
 
@@ -46,7 +46,7 @@ fun SignInNudgeBanner(
         Spacer(modifier = Modifier.size(10.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = stringResource(Res.string.sign_in_for_rolls),
+                text = stringResource(Res.string.sign_in_nudge_title),
                 color = TextWhite,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold
