@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.sp
 import com.dadomatch.shared.feature.auth.domain.repository.AuthRepository
 import com.dadomatch.shared.feature.auth.domain.usecase.DeleteAccountUseCase
 import com.dadomatch.shared.feature.auth.presentation.SignInCancelledException
+import com.dadomatch.shared.feature.subscription.domain.repository.SubscriptionRepository
 import com.dadomatch.shared.presentation.ui.theme.DeepDarkBlue
 import com.dadomatch.shared.presentation.ui.theme.NeonCyan
 import com.dadomatch.shared.presentation.ui.theme.TextGray
@@ -70,6 +71,7 @@ import org.koin.compose.koinInject
 fun ProfileScreen() {
     val authRepository: AuthRepository = koinInject()
     val deleteAccountUseCase: DeleteAccountUseCase = koinInject()
+    val subscriptionRepository: SubscriptionRepository = koinInject()
     val currentUser by authRepository.currentUser.collectAsState(initial = null)
     val scope = rememberCoroutineScope()
     var showSignOutDialog by remember { mutableStateOf(false) }
@@ -306,7 +308,11 @@ fun ProfileScreen() {
                 Button(
                     onClick = {
                         scope.launch {
+                            // RevenueCat identity must follow Firebase identity: without
+                            // this the signed-out device keeps serving the previous
+                            // account's entitlements from cached customer info.
                             authRepository.signOut()
+                            subscriptionRepository.logOut()
                             showSignOutDialog = false
                         }
                     },

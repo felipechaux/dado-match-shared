@@ -15,14 +15,23 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.dadomatch.shared.feature.auth.presentation.ui.AuthBottomSheet
 import com.dadomatch.shared.feature.auth.presentation.viewmodel.AuthViewModel
 import com.dadomatch.shared.feature.subscription.domain.usecase.GetLanguageUseCase
 import com.dadomatch.shared.feature.subscription.domain.usecase.SetLanguageUseCase
@@ -47,9 +57,19 @@ import com.dadomatch.shared.presentation.ui.theme.DeepDarkBlue
 import com.dadomatch.shared.presentation.ui.theme.NeonCyan
 import com.dadomatch.shared.presentation.ui.theme.TextGray
 import com.dadomatch.shared.presentation.ui.theme.TextWhite
+import com.dadomatch.shared.presentation.viewmodel.RestoreOutcome
 import com.dadomatch.shared.presentation.viewmodel.SubscriptionViewModel
 import com.dadomatch.shared.shared.generated.resources.Res
 import com.dadomatch.shared.shared.generated.resources.language_label
+import com.dadomatch.shared.shared.generated.resources.settings_account_section
+import com.dadomatch.shared.shared.generated.resources.settings_restore_desc
+import com.dadomatch.shared.shared.generated.resources.settings_restore_failed
+import com.dadomatch.shared.shared.generated.resources.settings_restore_none
+import com.dadomatch.shared.shared.generated.resources.settings_restore_success
+import com.dadomatch.shared.shared.generated.resources.settings_restore_title
+import com.dadomatch.shared.shared.generated.resources.settings_restoring
+import com.dadomatch.shared.shared.generated.resources.settings_sign_in_optional_desc
+import com.dadomatch.shared.shared.generated.resources.settings_sign_in_optional_title
 import com.dadomatch.shared.shared.generated.resources.settings_title
 import com.dadomatch.shared.presentation.haptic.rememberHapticEngine
 import kotlinx.coroutines.launch
@@ -70,8 +90,29 @@ fun SettingsScreen(
     val setLanguageUseCase: SetLanguageUseCase = koinInject()
     val scrollState = rememberScrollState()
     val authUiState by authViewModel.uiState.collectAsState()
+    val subsUiState by viewModel.uiState.collectAsState()
     val isAnonymous = authUiState.user?.isAnonymous ?: true
     var showConfetti by remember(showConfettiOnEnter) { mutableStateOf(showConfettiOnEnter) }
+    var showAuthSheet by remember { mutableStateOf(false) }
+    val authSheetState = rememberModalBottomSheetState(
+        confirmValueChange = { value -> !(authUiState.isLoading && value == SheetValue.Hidden) }
+    )
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // A restore reachable without an account has to say what it did — otherwise it is
+    // indistinguishable from a button that does nothing.
+    val restoredMessage = stringResource(Res.string.settings_restore_success)
+    val nothingFoundMessage = stringResource(Res.string.settings_restore_none)
+    val failedMessage = stringResource(Res.string.settings_restore_failed)
+    LaunchedEffect(subsUiState.restoreOutcome) {
+        when (subsUiState.restoreOutcome) {
+            RestoreOutcome.RESTORED -> snackbarHostState.showSnackbar(restoredMessage)
+            RestoreOutcome.NOTHING_FOUND -> snackbarHostState.showSnackbar(nothingFoundMessage)
+            RestoreOutcome.FAILED -> snackbarHostState.showSnackbar(failedMessage)
+            null -> return@LaunchedEffect
+        }
+        viewModel.consumeRestoreOutcome()
+    }
     val coroutineScope = rememberCoroutineScope()
     val haptic = rememberHapticEngine()
     val deviceLanguage = Locale.current.language.take(2)
@@ -81,6 +122,7 @@ fun SettingsScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             containerColor = DeepDarkBlue,
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             topBar = {
                 CenterAlignedTopAppBar(
                     title = { 
@@ -111,6 +153,42 @@ fun SettingsScreen(
                     onNavigateToPaywall = onNavigateToPaywall
                 )
                 
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // ── Account Section ───────────────────────────────────────
+                // Registration is optional and restoring a purchase never needs an
+                // account — App Store guideline 5.1.1(v).
+                SettingsSectionTitle(title = stringResource(Res.string.settings_account_section))
+
+                if (isAnonymous) {
+                    SettingsItem(
+                        icon = Icons.Default.Person,
+                        title = stringResource(Res.string.settings_sign_in_optional_title),
+                        subtitle = stringResource(Res.string.settings_sign_in_optional_desc),
+                        onClick = {
+                            haptic.light()
+                            showAuthSheet = true
+                        }
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+
+                SettingsItem(
+                    icon = Icons.Default.Refresh,
+                    title = stringResource(Res.string.settings_restore_title),
+                    subtitle = if (subsUiState.isRestoring) {
+                        stringResource(Res.string.settings_restoring)
+                    } else {
+                        stringResource(Res.string.settings_restore_desc)
+                    },
+                    onClick = {
+                        if (!subsUiState.isRestoring) {
+                            haptic.light()
+                            viewModel.restorePurchases()
+                        }
+                    }
+                )
+
                 Spacer(modifier = Modifier.height(32.dp))
 
                 // ── Language Section ──────────────────────────────────────
@@ -150,6 +228,20 @@ fun SettingsScreen(
             }
         }
         
+        if (showAuthSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { if (!authUiState.isLoading) showAuthSheet = false },
+                sheetState = authSheetState,
+                containerColor = DeepDarkBlue,
+                dragHandle = null
+            ) {
+                AuthBottomSheet(
+                    viewModel = authViewModel,
+                    onDismiss = { showAuthSheet = false }
+                )
+            }
+        }
+
         if (showConfetti) {
             ConfettiOverlay(
                 onAnimationEnd = {

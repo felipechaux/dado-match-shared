@@ -20,8 +20,8 @@
     <string name="error_button_retry">Try Again</string>
     <string name="rolls_left_today">%d rolls left today</string>
     <string name="no_rolls_left">No rolls left — upgrade for more ✨</string>
-    <string name="sign_in_for_rolls">Sign in for 10 free daily rolls</string>
-    <string name="sign_in_nudge_subtitle">Tap to create your free account</string>
+    <string name="sign_in_nudge_title">Sign in to sync across your devices</string>
+    <string name="sign_in_nudge_subtitle">Optional — tap to create a free account</string>
 
     <!-- Environments -->
     <string name="env_gym">Gym</string>
@@ -106,10 +106,17 @@
     <string name="subs_rolls_left">Daily rolls left: %d</string>
     <string name="subs_manage_button">Manage Subscription</string>
     <string name="subs_upgrade_button">Upgrade to Pro</string>
-    <string name="subs_login_required_title">Sign In Required</string>
-    <string name="subs_login_required_desc">Please sign in to safely link your subscription to your account.</string>
-    <string name="subs_login_button">Sign In Now</string>
-    <string name="subs_maybe_later">Maybe Later</string>
+
+    <!-- Account section (Settings) — registration is always optional, guideline 5.1.1(v) -->
+    <string name="settings_account_section">Account</string>
+    <string name="settings_sign_in_optional_title">Sign In (optional)</string>
+    <string name="settings_sign_in_optional_desc">Use your subscription on your other devices</string>
+    <string name="settings_restore_title">Restore Purchases</string>
+    <string name="settings_restore_desc">Already subscribed? Restore it here — no account needed</string>
+    <string name="settings_restoring">Restoring…</string>
+    <string name="settings_restore_success">Purchases restored — Pro is active</string>
+    <string name="settings_restore_none">No purchases found for this Apple ID</string>
+    <string name="settings_restore_failed">Couldn't restore. Please try again.</string>
     
     <!-- Subscription Periods -->
     <string name="period_monthly">Monthly</string>
