@@ -32,8 +32,9 @@ kotlin {
     }
 
     val xcf = XCFramework("DadoMatchShared")
+    // No iosX64: only Intel-Mac simulators need it, and every Mac here and in
+    // CI is Apple Silicon. Dropping it cuts minutes off each XCFramework build.
     listOf(
-        iosX64(),
         iosArm64(),
         iosSimulatorArm64(),
     ).forEach {
@@ -138,7 +139,6 @@ kotlin {
 dependencies {
     // Don't add kspCommonMainMetadata - it conflicts with platform-specific actuals
     add("kspAndroid", libs.room.compiler)
-    add("kspIosX64", libs.room.compiler)
     add("kspIosArm64", libs.room.compiler)
     add("kspIosSimulatorArm64", libs.room.compiler)
 }
