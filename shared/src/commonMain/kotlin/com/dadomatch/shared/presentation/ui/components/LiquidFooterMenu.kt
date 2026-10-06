@@ -1,5 +1,6 @@
 package com.dadomatch.shared.presentation.ui.components
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,6 +12,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,9 +31,12 @@ import com.dadomatch.shared.shared.generated.resources.nav_settings
 import com.dadomatch.shared.shared.generated.resources.nav_success
 import org.jetbrains.compose.resources.stringResource
 
+private val BarShape = RoundedCornerShape(36.dp)
+
 @Composable
 fun LiquidFooterMenu(
     currentRoute: String?,
+    glassSource: GlassSource,
     onNavigate: (String) -> Unit
 ) {
     val homeRoute = Screen.Home.route
@@ -50,10 +55,7 @@ fun LiquidFooterMenu(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(72.dp)
-                .background(
-                    color = Color.White.copy(alpha = 0.05f),
-                    shape = RoundedCornerShape(36.dp)
-                ),
+                .glassSurface(glassSource, BarShape),
             contentAlignment = Alignment.Center
         ) {
             Row(
@@ -98,14 +100,20 @@ private fun FooterItem(
     onClick: () -> Unit
 ) {
     val color = if (isSelected) NeonCyan else TextWhite.copy(alpha = 0.6f)
+    // Selected tab sits on a cyan-tinted glass capsule, like the iOS 26 tab bar
+    val capsuleColor by animateColorAsState(
+        if (isSelected) NeonCyan.copy(alpha = 0.14f) else Color.Transparent
+    )
 
     Column(
         modifier = Modifier
             .fillMaxHeight()
-            .widthIn(min = 72.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .padding(vertical = 10.dp)
+            .widthIn(min = 64.dp)
+            .clip(RoundedCornerShape(30.dp))
+            .background(capsuleColor)
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
