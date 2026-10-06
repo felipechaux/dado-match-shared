@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,7 +41,15 @@ import com.dadomatch.shared.presentation.ui.LocaleProvider
 import com.dadomatch.shared.presentation.ui.components.LiquidFooterMenu
 import com.dadomatch.shared.presentation.ui.screens.SplashScreen
 import com.dadomatch.shared.presentation.ui.theme.DeepDarkBlue
+import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import com.dadomatch.shared.shared.generated.resources.Res
+import com.dadomatch.shared.shared.generated.resources.nav_home
+import com.dadomatch.shared.shared.generated.resources.nav_profile
+import com.dadomatch.shared.shared.generated.resources.nav_settings
+import com.dadomatch.shared.shared.generated.resources.nav_success
+import com.dadomatch.shared.presentation.ui.components.glassSource
+import com.dadomatch.shared.presentation.ui.components.rememberGlassSource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -55,7 +65,9 @@ private fun tabIndex(route: String?) = TAB_ORDER.indexOf(route)
 
 @Composable
 fun AppNavigation(
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
+    // When set, a platform-native tab bar (iOS) replaces LiquidFooterMenu
+    nativeTabBar: NativeTabBarBridge? = null
 ) {
     // Read system locale before LocaleProvider overrides LocalConfiguration.
     val deviceLanguage = Locale.current.language.take(2)
@@ -67,6 +79,8 @@ fun AppNavigation(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     var showConfettiOnSettings by remember { mutableStateOf(false) }
+    // Screens are what the glass bottom bar floating above them refracts
+    val glassSource = rememberGlassSource()
 
     val homeViewModel: HomeViewModel = koinViewModel()
     val homeUiState by homeViewModel.uiState.collectAsState()
@@ -75,7 +89,40 @@ fun AppNavigation(
                         currentRoute != Screen.Paywall.route &&
                         !homeUiState.showOnboarding
 
+    val navigateToTab: (String) -> Unit = { route ->
+        navController.navigate(route) {
+            popUpTo(navController.graph.findStartDestination().route ?: Screen.Home.route) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState    = true
+        }
+    }
+
+    if (nativeTabBar != null) {
+        DisposableEffect(nativeTabBar) {
+            nativeTabBar.onTabSelected = { index -> TAB_ORDER.getOrNull(index)?.let(navigateToTab) }
+            onDispose { nativeTabBar.onTabSelected = null }
+        }
+        LaunchedEffect(nativeTabBar, currentRoute, showBottomBar) {
+            nativeTabBar.publishState(
+                selectedIndex = tabIndex(currentRoute).takeIf { it >= 0 } ?: NativeTabBarBridge.NO_TAB_SELECTED,
+                isVisible = showBottomBar
+            )
+        }
+    }
+
     LocaleProvider(languageCode = selectedLanguage) {
+    if (nativeTabBar != null) {
+        // Resolved inside LocaleProvider so the native bar follows the in-app language
+        val tabTitles = listOf(
+            stringResource(Res.string.nav_home),
+            stringResource(Res.string.nav_success),
+            stringResource(Res.string.nav_profile),
+            stringResource(Res.string.nav_settings)
+        )
+        LaunchedEffect(nativeTabBar, tabTitles) { nativeTabBar.publishTitles(tabTitles) }
+    }
     Scaffold(containerColor = DeepDarkBlue) { paddingValues ->
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -87,7 +134,8 @@ fun AppNavigation(
                     startDestination = Screen.Splash.route,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(top = paddingValues.calculateTopPadding()),
+                        .padding(top = paddingValues.calculateTopPadding())
+                        .glassSource(glassSource),
                     enterTransition = {
                         val from = tabIndex(initialState.destination.route)
                         val to   = tabIndex(targetState.destination.route)
@@ -191,22 +239,15 @@ fun AppNavigation(
                 }
 
                 AnimatedVisibility(
-                    visible = showBottomBar,
+                    visible = showBottomBar && nativeTabBar == null,
                     enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
                     exit  = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 }),
                     modifier = Modifier.align(Alignment.BottomCenter)
                 ) {
                     LiquidFooterMenu(
                         currentRoute = currentRoute,
-                        onNavigate   = { route ->
-                            navController.navigate(route) {
-                                popUpTo(navController.graph.findStartDestination().route ?: Screen.Home.route) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState    = true
-                            }
-                        }
+                        glassSource  = glassSource,
+                        onNavigate   = navigateToTab
                     )
                 }
             }

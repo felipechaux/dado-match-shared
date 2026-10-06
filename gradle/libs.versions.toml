@@ -16,6 +16,8 @@ navigation-compose = "2.9.1"
 kotlinx-datetime = "0.6.1"
 calf-file-picker = "0.5.0"
 coilCompose3Version = "3.0.4"
+# Android-only 1.x line; 2.x (multiplatform) requires Compose Multiplatform 1.11+
+backdrop = "1.0.6"
 gemini-common = "0.9.0-1.1.0"
 buildkonfig = "0.17.1"
 compottie = "2.0.0-rc01"
@@ -37,6 +39,7 @@ kotlin-gradle-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-p
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 calf-file-picker = { module = "com.mohamedrejeb.calf:calf-file-picker", version.ref = "calf-file-picker" }
 
+backdrop = { module = "io.github.kyant0:backdrop", version.ref = "backdrop" }
 coil3-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coilCompose3Version" }
 coil3-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coilCompose3Version" }
 compose-animation = { group = "androidx.compose.animation", name = "animation" }

@@ -53,6 +53,7 @@ kotlin {
         androidMain {
             dependencies {
                 implementation(libs.ktor.client.okhttp)
+                implementation(libs.backdrop)
                 implementation(compose.preview)
                 implementation(compose.components.uiToolingPreview)
                 api(libs.koin.android)
