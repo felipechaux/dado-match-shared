@@ -12,7 +12,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class AndroidAuthHandler(
-    private val context: Context
+    private val context: Context,
+    private val activityTracker: CurrentActivityTracker
 ) : NativeAuthHandler {
 
     override val isAppleSignInAvailable: Boolean = false
@@ -24,7 +25,10 @@ class AndroidAuthHandler(
             println("   Package Name: ${context.packageName}")
             println("   Web Client ID: ${BuildKonfig.GOOGLE_WEB_CLIENT_ID}")
             
-            val credentialManager = CredentialManager.create(context)
+            // The account picker needs an Activity context (see CurrentActivityTracker)
+            val activity = activityTracker.activity
+                ?: return@withContext Result.failure(Exception("Google Sign-In needs a visible screen to show the account picker"))
+            val credentialManager = CredentialManager.create(activity)
             
             val googleIdOption = GetGoogleIdOption.Builder()
                 .setFilterByAuthorizedAccounts(false)
@@ -38,7 +42,7 @@ class AndroidAuthHandler(
 
             println("🔍 Requesting credentials...")
             val result = credentialManager.getCredential(
-                context = context,
+                context = activity,
                 request = request
             )
             println("✅ Credentials received!")
