@@ -122,17 +122,20 @@ fun AuthBottomSheet(
                 Spacer(modifier = Modifier.height(40.dp))
             } else {
                 // Apple Button — required by App Store guideline 4.8 as an
-                // equivalent privacy-preserving login option, shown first
-                SocialAuthButton(
-                    text = stringResource(Res.string.auth_apple_button),
-                    icon = "",
-                    backgroundColor = Color.White,
-                    contentColor = Color.Black,
-                    onClick = { viewModel.triggerAppleSignIn() },
-                    iconPainter = painterResource(Res.drawable.ic_apple)
-                )
+                // equivalent privacy-preserving login option, shown first.
+                // iOS only: Google Play has no such requirement.
+                if (uiState.isAppleSignInAvailable) {
+                    SocialAuthButton(
+                        text = stringResource(Res.string.auth_apple_button),
+                        icon = "",
+                        backgroundColor = Color.White,
+                        contentColor = Color.Black,
+                        onClick = { viewModel.triggerAppleSignIn() },
+                        iconPainter = painterResource(Res.drawable.ic_apple)
+                    )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
 
                 // Google Button
                 SocialAuthButton(

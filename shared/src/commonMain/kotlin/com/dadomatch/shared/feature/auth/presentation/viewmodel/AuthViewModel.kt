@@ -27,7 +27,9 @@ class AuthViewModel(
     private val nativeAuthHandler: NativeAuthHandler
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(AuthUiState())
+    private val _uiState = MutableStateFlow(
+        AuthUiState(isAppleSignInAvailable = nativeAuthHandler.isAppleSignInAvailable)
+    )
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
     private val _events = MutableSharedFlow<AuthEvent>(
@@ -99,7 +101,8 @@ data class AuthUiState(
     val isLoading: Boolean = false,
     val isInitialized: Boolean = false,
     val user: AuthUser? = null,
-    val error: String? = null
+    val error: String? = null,
+    val isAppleSignInAvailable: Boolean = false
 )
 
 sealed class AuthEvent {
