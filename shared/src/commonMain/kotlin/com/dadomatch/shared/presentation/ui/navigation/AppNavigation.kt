@@ -25,7 +25,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.intl.Locale
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -91,7 +90,10 @@ fun AppNavigation(
 
     val navigateToTab: (String) -> Unit = { route ->
         navController.navigate(route) {
-            popUpTo(navController.graph.findStartDestination().route ?: Screen.Home.route) {
+            // Home is the root of the tab stack: the graph's start destination is
+            // Splash, which is already popped, so popping up to it would be a no-op
+            // and every tab switch would pile up on the back stack
+            popUpTo(Screen.Home.route) {
                 saveState = true
             }
             launchSingleTop = true
