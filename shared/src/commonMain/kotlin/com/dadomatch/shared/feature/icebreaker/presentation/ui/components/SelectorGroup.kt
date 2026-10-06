@@ -1,6 +1,7 @@
 package com.dadomatch.shared.feature.icebreaker.presentation.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -30,16 +31,25 @@ import com.dadomatch.shared.presentation.haptic.rememberHapticEngine
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dadomatch.shared.presentation.ui.theme.DarkSurface
 import com.dadomatch.shared.presentation.ui.theme.TextGray
 import com.dadomatch.shared.presentation.ui.theme.TextWhite
 import com.dadomatch.shared.shared.generated.resources.Res
+import com.dadomatch.shared.shared.generated.resources.cd_locked_option
 import com.dadomatch.shared.shared.generated.resources.env_bar
 import com.dadomatch.shared.shared.generated.resources.env_beach
 import com.dadomatch.shared.shared.generated.resources.env_cafe
@@ -96,6 +106,9 @@ fun SelectorGroup(
             modifier = Modifier
                 .fillMaxWidth()
                 .onGloballyPositioned { viewportWidth = it.size.width }
+                .horizontalFadingEdges(scrollState),
+            // Centers the chips when they all fit (tablets, landscape)
+            contentAlignment = Alignment.Center
         ) {
             Row(
                 modifier = Modifier
@@ -145,7 +158,7 @@ fun SelectorGroup(
                             if (isRestricted(option)) {
                                 Icon(
                                     imageVector = Icons.Default.Lock,
-                                    contentDescription = "Restricted",
+                                    contentDescription = stringResource(Res.string.cd_locked_option),
                                     tint = if (isSelected) TextWhite.copy(alpha = 0.6f) else TextGray,
                                     modifier = Modifier.size(12.dp)
                                 )
@@ -176,3 +189,28 @@ fun SelectorGroup(
         }
     }
 }
+
+// Fades the chips out at an edge while there is more to scroll that way, so a
+// cut-off chip reads as "scroll for more" instead of a clipping bug.
+// Scroll state is read in the draw phase, so scrolling doesn't recompose.
+private fun Modifier.horizontalFadingEdges(scrollState: ScrollState, edgeWidth: Dp = 24.dp): Modifier =
+    graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+        .drawWithContent {
+            drawContent()
+            val edge = edgeWidth.toPx().coerceAtMost(size.width / 2)
+            if (scrollState.canScrollBackward) {
+                drawRect(
+                    brush = Brush.horizontalGradient(listOf(Color.Transparent, Color.Black), startX = 0f, endX = edge),
+                    size = Size(edge, size.height),
+                    blendMode = BlendMode.DstIn
+                )
+            }
+            if (scrollState.canScrollForward) {
+                drawRect(
+                    brush = Brush.horizontalGradient(listOf(Color.Black, Color.Transparent), startX = size.width - edge, endX = size.width),
+                    topLeft = Offset(size.width - edge, 0f),
+                    size = Size(edge, size.height),
+                    blendMode = BlendMode.DstIn
+                )
+            }
+        }

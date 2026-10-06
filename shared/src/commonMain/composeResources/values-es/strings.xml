@@ -169,4 +169,6 @@
     <string name="profile_edit_name_title">Editar Nombre</string>
     <string name="profile_edit_name_placeholder">Tu nombre</string>
     <string name="profile_edit_name_save">Guardar</string>
+    <string name="get_unlimited_rolls">✨ Lanzamientos ilimitados</string>
+    <string name="cd_locked_option">Bloqueado</string>
 </resources>

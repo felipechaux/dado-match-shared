@@ -169,4 +169,6 @@
     <string name="profile_edit_name_title">Edit Name</string>
     <string name="profile_edit_name_placeholder">Your name</string>
     <string name="profile_edit_name_save">Save</string>
+    <string name="get_unlimited_rolls">✨ Get Unlimited Rolls</string>
+    <string name="cd_locked_option">Locked</string>
 </resources>

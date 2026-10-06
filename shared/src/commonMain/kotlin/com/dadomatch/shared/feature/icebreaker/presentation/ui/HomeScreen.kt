@@ -2,16 +2,22 @@ package com.dadomatch.shared.feature.icebreaker.presentation.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
@@ -46,12 +52,14 @@ import com.dadomatch.shared.feature.icebreaker.presentation.ui.components.Select
 import com.dadomatch.shared.feature.icebreaker.presentation.ui.components.SignInNudgeBanner
 import com.dadomatch.shared.feature.icebreaker.presentation.viewmodel.HomeViewModel
 import com.dadomatch.shared.presentation.ui.components.AppLogo
+import com.dadomatch.shared.presentation.ui.components.bottomBarClearance
 import com.dadomatch.shared.presentation.ui.theme.AppConstants
 import com.dadomatch.shared.presentation.ui.theme.DeepDarkBlue
 import com.dadomatch.shared.presentation.ui.theme.NeonCyan
 import com.dadomatch.shared.shared.generated.resources.Res
 import com.dadomatch.shared.shared.generated.resources.environment_label
 import com.dadomatch.shared.shared.generated.resources.error_title
+import com.dadomatch.shared.shared.generated.resources.get_unlimited_rolls
 import com.dadomatch.shared.shared.generated.resources.intensity_label
 import com.dadomatch.shared.shared.generated.resources.no_rolls_left
 import com.dadomatch.shared.shared.generated.resources.ok_button
@@ -207,7 +215,7 @@ fun HomeScreen(
                         colors   = ButtonDefaults.outlinedButtonColors(contentColor = NeonCyan),
                         border   = BorderStroke(1.dp, NeonCyan)
                     ) {
-                        Text("✨ Get Unlimited Rolls", color = NeonCyan, fontWeight = FontWeight.Bold)
+                        Text(stringResource(Res.string.get_unlimited_rolls), color = NeonCyan, fontWeight = FontWeight.Bold)
                     }
                 }
             )
@@ -307,6 +315,12 @@ fun HomeScreen(
 
 // ── Main content composable ───────────────────────────────────────────────────
 
+// Below this height (most phones) the header goes inline and spacing tightens
+// so everything, Surprise me included, fits above the bottom bar without scrolling
+private val CompactHeight = 840.dp
+// Keeps the controls a comfortable width on tablets and landscape
+private val MaxContentWidth = 480.dp
+
 @Composable
 private fun HomeContent(
     environments: List<String>,
@@ -324,79 +338,87 @@ private fun HomeContent(
     onRollComplete: (Int) -> Unit,
     onSignInClick: () -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.height(8.dp))
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val isCompact = maxHeight < CompactHeight
+        val sectionGap = if (isCompact) 8.dp else 16.dp
+        val diceSize = (maxHeight * if (isCompact) 0.2f else 0.24f).coerceIn(120.dp, 240.dp)
 
-        AppLogo()
-
-        if (isAnonymous) {
-            Spacer(modifier = Modifier.height(10.dp))
-            SignInNudgeBanner(onClick = onSignInClick)
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        RizzDice(
-            rolling       = rolling,
-            onRollComplete = onRollComplete,
-            modifier       = Modifier.size(180.dp)
-        )
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        SelectorGroup(
-            title            = stringResource(Res.string.environment_label),
-            options          = environments,
-            selectedOption   = selectedEnvironment,
-            onOptionSelected = onEnvironmentSelected,
-            selectionColorProvider = { AppConstants.getEnvironmentColor(it) },
-            iconProvider           = { AppConstants.getEnvironmentIcon(it) }
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        SelectorGroup(
-            title            = stringResource(Res.string.intensity_label),
-            options          = intensities,
-            selectedOption   = selectedIntensity,
-            onOptionSelected = onIntensitySelected,
-            selectionColorProvider = { AppConstants.getIntensityColor(it) },
-            iconProvider           = { AppConstants.getIntensityIcon(it) },
-            isRestricted           = { option -> option == "int_spicy" && !isPremium }
-        )
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        LaunchButton(
-            onClick           = onLaunch,
-            environmentColor  = AppConstants.getEnvironmentColor(selectedEnvironment),
-            intensityColor    = AppConstants.getIntensityColor(selectedIntensity)
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedButton(
-            onClick  = onSurpriseMe,
-            enabled  = !isLoading && !rolling,
-            modifier = Modifier.fillMaxWidth().height(48.dp),
-            shape    = RoundedCornerShape(24.dp),
-            border   = BorderStroke(1.dp, NeonCyan.copy(alpha = 0.4f)),
-            colors   = ButtonDefaults.outlinedButtonColors(contentColor = NeonCyan)
+        // Fills the screen when everything fits (SpaceBetween spreads the
+        // sections) and scrolls when it doesn't — small phones, large font
+        // scale — so the Launch button is never hidden behind the bottom bar.
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .widthIn(max = MaxContentWidth)
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .heightIn(min = maxHeight)
+                .statusBarsPadding()
+                .padding(horizontal = 16.dp)
+                .padding(top = sectionGap)
+                .bottomBarClearance(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                text       = "🎲 ${stringResource(Res.string.surprise_me_button)}",
-                color      = NeonCyan,
-                fontSize   = 14.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                AppLogo(inline = isCompact)
+                if (isAnonymous) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    SignInNudgeBanner(onClick = onSignInClick)
+                }
+            }
 
-        Spacer(modifier = Modifier.height(100.dp))
+            RizzDice(
+                rolling        = rolling,
+                onRollComplete = onRollComplete,
+                modifier       = Modifier.padding(vertical = sectionGap).size(diceSize)
+            )
+
+            Column(verticalArrangement = Arrangement.spacedBy(sectionGap)) {
+                SelectorGroup(
+                    title            = stringResource(Res.string.environment_label),
+                    options          = environments,
+                    selectedOption   = selectedEnvironment,
+                    onOptionSelected = onEnvironmentSelected,
+                    selectionColorProvider = { AppConstants.getEnvironmentColor(it) },
+                    iconProvider           = { AppConstants.getEnvironmentIcon(it) }
+                )
+                SelectorGroup(
+                    title            = stringResource(Res.string.intensity_label),
+                    options          = intensities,
+                    selectedOption   = selectedIntensity,
+                    onOptionSelected = onIntensitySelected,
+                    selectionColorProvider = { AppConstants.getIntensityColor(it) },
+                    iconProvider           = { AppConstants.getIntensityIcon(it) },
+                    isRestricted           = { option -> option == "int_spicy" && !isPremium }
+                )
+            }
+
+            Column(
+                modifier = Modifier.padding(top = sectionGap),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                LaunchButton(
+                    onClick          = onLaunch,
+                    environmentColor = AppConstants.getEnvironmentColor(selectedEnvironment),
+                    intensityColor   = AppConstants.getIntensityColor(selectedIntensity)
+                )
+                OutlinedButton(
+                    onClick  = onSurpriseMe,
+                    enabled  = !isLoading && !rolling,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                    shape    = RoundedCornerShape(24.dp),
+                    border   = BorderStroke(1.dp, NeonCyan.copy(alpha = 0.4f)),
+                    colors   = ButtonDefaults.outlinedButtonColors(contentColor = NeonCyan)
+                ) {
+                    Text(
+                        text       = "🎲 ${stringResource(Res.string.surprise_me_button)}",
+                        color      = NeonCyan,
+                        fontSize   = 14.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
     }
 }

@@ -32,6 +32,16 @@ import com.dadomatch.shared.shared.generated.resources.nav_success
 import org.jetbrains.compose.resources.stringResource
 
 private val BarShape = RoundedCornerShape(36.dp)
+private val BarHeight = 72.dp
+private val BarBottomMargin = 12.dp
+
+/**
+ * Bottom space a screen must leave so its last item isn't hidden behind the
+ * floating bar: the bar itself plus a small gap, on top of the system
+ * navigation bar inset. Also clears the native iOS tab bar, which is shorter.
+ */
+fun Modifier.bottomBarClearance(): Modifier =
+    navigationBarsPadding().padding(bottom = BarHeight + BarBottomMargin + 8.dp)
 
 @Composable
 fun LiquidFooterMenu(
@@ -48,13 +58,15 @@ fun LiquidFooterMenu(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, bottom = 32.dp),
+            // Sit above the system navigation bar (gesture pill or 3-button bar)
+            .navigationBarsPadding()
+            .padding(start = 16.dp, end = 16.dp, bottom = BarBottomMargin),
         contentAlignment = Alignment.Center
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(72.dp)
+                .height(BarHeight)
                 .glassSurface(glassSource, BarShape),
             contentAlignment = Alignment.Center
         ) {
