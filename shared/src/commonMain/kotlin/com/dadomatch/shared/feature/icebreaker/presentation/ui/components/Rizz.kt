@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
@@ -52,6 +53,9 @@ fun RizzRoller(modifier: Modifier = Modifier) {
         }
     }
 }
+
+private val ReferenceBoxSize = 250.dp
+private const val DiceFraction = 0.8f // the cube canvas was 200dp of the 250dp box
 
 @Composable
 fun RizzDice(
@@ -134,15 +138,19 @@ fun RizzDice(
         }
     }
 
+    // Everything below is drawn in a 250dp reference box and scaled to the
+    // actual size, so a smaller dice (short screens) never spills over its
+    // neighbours. 250dp stays the default when the caller sets no size.
     Box(
-        modifier = modifier.size(250.dp),
+        modifier = modifier.size(ReferenceBoxSize),
         contentAlignment = Alignment.Center
     ) {
         // Base Glow Rings (Matches image)
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val ringWidth = 140.dp.toPx()
-            val ringHeight = 35.dp.toPx()
-            val centerY = center.y + 50.dp.toPx()
+            val k = size.minDimension / ReferenceBoxSize.toPx()
+            val ringWidth = 140.dp.toPx() * k
+            val ringHeight = 35.dp.toPx() * k
+            val centerY = center.y + 50.dp.toPx() * k
             
             drawOval(
                 brush = Brush.radialGradient(
@@ -165,15 +173,21 @@ fun RizzDice(
         // Depth-Sorted Face Renderer
         Canvas(
             modifier = Modifier
-                .size(200.dp)
-                .offset(y = jumpOffset.value.dp)
+                .fillMaxSize(DiceFraction)
+                // Jump is in reference dp; applied in the draw layer so the
+                // animation doesn't recompose
+                .graphicsLayer {
+                    translationY = jumpOffset.value.dp.toPx() * (size.height / (ReferenceBoxSize * DiceFraction).toPx())
+                }
         ) {
+            val k = size.minDimension / (ReferenceBoxSize * DiceFraction).toPx()
             val currentX = if (rolling) rollX.value else baseRotX + 20f
             val currentY = if (rolling) rollY.value else baseRotY + 20f
             val currentZ = if (rolling) rollZ.value else 10f
 
             drawDepthSortedDice(
-                size = 100.dp.toPx(),
+                // Half the box: even rotated corner-on (edge × √3) it stays inside
+                size = 125.dp.toPx() * k,
                 rotX = currentX,
                 rotY = currentY,
                 rotZ = currentZ
@@ -182,9 +196,10 @@ fun RizzDice(
 
         // Particles
         Canvas(modifier = Modifier.fillMaxSize()) {
+            val k = size.minDimension / ReferenceBoxSize.toPx()
             repeat(15) { i ->
                 val angle = (i.toFloat() / 15) * 2 * PI.toFloat() + particleProgress * 2 * PI.toFloat()
-                val r = 100.dp.toPx() + sin(particleProgress * 10 * PI.toFloat() + i) * 20
+                val r = (112.dp.toPx() + sin(particleProgress * 10 * PI.toFloat() + i) * 20) * k
                 drawCircle(
                     color = if (i % 2 == 0) NeonCyan.copy(alpha = 0.3f) else NeonPink.copy(alpha = 0.3f),
                     radius = 2f,
