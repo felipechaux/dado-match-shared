@@ -12,6 +12,8 @@ import kotlin.coroutines.suspendCoroutine
  */
 class IosAuthHandler : NativeAuthHandler {
 
+    override val isAppleSignInAvailable: Boolean = true
+
     /** Set by Swift (AuthCoordinator) before any Google Sign-In is triggered. */
     var googleSignInProvider: ((GoogleSignInCallback) -> Unit)? = null
 

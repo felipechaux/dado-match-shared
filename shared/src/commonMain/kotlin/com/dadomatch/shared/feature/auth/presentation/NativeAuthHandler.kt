@@ -1,6 +1,13 @@
 package com.dadomatch.shared.feature.auth.presentation
 
 interface NativeAuthHandler {
+    /**
+     * Whether Sign in with Apple is offered on this platform. Only iOS needs it
+     * (App Store guideline 4.8); Google Play has no such requirement, so the
+     * Android build hides the button.
+     */
+    val isAppleSignInAvailable: Boolean
+
     suspend fun signInWithGoogle(): Result<GoogleTokens>
     suspend fun signInWithApple(): Result<AuthTokens>
 

@@ -15,6 +15,8 @@ class AndroidAuthHandler(
     private val context: Context
 ) : NativeAuthHandler {
 
+    override val isAppleSignInAvailable: Boolean = false
+
     override suspend fun signInWithGoogle(): Result<GoogleTokens> = withContext(Dispatchers.Main) {
         try {
             // Diagnostic logging
