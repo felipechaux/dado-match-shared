@@ -52,7 +52,12 @@ interface SubscriptionRepository {
     suspend fun decrementDailyRolls(): Result<SubscriptionStatus>
     
     /**
-     * Reset daily roll count (called at midnight)
+     * Give back a roll that did not produce an icebreaker (e.g. the AI call failed)
+     */
+    suspend fun refundDailyRoll()
+
+    /**
+     * Reset the daily roll count if a day has passed since the last reset
      */
     suspend fun resetDailyRolls()
 
@@ -63,7 +68,7 @@ interface SubscriptionRepository {
     suspend fun decrementDailyAiCalls(): Result<SubscriptionStatus>
 
     /**
-     * Reset daily AI call count (called at midnight or after tier upgrade)
+     * Reset the daily AI call count if a day has passed since the last reset
      */
     suspend fun resetDailyAiCalls()
 

@@ -57,10 +57,13 @@ data class SubscriptionStatus(
     }
     
     companion object {
+        /** Daily AI icebreakers a free user gets — a taste before the paywall. */
+        const val FREE_DAILY_ROLLS = 3
+
         /**
          * Default free tier subscription status
          */
-        fun free(dailyRollsRemaining: Int = 10): SubscriptionStatus {
+        fun free(dailyRollsRemaining: Int = FREE_DAILY_ROLLS): SubscriptionStatus {
             return SubscriptionStatus(
                 tier = SubscriptionTier.FREE,
                 isActive = true,

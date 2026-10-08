@@ -102,7 +102,7 @@
     <string name="subs_tier_pro">PRO ACCESS</string>
     <string name="subs_tier_free">FREE TIER</string>
     <string name="subs_pro_desc">You have unlimited daily icebreaker rolls and access to all premium categories.</string>
-    <string name="subs_free_desc">Limited to 10 rolls per day. Upgrade to Pro for unlimited rizz.</string>
+    <string name="subs_free_desc">Limited to 3 rolls per day. Upgrade to Pro for unlimited rizz.</string>
     <string name="subs_rolls_left">Daily rolls left: %d</string>
     <string name="subs_manage_button">Manage Subscription</string>
     <string name="subs_upgrade_button">Upgrade to Pro</string>

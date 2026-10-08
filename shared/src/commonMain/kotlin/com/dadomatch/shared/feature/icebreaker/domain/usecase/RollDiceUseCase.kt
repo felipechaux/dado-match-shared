@@ -16,6 +16,10 @@ class RollDiceUseCase(
      * @return Result with updated subscription status if successful, or error if no rolls remaining
      */
     suspend operator fun invoke(): Result<SubscriptionStatus> {
+        // Nothing runs at midnight: the daily allowance is refilled lazily on the
+        // first roll after a day has passed.
+        subscriptionRepository.resetDailyRolls()
+
         // Get current status
         val currentStatus = subscriptionRepository.getCurrentSubscriptionStatus()
         if (currentStatus.isFailure) {
@@ -39,12 +43,13 @@ class RollDiceUseCase(
         // Decrement rolls for free users
         return subscriptionRepository.decrementDailyRolls()
     }
-    
+
     /**
-     * Reset daily rolls (should be called at midnight)
+     * Give back the roll when it did not end in an icebreaker (AI error, no internet…),
+     * so free users only spend their few daily rolls on results they actually see.
      */
-    suspend fun resetDailyRolls() {
-        subscriptionRepository.resetDailyRolls()
+    suspend fun refund() {
+        subscriptionRepository.refundDailyRoll()
     }
 }
 
