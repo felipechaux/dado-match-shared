@@ -253,7 +253,7 @@ buildkonfig {
 
         val nvidiaModelName = localProperties.getProperty("NVIDIA_MODEL_NAME")
                 ?: System.getenv("NVIDIA_MODEL_NAME")
-                ?: "meta/llama-3.3-70b-instruct"
+                ?: "nvidia/nemotron-3-super-120b-a12b"
 
         val nvidiaBaseUrl = localProperties.getProperty("NVIDIA_BASE_URL")
                 ?: System.getenv("NVIDIA_BASE_URL")

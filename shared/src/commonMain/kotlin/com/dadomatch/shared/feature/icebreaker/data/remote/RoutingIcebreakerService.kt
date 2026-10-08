@@ -5,11 +5,16 @@ import com.dadomatch.shared.feature.icebreaker.data.telemetry.AiTelemetry
 import com.dadomatch.shared.feature.icebreaker.data.telemetry.NoOpAiTelemetry
 import kotlin.time.TimeSource
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.selects.select
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * Tries [primary] first (fast path); on any failure transparently retries with
- * [fallback]. This is what gives us NVIDIA's speed while keeping Gemini's
- * resilience — if NVIDIA errors, rate-limits, or times out, Gemini answers instead.
+ * Tries [primary] first (fast path). If it fails, or has not answered within
+ * [hedgeAfterMs], [fallback] is started in parallel and the first success wins —
+ * a slow or overloaded provider costs at most the head start, not its full timeout.
+ * Every attempt is capped at [attemptTimeoutMs].
  *
  * This is also the single place AI telemetry is emitted: per-attempt latency/winner
  * for performance analysis, plus non-fatals for failures and the total-failure case.
@@ -20,6 +25,8 @@ class RoutingIcebreakerService(
     private val primary: IcebreakerAiService,
     private val fallback: IcebreakerAiService,
     private val telemetry: AiTelemetry = NoOpAiTelemetry,
+    private val hedgeAfterMs: Long = 2_500,
+    private val attemptTimeoutMs: Long = 10_000,
 ) : IcebreakerAiService {
 
     override val providerId: String = "routing"
@@ -48,38 +55,62 @@ class RoutingIcebreakerService(
         intensity: String,
         language: String,
         usePremiumModel: Boolean,
-    ): Resource<String> {
-        val primaryResult = safeAttempt(primary, environment, intensity, language, usePremiumModel)
-        telemetry.onProviderAttempt(
-            provider = primary.providerId,
-            success = primaryResult.value is Resource.Success,
-            latencyMs = primaryResult.millis,
-            premium = usePremiumModel,
-            fellBack = false,
-            errorCode = (primaryResult.value as? Resource.Error)?.message,
-        )
-        if (primaryResult.value is Resource.Success) return primaryResult.value
-
-        // Primary failed → record it, then fall back.
-        val primaryError = primaryResult.value as Resource.Error
-        telemetry.onProviderFailure(primary.providerId, primaryError.message, fellBack = false, cause = primaryError.throwable)
-
-        val fallbackResult = safeAttempt(fallback, environment, intensity, language, usePremiumModel)
-        telemetry.onProviderAttempt(
-            provider = fallback.providerId,
-            success = fallbackResult.value is Resource.Success,
-            latencyMs = fallbackResult.millis,
-            premium = usePremiumModel,
-            fellBack = true,
-            errorCode = (fallbackResult.value as? Resource.Error)?.message,
-        )
-
-        // If the fallback also fails, surface its error — and flag the total failure.
-        (fallbackResult.value as? Resource.Error)?.let { fallbackError ->
-            telemetry.onProviderFailure(fallback.providerId, fallbackError.message, fellBack = true, cause = fallbackError.throwable)
-            telemetry.onTotalFailure(primaryError.message, fallbackError.message)
+    ): Resource<String> = coroutineScope {
+        val primaryAttempt = async {
+            attempt(primary, environment, intensity, language, usePremiumModel, fellBack = false)
         }
-        return fallbackResult.value
+
+        // Head start: most of the time the primary answers within it and the
+        // fallback is never called.
+        val early = withTimeoutOrNull(hedgeAfterMs) { primaryAttempt.await() }
+        if (early is Resource.Success) return@coroutineScope early
+
+        // Primary failed or is slow → race the fallback against it instead of waiting
+        // the primary out; the first success wins and the loser is cancelled.
+        val fallbackAttempt = async {
+            attempt(fallback, environment, intensity, language, usePremiumModel, fellBack = true)
+        }
+        val first = select {
+            primaryAttempt.onAwait { it to fallbackAttempt }
+            fallbackAttempt.onAwait { it to primaryAttempt }
+        }
+        val (firstResult, other) = first
+        if (firstResult is Resource.Success) {
+            other.cancel()
+            return@coroutineScope firstResult
+        }
+        val otherResult = other.await()
+        if (otherResult is Resource.Success) return@coroutineScope otherResult
+
+        // Both failed — surface the fallback's error and flag the total failure.
+        val primaryError = primaryAttempt.await() as Resource.Error
+        val fallbackError = fallbackAttempt.await() as Resource.Error
+        telemetry.onTotalFailure(primaryError.message, fallbackError.message)
+        fallbackError
+    }
+
+    /** One provider attempt with its telemetry: latency/winner, plus a non-fatal on failure. */
+    private suspend fun attempt(
+        service: IcebreakerAiService,
+        environment: String,
+        intensity: String,
+        language: String,
+        usePremiumModel: Boolean,
+        fellBack: Boolean,
+    ): Resource<String> {
+        val result = safeAttempt(service, environment, intensity, language, usePremiumModel)
+        telemetry.onProviderAttempt(
+            provider = service.providerId,
+            success = result.value is Resource.Success,
+            latencyMs = result.millis,
+            premium = usePremiumModel,
+            fellBack = fellBack,
+            errorCode = (result.value as? Resource.Error)?.message,
+        )
+        (result.value as? Resource.Error)?.let { error ->
+            telemetry.onProviderFailure(service.providerId, error.message, fellBack = fellBack, cause = error.throwable)
+        }
+        return result.value
     }
 
     /**
@@ -96,7 +127,11 @@ class RoutingIcebreakerService(
     ): Timed<Resource<String>> {
         val start = TimeSource.Monotonic.markNow()
         val value: Resource<String> = try {
-            service.generateIcebreaker(environment, intensity, language, usePremiumModel)
+            // A provider that hangs (Gemini's SDK has no timeout by default) must not
+            // keep the user waiting: past the cap it counts as "AI busy, retry".
+            withTimeoutOrNull(attemptTimeoutMs) {
+                service.generateIcebreaker(environment, intensity, language, usePremiumModel)
+            } ?: Resource.Error("rate_limit_exceeded", AiTimeoutException(service.providerId, attemptTimeoutMs))
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
@@ -108,3 +143,7 @@ class RoutingIcebreakerService(
 
     private data class Timed<T>(val value: T, val millis: Long)
 }
+
+/** Synthetic throwable recording that a provider exceeded the attempt cap, for Crashlytics. */
+class AiTimeoutException(provider: String, timeoutMs: Long) :
+    Exception("$provider did not answer within ${timeoutMs}ms")

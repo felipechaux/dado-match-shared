@@ -47,6 +47,9 @@ class NvidiaService(
             temperature = if (usePremiumModel) 0.9 else 0.7,
             topP = 0.95,
             maxTokens = 160,
+            // Nemotron models reason by default: the "thinking" both adds seconds and
+            // leaks into the reply instead of the icebreaker itself.
+            chatTemplateKwargs = ChatTemplateKwargs(enableThinking = false),
         )
 
         return try {
@@ -64,14 +67,15 @@ class NvidiaService(
                 val body = runCatching { response.bodyAsText() }.getOrNull().orEmpty().take(500)
                 val cause = NvidiaHttpException(status, body)
                 val code = when (status) {
-                    429 -> "rate_limit_exceeded"
+                    429, 503 -> "rate_limit_exceeded"
                     401, 403 -> "nvidia_auth_error"
                     else -> "nvidia_http_$status"
                 }
                 return Resource.Error(code, cause)
             }
 
-            val text = response.body<ChatResponse>().choices.firstOrNull()?.message?.content?.trim()
+            val text = response.body<ChatResponse>().choices.firstOrNull()?.message?.content
+                ?.let(IcebreakerPrompt::clean)
             if (text.isNullOrEmpty()) Resource.Error("ai_empty_response")
             else Resource.Success(text)
         } catch (e: CancellationException) {
@@ -102,6 +106,12 @@ private data class ChatRequest(
     val temperature: Double,
     @SerialName("top_p") val topP: Double,
     @SerialName("max_tokens") val maxTokens: Int,
+    @SerialName("chat_template_kwargs") val chatTemplateKwargs: ChatTemplateKwargs,
+)
+
+@Serializable
+private data class ChatTemplateKwargs(
+    @SerialName("enable_thinking") val enableThinking: Boolean,
 )
 
 @Serializable
