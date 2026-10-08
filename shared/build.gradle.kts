@@ -94,7 +94,6 @@ kotlin {
                 api(libs.androidx.navigation.compose)
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.calf.file.picker)
-                implementation(libs.generative.ai)
                 implementation(libs.compottie)
                 
                 // Room
@@ -240,11 +239,11 @@ buildkonfig {
 
         val geminiModelName = localProperties.getProperty("GEMINI_MODEL_NAME")
                 ?: System.getenv("GEMINI_MODEL_NAME")
-                ?: "gemini-2.5-flash-lite"
+                ?: "gemini-3.5-flash-lite"
 
         val geminiPremiumModelName = localProperties.getProperty("GEMINI_PREMIUM_MODEL_NAME")
                 ?: System.getenv("GEMINI_PREMIUM_MODEL_NAME")
-                ?: "gemini-2.5-flash"
+                ?: "gemini-3.5-flash"
 
         // NVIDIA NIM (OpenAI-compatible) — primary fast provider for icebreaker generation
         val nvidiaApiKey = localProperties.getProperty("NVIDIA_API_KEY")
