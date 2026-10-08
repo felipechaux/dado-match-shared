@@ -119,6 +119,12 @@ class HomeViewModel(
             )
         }
         viewModelScope.safeLaunch(stage = "home_vm.onRollComplete") {
+            // Checked before rolling so a locked category doesn't cost a roll
+            if (!checkEntitlementUseCase.canAccessCategory(intensity)) {
+                _uiState.update { it.copy(isLoading = false, showPaywallNudge = true) }
+                return@safeLaunch
+            }
+
             val rollResult = rollDiceUseCase()
             if (rollResult.isFailure) {
                 val exception = rollResult.exceptionOrNull()
@@ -130,15 +136,11 @@ class HomeViewModel(
                 return@safeLaunch
             }
 
-            if (!checkEntitlementUseCase.canAccessCategory(intensity)) {
-                _uiState.update { it.copy(isLoading = false, showPaywallNudge = true) }
-                return@safeLaunch
-            }
-
             when (val result = generateIcebreakerUseCase(environment, intensity, language)) {
                 is Resource.Success ->
                     _uiState.update { it.copy(isLoading = false, icebreaker = result.data) }
                 is Resource.Error -> {
+                    rollDiceUseCase.refund()
                     val msg = result.message
                     when {
                         msg == "no_ai_calls_available" || msg == "daily_ai_limit_reached" ->

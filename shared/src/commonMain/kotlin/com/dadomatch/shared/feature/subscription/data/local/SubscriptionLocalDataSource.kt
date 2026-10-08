@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.dadomatch.shared.feature.subscription.domain.model.SubscriptionStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -26,7 +27,7 @@ class SubscriptionLocalDataSource(
         private val LAST_AI_CALLS_RESET_DATE = longPreferencesKey("last_ai_calls_reset_date")
         private val PREFERRED_LANGUAGE = stringPreferencesKey("preferred_language")
 
-        const val DEFAULT_DAILY_ROLLS = 10
+        const val DEFAULT_DAILY_ROLLS = SubscriptionStatus.FREE_DAILY_ROLLS
         // -1 sentinel means "not yet initialized — use tier default on first read"
         const val AI_CALLS_UNSET = -1
     }
@@ -35,10 +36,12 @@ class SubscriptionLocalDataSource(
      * Get daily rolls remaining
      */
     fun getDailyRollsRemaining(): Flow<Int> {
-        return dataStore.data.map { preferences ->
-            preferences[DAILY_ROLLS_REMAINING] ?: DEFAULT_DAILY_ROLLS
-        }
+        return dataStore.data.map { preferences -> storedRolls(preferences) }
     }
+
+    // Capped so counts saved under the old, larger daily allowance shrink right away.
+    private fun storedRolls(preferences: Preferences): Int =
+        minOf(preferences[DAILY_ROLLS_REMAINING] ?: DEFAULT_DAILY_ROLLS, DEFAULT_DAILY_ROLLS)
     
     /**
      * Set daily rolls remaining
@@ -55,8 +58,17 @@ class SubscriptionLocalDataSource(
     suspend fun decrementDailyRolls(): Int {
         var newCount = 0
         dataStore.edit { preferences ->
-            val current = preferences[DAILY_ROLLS_REMAINING] ?: DEFAULT_DAILY_ROLLS
-            newCount = maxOf(0, current - 1)
+            newCount = maxOf(0, storedRolls(preferences) - 1)
+            preferences[DAILY_ROLLS_REMAINING] = newCount
+        }
+        return newCount
+    }
+
+    /** Gives back one roll (capped at the daily allowance) and returns the new count. */
+    suspend fun incrementDailyRolls(): Int {
+        var newCount = 0
+        dataStore.edit { preferences ->
+            newCount = minOf(DEFAULT_DAILY_ROLLS, storedRolls(preferences) + 1)
             preferences[DAILY_ROLLS_REMAINING] = newCount
         }
         return newCount

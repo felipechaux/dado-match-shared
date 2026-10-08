@@ -19,7 +19,7 @@ fun CustomerInfo.toSubscriptionStatus(dailyRollsRemaining: Int?): SubscriptionSt
     val baseStatus = if (hasPremium) {
         SubscriptionStatus.premium(dailyRollsRemaining)
     } else {
-        SubscriptionStatus.free(dailyRollsRemaining ?: 10)
+        SubscriptionStatus.free(dailyRollsRemaining ?: SubscriptionStatus.FREE_DAILY_ROLLS)
     }
     
     val entitlementSet = entitlements.active.keys.mapNotNull { key ->

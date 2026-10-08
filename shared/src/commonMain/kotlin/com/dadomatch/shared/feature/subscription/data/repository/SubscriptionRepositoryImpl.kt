@@ -202,6 +202,12 @@ class SubscriptionRepositoryImpl(
         }
     }
     
+    override suspend fun refundDailyRoll() {
+        // Premium rolls are never decremented, so there is nothing to give back
+        val hasPremium = revenueCatService.hasPremiumAccess(revenueCatService.customerInfoFlow.first())
+        if (!hasPremium) localDataSource.incrementDailyRolls()
+    }
+
     override suspend fun resetDailyRolls() {
         // Check if reset is needed
         if (localDataSource.shouldResetDailyRolls()) {

@@ -28,20 +28,20 @@ class GenerateIcebreakerUseCase(
     }
 
     private suspend fun run(environment: String, intensity: String, language: String): Resource<String> {
+        // Refilled lazily, like the free rolls: nothing runs at midnight.
+        subscriptionRepository.resetDailyAiCalls()
         val status = subscriptionRepository.getCurrentSubscriptionStatus().getOrNull()
+            ?: return Resource.Error("no_ai_calls_available")
 
-        // Free (or unauthenticated) users cannot generate icebreakers
-        if (status == null || status.tier == SubscriptionTier.FREE) {
-            return Resource.Error("no_ai_calls_available")
+        // Free users are limited by their daily rolls (already spent by RollDiceUseCase);
+        // the AI call budget below only applies to premium.
+        if (status.tier != SubscriptionTier.FREE) {
+            if (status.dailyAiCallsRemaining <= 0) {
+                return Resource.Error("daily_ai_limit_reached")
+            }
+            // Decrement the counter before making the call
+            subscriptionRepository.decrementDailyAiCalls()
         }
-
-        // Block if the daily AI call budget is exhausted
-        if (status.dailyAiCallsRemaining <= 0) {
-            return Resource.Error("daily_ai_limit_reached")
-        }
-
-        // Decrement the counter before making the call
-        subscriptionRepository.decrementDailyAiCalls()
 
         return repository.generateIcebreaker(
             environment = environment,
