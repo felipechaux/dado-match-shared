@@ -171,4 +171,14 @@
     <string name="profile_edit_name_save">Save</string>
     <string name="get_unlimited_rolls">✨ Get Unlimited Rolls</string>
     <string name="cd_locked_option">Locked</string>
+    <!-- Notifications -->
+    <string name="home_streak">🔥 %d-day streak</string>
+    <string name="settings_notifications_section">Notifications</string>
+    <string name="settings_notifications_all">Reminders</string>
+    <string name="settings_notifications_all_desc">At most one a day</string>
+    <string name="settings_notifications_blocked">Notifications are off in your phone settings</string>
+    <string name="settings_notifications_streak">Streak at risk</string>
+    <string name="settings_notifications_rolls">Free rolls refilled</string>
+    <string name="settings_notifications_night">Night out (Thu–Sat)</string>
+    <string name="settings_notifications_miss_you">Icebreaker of the day after a few days away</string>
 </resources>

@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Android 13+: asked at runtime after the first icebreaker -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application>
+        <!-- FCM campaigns: same status-bar icon and channel as the scheduled reminders -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_dadomatch" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="reminders" />
         <activity
             android:name=".feature.auth.presentation.AppleSignInActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"

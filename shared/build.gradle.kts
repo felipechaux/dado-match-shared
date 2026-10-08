@@ -64,6 +64,9 @@ kotlin {
                 implementation(libs.credentials)
                 implementation(libs.credentials.play.services.auth)
                 implementation(libs.googleid)
+
+                // Scheduled engagement notifications
+                implementation(libs.androidx.work.runtime)
             }
         }
         commonMain {
@@ -110,6 +113,7 @@ kotlin {
                 implementation(libs.firebase.common)
                 implementation(libs.firebase.crashlytics)
                 implementation(libs.firebase.analytics)
+                implementation(libs.firebase.messaging)
             }
         }
         commonTest {

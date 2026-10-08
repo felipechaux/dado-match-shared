@@ -50,6 +50,12 @@ import com.dadomatch.shared.shared.generated.resources.nav_success
 import com.dadomatch.shared.presentation.ui.components.glassSource
 import com.dadomatch.shared.presentation.ui.components.rememberGlassSource
 import org.koin.compose.koinInject
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import com.dadomatch.shared.feature.engagement.domain.EngagementManager
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
 // Tab order determines slide direction: higher index → slide from right, lower → from left
@@ -80,6 +86,22 @@ fun AppNavigation(
     var showConfettiOnSettings by remember { mutableStateOf(false) }
     // Screens are what the glass bottom bar floating above them refracts
     val glassSource = rememberGlassSource()
+
+    // Re-plan reminders whenever the app is in front again. ON_RESUME rather than
+    // ON_START so the answer to the notification permission dialog is picked up too.
+    val engagementManager: EngagementManager = koinInject()
+    val engagementScope = rememberCoroutineScope()
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        engagementScope.launch {
+            try {
+                engagementManager.onAppForeground()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Throwable) {
+                // Reminders are best effort; the next resume tries again
+            }
+        }
+    }
 
     val homeViewModel: HomeViewModel = koinViewModel()
     val homeUiState by homeViewModel.uiState.collectAsState()
