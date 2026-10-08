@@ -33,10 +33,16 @@ class GeminiService(
     // Lifetime model: higher token budget + more creative temperature for richer outputs
     private val premiumModel by lazy { buildModel(sanitizedPremiumModelName, maxOutputTokens = 2048, temperature = 0.9f) }
 
+    // Overload (503 "high demand") is treated like a rate limit: it is just as
+    // temporary and the user gets the same "AI is busy, retry" message.
     private fun isRateLimitError(msg: String, e: Exception) =
         msg.contains("quota", ignoreCase = true) ||
         msg.contains("RESOURCE_EXHAUSTED", ignoreCase = true) ||
-        msg.contains("429")
+        msg.contains("429") ||
+        msg.contains("503") ||
+        msg.contains("UNAVAILABLE", ignoreCase = true) ||
+        msg.contains("overloaded", ignoreCase = true) ||
+        msg.contains("high demand", ignoreCase = true)
 
     private fun isNetworkError(msg: String, e: Exception) =
         msg.contains("Unable to resolve host", ignoreCase = true) ||
@@ -63,7 +69,7 @@ class GeminiService(
 
         return try {
             val response = model.generateContent(fullPrompt)
-            Resource.Success(response.text?.trim() ?: "fallback_icebreaker")
+            Resource.Success(response.text?.let(IcebreakerPrompt::clean) ?: "fallback_icebreaker")
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -74,7 +80,7 @@ class GeminiService(
                     if (usePremiumModel) {
                         try {
                             val fallbackResponse = defaultModel.generateContent(fullPrompt)
-                            Resource.Success(fallbackResponse.text?.trim() ?: "fallback_icebreaker")
+                            Resource.Success(fallbackResponse.text?.let(IcebreakerPrompt::clean) ?: "fallback_icebreaker")
                         } catch (fallbackEx: CancellationException) {
                             throw fallbackEx
                         } catch (fallbackEx: Exception) {

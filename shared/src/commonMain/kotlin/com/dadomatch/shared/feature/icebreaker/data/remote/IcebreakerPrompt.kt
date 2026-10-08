@@ -6,6 +6,11 @@ package com.dadomatch.shared.feature.icebreaker.data.remote
  */
 object IcebreakerPrompt {
 
+    private val wrappingQuotes = charArrayOf('"', '“', '”', '«', '»', '\'')
+
+    /** Trims the reply and drops the wrapping quotes models add despite being told not to. */
+    fun clean(raw: String): String = raw.trim().trim(*wrappingQuotes).trim()
+
     fun build(environment: String, intensity: String, language: String): String {
         val isSpanish = language.lowercase().contains("es")
         val langName = if (isSpanish) "Español" else "English"
