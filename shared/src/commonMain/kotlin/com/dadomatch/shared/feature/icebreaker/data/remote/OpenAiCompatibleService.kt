@@ -17,18 +17,31 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Fast primary provider backed by NVIDIA NIM (https://integrate.api.nvidia.com),
- * which exposes an OpenAI-compatible `/chat/completions` endpoint. Any failure here
- * is surfaced as [Resource.Error] so [RoutingIcebreakerService] can fall back to Gemini.
+ * Icebreaker provider for any OpenAI-compatible `/chat/completions` endpoint — used for
+ * both NVIDIA NIM and Gemini (via its OpenAI compatibility layer). Any failure is
+ * surfaced as [Resource.Error] so [RoutingIcebreakerService] can race the other provider.
+ *
+ * Reasoning models must answer without "thinking": it adds seconds and, on some models,
+ * leaks into the reply. Providers disable it differently, hence [thinkingOff].
  */
-class NvidiaService(
+class OpenAiCompatibleService(
     private val httpClient: HttpClient,
+    override val providerId: String,
     private val apiKey: String,
-    private val modelName: String,
     private val baseUrl: String,
+    private val modelName: String,
+    private val premiumModelName: String = modelName,
+    private val thinkingOff: ThinkingOff,
 ) : IcebreakerAiService {
 
-    override val providerId: String = "nvidia"
+    /** How a provider is told not to reason before answering. */
+    enum class ThinkingOff {
+        /** NVIDIA NIM: `chat_template_kwargs.enable_thinking = false`. */
+        CHAT_TEMPLATE_KWARGS,
+
+        /** Gemini: `reasoning_effort = "minimal"`. */
+        MINIMAL_REASONING_EFFORT,
+    }
 
     override suspend fun generateIcebreaker(
         environment: String,
@@ -36,20 +49,35 @@ class NvidiaService(
         language: String,
         usePremiumModel: Boolean,
     ): Resource<String> {
-        // No key configured → let the router fall straight through to Gemini.
-        if (apiKey.isBlank()) return Resource.Error("nvidia_not_configured")
+        // No key configured → let the router fall straight through to the other provider.
+        if (apiKey.isBlank()) return Resource.Error("${providerId}_not_configured")
 
         val prompt = IcebreakerPrompt.build(environment, intensity, language)
+        if (!usePremiumModel || premiumModelName == modelName) {
+            return complete(modelName, prompt, usePremiumModel)
+        }
+
+        // The premium model has tighter quotas: when it is saturated, lifetime users
+        // silently get the standard model instead of an error.
+        val premium = complete(premiumModelName, prompt, usePremiumModel = true)
+        return if (premium is Resource.Error && premium.message == RATE_LIMITED) {
+            complete(modelName, prompt, usePremiumModel = true)
+        } else {
+            premium
+        }
+    }
+
+    private suspend fun complete(model: String, prompt: String, usePremiumModel: Boolean): Resource<String> {
         val request = ChatRequest(
-            model = modelName,
+            model = model,
             messages = listOf(ChatMessage(role = "user", content = prompt)),
             // Lifetime users get a touch more creative variance; output stays one-liner short.
             temperature = if (usePremiumModel) 0.9 else 0.7,
             topP = 0.95,
             maxTokens = 160,
-            // Nemotron models reason by default: the "thinking" both adds seconds and
-            // leaks into the reply instead of the icebreaker itself.
-            chatTemplateKwargs = ChatTemplateKwargs(enableThinking = false),
+            chatTemplateKwargs = ChatTemplateKwargs(enableThinking = false)
+                .takeIf { thinkingOff == ThinkingOff.CHAT_TEMPLATE_KWARGS },
+            reasoningEffort = "minimal".takeIf { thinkingOff == ThinkingOff.MINIMAL_REASONING_EFFORT },
         )
 
         return try {
@@ -65,11 +93,13 @@ class NvidiaService(
                 // being collapsed to an opaque code.
                 val status = response.status.value
                 val body = runCatching { response.bodyAsText() }.getOrNull().orEmpty().take(500)
-                val cause = NvidiaHttpException(status, body)
+                val cause = AiHttpException(providerId, status, body)
                 val code = when (status) {
-                    429, 503 -> "rate_limit_exceeded"
-                    401, 403 -> "nvidia_auth_error"
-                    else -> "nvidia_http_$status"
+                    // Overload ("high demand") is as temporary as a rate limit: same
+                    // "AI is busy, retry" message for the user.
+                    429, 503 -> RATE_LIMITED
+                    401, 403 -> "${providerId}_auth_error"
+                    else -> "${providerId}_http_$status"
                 }
                 return Resource.Error(code, cause)
             }
@@ -92,13 +122,19 @@ class NvidiaService(
             else Resource.Error(msg.ifEmpty { "ai_connection_error" }, e)
         }
     }
+
+    private companion object {
+        const val RATE_LIMITED = "rate_limit_exceeded"
+    }
 }
 
-/** Synthetic throwable carrying the raw NVIDIA HTTP status + body for Crashlytics. */
-class NvidiaHttpException(val status: Int, val body: String) :
-    Exception("NVIDIA HTTP $status: ${body.ifBlank { "<empty body>" }}")
+/** Synthetic throwable carrying the raw provider HTTP status + body for Crashlytics. */
+class AiHttpException(val provider: String, val status: Int, val body: String) :
+    Exception("$provider HTTP $status: ${body.ifBlank { "<empty body>" }}")
 
 // ── OpenAI-compatible request/response DTOs ───────────────────────────────────
+// Null fields are left out of the request (encodeDefaults is off), so each provider
+// only receives the thinking switch it understands.
 @Serializable
 private data class ChatRequest(
     val model: String,
@@ -106,7 +142,8 @@ private data class ChatRequest(
     val temperature: Double,
     @SerialName("top_p") val topP: Double,
     @SerialName("max_tokens") val maxTokens: Int,
-    @SerialName("chat_template_kwargs") val chatTemplateKwargs: ChatTemplateKwargs,
+    @SerialName("chat_template_kwargs") val chatTemplateKwargs: ChatTemplateKwargs? = null,
+    @SerialName("reasoning_effort") val reasoningEffort: String? = null,
 )
 
 @Serializable
