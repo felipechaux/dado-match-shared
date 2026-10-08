@@ -1,9 +1,9 @@
 package com.dadomatch.shared.feature.icebreaker.di
 
 import com.dadomatch.shared.BuildKonfig
-import com.dadomatch.shared.feature.icebreaker.data.remote.GeminiService
 import com.dadomatch.shared.feature.icebreaker.data.remote.IcebreakerAiService
-import com.dadomatch.shared.feature.icebreaker.data.remote.NvidiaService
+import com.dadomatch.shared.feature.icebreaker.data.remote.OpenAiCompatibleService
+import com.dadomatch.shared.feature.icebreaker.data.remote.OpenAiCompatibleService.ThinkingOff
 import com.dadomatch.shared.feature.icebreaker.data.remote.RoutingIcebreakerService
 import com.dadomatch.shared.feature.icebreaker.data.repository.IcebreakerRepositoryImpl
 import com.dadomatch.shared.feature.icebreaker.data.telemetry.AiTelemetry
@@ -33,9 +33,8 @@ import org.koin.dsl.module
  */
 val icebreakerModule = module {
 
-    // Dedicated Ktor client for the OpenAI-compatible NVIDIA endpoint.
-    // Short timeouts mean a slow/unreachable provider fails fast and the router
-    // falls back to Gemini instead of leaving the user waiting.
+    // Dedicated Ktor client shared by both OpenAI-compatible providers. The router
+    // caps each attempt anyway; these only bound a connection that never answers.
     single(named("aiHttpClient")) {
         HttpClient {
             install(ContentNegotiation) {
@@ -52,20 +51,29 @@ val icebreakerModule = module {
         }
     }
 
-    single {
-        GeminiService(
-            apiKey = BuildKonfig.GEMINI_API_KEY,
-            modelName = BuildKonfig.GEMINI_MODEL_NAME,
-            premiumModelName = BuildKonfig.GEMINI_PREMIUM_MODEL_NAME
+    single(named("nvidia")) {
+        OpenAiCompatibleService(
+            httpClient = get(named("aiHttpClient")),
+            providerId = "nvidia",
+            apiKey = BuildKonfig.NVIDIA_API_KEY,
+            baseUrl = BuildKonfig.NVIDIA_BASE_URL,
+            modelName = BuildKonfig.NVIDIA_MODEL_NAME,
+            thinkingOff = ThinkingOff.CHAT_TEMPLATE_KWARGS,
         )
     }
 
-    single {
-        NvidiaService(
+    // Gemini through its OpenAI compatibility layer rather than the Gemini SDK, which
+    // can neither turn thinking off (newer Flash models take 6-12s with it) nor reach
+    // models that are only served on v1beta.
+    single(named("gemini")) {
+        OpenAiCompatibleService(
             httpClient = get(named("aiHttpClient")),
-            apiKey = BuildKonfig.NVIDIA_API_KEY,
-            modelName = BuildKonfig.NVIDIA_MODEL_NAME,
-            baseUrl = BuildKonfig.NVIDIA_BASE_URL
+            providerId = "gemini",
+            apiKey = BuildKonfig.GEMINI_API_KEY,
+            baseUrl = "https://generativelanguage.googleapis.com/v1beta/openai",
+            modelName = BuildKonfig.GEMINI_MODEL_NAME,
+            premiumModelName = BuildKonfig.GEMINI_PREMIUM_MODEL_NAME,
+            thinkingOff = ThinkingOff.MINIMAL_REASONING_EFFORT,
         )
     }
 
@@ -76,8 +84,8 @@ val icebreakerModule = module {
     // Primary = NVIDIA, fallback = Gemini.
     single<IcebreakerAiService> {
         RoutingIcebreakerService(
-            primary = get<NvidiaService>(),
-            fallback = get<GeminiService>(),
+            primary = get<OpenAiCompatibleService>(named("nvidia")),
+            fallback = get<OpenAiCompatibleService>(named("gemini")),
             telemetry = get()
         )
     }

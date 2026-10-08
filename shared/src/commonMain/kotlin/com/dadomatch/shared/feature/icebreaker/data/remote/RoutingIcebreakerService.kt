@@ -18,7 +18,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  *
  * This is also the single place AI telemetry is emitted: per-attempt latency/winner
  * for performance analysis, plus non-fatals for failures and the total-failure case.
- * Keeping it here means the leaf services ([NvidiaService], [GeminiService]) stay pure
+ * Keeping it here means the leaf services ([OpenAiCompatibleService]) stay pure
  * and free of any Firebase dependency.
  */
 class RoutingIcebreakerService(
