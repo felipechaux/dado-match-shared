@@ -19,4 +19,14 @@ interface IcebreakerAiService {
         language: String,
         usePremiumModel: Boolean = false,
     ): Resource<String>
+
+    /**
+     * Free-form prompt for other features (e.g. game challenge batches). Returns the
+     * reply trimmed but otherwise untouched; the caller parses it.
+     */
+    suspend fun complete(
+        prompt: String,
+        maxTokens: Int,
+        usePremiumModel: Boolean = false,
+    ): Resource<String>
 }

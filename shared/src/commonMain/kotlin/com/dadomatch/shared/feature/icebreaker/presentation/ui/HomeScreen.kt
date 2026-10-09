@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -56,10 +57,12 @@ import com.dadomatch.shared.presentation.ui.components.bottomBarClearance
 import com.dadomatch.shared.presentation.ui.theme.AppConstants
 import com.dadomatch.shared.presentation.ui.theme.DeepDarkBlue
 import com.dadomatch.shared.presentation.ui.theme.NeonCyan
+import com.dadomatch.shared.presentation.ui.theme.NeonPink
 import com.dadomatch.shared.feature.icebreaker.presentation.ui.components.StreakBadge
 import com.dadomatch.shared.shared.generated.resources.Res
 import com.dadomatch.shared.shared.generated.resources.environment_label
 import com.dadomatch.shared.shared.generated.resources.error_title
+import com.dadomatch.shared.shared.generated.resources.game_entry
 import com.dadomatch.shared.shared.generated.resources.get_unlimited_rolls
 import com.dadomatch.shared.shared.generated.resources.intensity_label
 import com.dadomatch.shared.shared.generated.resources.no_rolls_left
@@ -84,7 +87,8 @@ import org.koin.compose.viewmodel.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onNavigateToPaywall: () -> Unit = {}
+    onNavigateToPaywall: () -> Unit = {},
+    onNavigateToGame: () -> Unit = {}
 ) {
     val environments = AppConstants.ENVIRONMENTS
     val intensities  = AppConstants.INTENSITIES
@@ -155,7 +159,8 @@ fun HomeScreen(
                 rolling = false
                 viewModel.onRollComplete(selectedEnvironment, selectedIntensity, uiState.selectedLanguage)
             },
-            onSignInClick = { viewModel.showAuth() }
+            onSignInClick = { viewModel.showAuth() },
+            onGameMode = onNavigateToGame
         )
 
         // ── Overlay layer ─────────────────────────────────────────────────────
@@ -339,7 +344,8 @@ private fun HomeContent(
     onLaunch: () -> Unit,
     onSurpriseMe: () -> Unit,
     onRollComplete: (Int) -> Unit,
-    onSignInClick: () -> Unit
+    onSignInClick: () -> Unit,
+    onGameMode: () -> Unit
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val isCompact = maxHeight < CompactHeight
@@ -410,20 +416,40 @@ private fun HomeContent(
                     environmentColor = AppConstants.getEnvironmentColor(selectedEnvironment),
                     intensityColor   = AppConstants.getIntensityColor(selectedIntensity)
                 )
-                OutlinedButton(
-                    onClick  = onSurpriseMe,
-                    enabled  = !isLoading && !rolling,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                    shape    = RoundedCornerShape(24.dp),
-                    border   = BorderStroke(1.dp, NeonCyan.copy(alpha = 0.4f)),
-                    colors   = ButtonDefaults.outlinedButtonColors(contentColor = NeonCyan)
-                ) {
-                    Text(
-                        text       = "🎲 ${stringResource(Res.string.surprise_me_button)}",
-                        color      = NeonCyan,
-                        fontSize   = 14.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                // Side by side so Game mode doesn't push the layout into scrolling
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(
+                        onClick  = onSurpriseMe,
+                        enabled  = !isLoading && !rolling,
+                        modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                        shape    = RoundedCornerShape(24.dp),
+                        border   = BorderStroke(1.dp, NeonCyan.copy(alpha = 0.4f)),
+                        colors   = ButtonDefaults.outlinedButtonColors(contentColor = NeonCyan)
+                    ) {
+                        Text(
+                            text       = "🎲 ${stringResource(Res.string.surprise_me_button)}",
+                            color      = NeonCyan,
+                            fontSize   = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines   = 1
+                        )
+                    }
+                    OutlinedButton(
+                        onClick  = onGameMode,
+                        enabled  = !isLoading && !rolling,
+                        modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                        shape    = RoundedCornerShape(24.dp),
+                        border   = BorderStroke(1.dp, NeonPink.copy(alpha = 0.5f)),
+                        colors   = ButtonDefaults.outlinedButtonColors(contentColor = NeonPink)
+                    ) {
+                        Text(
+                            text       = "🎉 ${stringResource(Res.string.game_entry)}",
+                            color      = NeonPink,
+                            fontSize   = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines   = 1
+                        )
+                    }
                 }
             }
         }

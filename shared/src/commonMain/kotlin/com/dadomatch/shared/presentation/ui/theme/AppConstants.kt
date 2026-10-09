@@ -61,5 +61,6 @@ object AppConstants {
         const val PROFILE   = "profile"
         const val SETTINGS  = "settings"
         const val PAYWALL   = "paywall"
+        const val GAME      = "game"
     }
 }

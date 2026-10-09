@@ -4,6 +4,7 @@ import com.dadomatch.shared.core.di.coreModule
 import com.dadomatch.shared.feature.icebreaker.di.icebreakerModule
 import com.dadomatch.shared.feature.auth.di.authModule
 import com.dadomatch.shared.feature.engagement.di.engagementModule
+import com.dadomatch.shared.feature.game.di.gameModule
 import com.dadomatch.shared.feature.onboarding.di.onboardingModule
 import com.dadomatch.shared.feature.subscription.di.subscriptionModule
 import com.dadomatch.shared.feature.success.di.successModule
@@ -22,7 +23,8 @@ fun getAllModules() = listOf(
     successModule,
     subscriptionModule,
     onboardingModule,
-    engagementModule
+    engagementModule,
+    gameModule
 )
 
 expect fun platformModule(): Module

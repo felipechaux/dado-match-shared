@@ -9,4 +9,5 @@ sealed class Screen(val route: String) {
     data object Profile : Screen(AppConstants.Routes.PROFILE)
     data object Settings : Screen(AppConstants.Routes.SETTINGS)
     data object Paywall : Screen(AppConstants.Routes.PAYWALL)
+    data object Game : Screen(AppConstants.Routes.GAME)
 }
