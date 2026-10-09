@@ -49,32 +49,38 @@ class OpenAiCompatibleService(
         language: String,
         usePremiumModel: Boolean,
     ): Resource<String> {
+        val reply = complete(IcebreakerPrompt.build(environment, intensity, language), ICEBREAKER_MAX_TOKENS, usePremiumModel)
+        if (reply !is Resource.Success) return reply
+        val text = IcebreakerPrompt.clean(reply.data)
+        return if (text.isEmpty()) Resource.Error("ai_empty_response") else Resource.Success(text)
+    }
+
+    override suspend fun complete(prompt: String, maxTokens: Int, usePremiumModel: Boolean): Resource<String> {
         // No key configured → let the router fall straight through to the other provider.
         if (apiKey.isBlank()) return Resource.Error("${providerId}_not_configured")
 
-        val prompt = IcebreakerPrompt.build(environment, intensity, language)
         if (!usePremiumModel || premiumModelName == modelName) {
-            return complete(modelName, prompt, usePremiumModel)
+            return request(modelName, prompt, maxTokens, usePremiumModel)
         }
 
         // The premium model has tighter quotas: when it is saturated, lifetime users
         // silently get the standard model instead of an error.
-        val premium = complete(premiumModelName, prompt, usePremiumModel = true)
+        val premium = request(premiumModelName, prompt, maxTokens, usePremiumModel = true)
         return if (premium is Resource.Error && premium.message == RATE_LIMITED) {
-            complete(modelName, prompt, usePremiumModel = true)
+            request(modelName, prompt, maxTokens, usePremiumModel = true)
         } else {
             premium
         }
     }
 
-    private suspend fun complete(model: String, prompt: String, usePremiumModel: Boolean): Resource<String> {
+    private suspend fun request(model: String, prompt: String, maxTokens: Int, usePremiumModel: Boolean): Resource<String> {
         val request = ChatRequest(
             model = model,
             messages = listOf(ChatMessage(role = "user", content = prompt)),
-            // Lifetime users get a touch more creative variance; output stays one-liner short.
+            // Lifetime users get a touch more creative variance.
             temperature = if (usePremiumModel) 0.9 else 0.7,
             topP = 0.95,
-            maxTokens = 160,
+            maxTokens = maxTokens,
             chatTemplateKwargs = ChatTemplateKwargs(enableThinking = false)
                 .takeIf { thinkingOff == ThinkingOff.CHAT_TEMPLATE_KWARGS },
             reasoningEffort = "minimal".takeIf { thinkingOff == ThinkingOff.MINIMAL_REASONING_EFFORT },
@@ -104,8 +110,7 @@ class OpenAiCompatibleService(
                 return Resource.Error(code, cause)
             }
 
-            val text = response.body<ChatResponse>().choices.firstOrNull()?.message?.content
-                ?.let(IcebreakerPrompt::clean)
+            val text = response.body<ChatResponse>().choices.firstOrNull()?.message?.content?.trim()
             if (text.isNullOrEmpty()) Resource.Error("ai_empty_response")
             else Resource.Success(text)
         } catch (e: CancellationException) {
@@ -125,6 +130,8 @@ class OpenAiCompatibleService(
 
     private companion object {
         const val RATE_LIMITED = "rate_limit_exceeded"
+        // Output stays one-liner short
+        const val ICEBREAKER_MAX_TOKENS = 160
     }
 }
 

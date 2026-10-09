@@ -30,6 +30,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.dadomatch.shared.feature.game.presentation.GameScreen
 import com.dadomatch.shared.feature.icebreaker.presentation.ui.HomeScreen
 import com.dadomatch.shared.feature.icebreaker.presentation.viewmodel.HomeViewModel
 import com.dadomatch.shared.feature.subscription.domain.usecase.GetLanguageUseCase
@@ -108,6 +109,7 @@ fun AppNavigation(
 
     val showBottomBar = currentRoute != Screen.Splash.route &&
                         currentRoute != Screen.Paywall.route &&
+                        currentRoute != Screen.Game.route &&
                         !homeUiState.showOnboarding
 
     val navigateToTab: (String) -> Unit = { route ->
@@ -208,6 +210,13 @@ fun AppNavigation(
                     }
                     composable(Screen.Home.route) {
                         HomeScreen(
+                            onNavigateToPaywall = { navController.navigate(Screen.Paywall.route) },
+                            onNavigateToGame = { navController.navigate(Screen.Game.route) }
+                        )
+                    }
+                    composable(Screen.Game.route) {
+                        GameScreen(
+                            onBack = { navController.popBackStack() },
                             onNavigateToPaywall = { navController.navigate(Screen.Paywall.route) }
                         )
                     }

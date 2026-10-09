@@ -36,12 +36,22 @@ class RoutingIcebreakerService(
         intensity: String,
         language: String,
         usePremiumModel: Boolean,
+    ): Resource<String> = routeSafely(usePremiumModel) {
+        it.generateIcebreaker(environment, intensity, language, usePremiumModel)
+    }
+
+    override suspend fun complete(prompt: String, maxTokens: Int, usePremiumModel: Boolean): Resource<String> =
+        routeSafely(usePremiumModel) { it.complete(prompt, maxTokens, usePremiumModel) }
+
+    private suspend fun routeSafely(
+        usePremiumModel: Boolean,
+        call: suspend (IcebreakerAiService) -> Resource<String>,
     ): Resource<String> {
         // Top-level safety net: if either leaf service throws something its own try/catch
         // missed (e.g. a serialization crash, Ktor null, OOM, Firebase init failure), make
         // sure it lands in Crashlytics before we rethrow / surface a generic error.
         return try {
-            route(environment, intensity, language, usePremiumModel)
+            route(usePremiumModel, call)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
@@ -51,14 +61,10 @@ class RoutingIcebreakerService(
     }
 
     private suspend fun route(
-        environment: String,
-        intensity: String,
-        language: String,
         usePremiumModel: Boolean,
+        call: suspend (IcebreakerAiService) -> Resource<String>,
     ): Resource<String> = coroutineScope {
-        val primaryAttempt = async {
-            attempt(primary, environment, intensity, language, usePremiumModel, fellBack = false)
-        }
+        val primaryAttempt = async { attempt(primary, usePremiumModel, fellBack = false, call) }
 
         // Head start: most of the time the primary answers within it and the
         // fallback is never called.
@@ -67,9 +73,7 @@ class RoutingIcebreakerService(
 
         // Primary failed or is slow → race the fallback against it instead of waiting
         // the primary out; the first success wins and the loser is cancelled.
-        val fallbackAttempt = async {
-            attempt(fallback, environment, intensity, language, usePremiumModel, fellBack = true)
-        }
+        val fallbackAttempt = async { attempt(fallback, usePremiumModel, fellBack = true, call) }
         val first = select {
             primaryAttempt.onAwait { it to fallbackAttempt }
             fallbackAttempt.onAwait { it to primaryAttempt }
@@ -92,13 +96,11 @@ class RoutingIcebreakerService(
     /** One provider attempt with its telemetry: latency/winner, plus a non-fatal on failure. */
     private suspend fun attempt(
         service: IcebreakerAiService,
-        environment: String,
-        intensity: String,
-        language: String,
         usePremiumModel: Boolean,
         fellBack: Boolean,
+        call: suspend (IcebreakerAiService) -> Resource<String>,
     ): Resource<String> {
-        val result = safeAttempt(service, environment, intensity, language, usePremiumModel)
+        val result = safeAttempt(service, call)
         telemetry.onProviderAttempt(
             provider = service.providerId,
             success = result.value is Resource.Success,
@@ -120,18 +122,14 @@ class RoutingIcebreakerService(
      */
     private suspend fun safeAttempt(
         service: IcebreakerAiService,
-        environment: String,
-        intensity: String,
-        language: String,
-        usePremiumModel: Boolean,
+        call: suspend (IcebreakerAiService) -> Resource<String>,
     ): Timed<Resource<String>> {
         val start = TimeSource.Monotonic.markNow()
         val value: Resource<String> = try {
             // A provider that hangs (Gemini's SDK has no timeout by default) must not
             // keep the user waiting: past the cap it counts as "AI busy, retry".
-            withTimeoutOrNull(attemptTimeoutMs) {
-                service.generateIcebreaker(environment, intensity, language, usePremiumModel)
-            } ?: Resource.Error("rate_limit_exceeded", AiTimeoutException(service.providerId, attemptTimeoutMs))
+            withTimeoutOrNull(attemptTimeoutMs) { call(service) }
+                ?: Resource.Error("rate_limit_exceeded", AiTimeoutException(service.providerId, attemptTimeoutMs))
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
