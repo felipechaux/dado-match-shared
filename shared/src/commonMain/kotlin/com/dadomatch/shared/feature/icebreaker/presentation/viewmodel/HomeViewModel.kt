@@ -2,6 +2,7 @@ package com.dadomatch.shared.feature.icebreaker.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dadomatch.shared.feature.engagement.domain.EngagementManager
 import com.dadomatch.shared.feature.icebreaker.data.telemetry.AiTelemetry
 import com.dadomatch.shared.feature.icebreaker.data.telemetry.NoOpAiTelemetry
 import com.dadomatch.shared.feature.icebreaker.domain.model.IcebreakerFeedback
@@ -37,6 +38,7 @@ class HomeViewModel(
     private val getOnboardingStatusUseCase: GetOnboardingStatusUseCase,
     private val setOnboardingStatusUseCase: SetOnboardingStatusUseCase,
     private val getLanguageUseCase: GetLanguageUseCase,
+    private val engagementManager: EngagementManager,
     private val telemetry: AiTelemetry = NoOpAiTelemetry,
 ) : ViewModel() {
 
@@ -64,6 +66,24 @@ class HomeViewModel(
     init {
         observeSubscriptionStatus()
         observeOnboardingStatus()
+        observeStreak()
+    }
+
+    /** Reminders are a side effect: a failure there must never break the roll flow. */
+    private suspend fun recordRoll(generated: Boolean) {
+        try {
+            engagementManager.onRollFinished(generated)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            telemetry.onUnexpectedError(stage = "engagement.onRollFinished", cause = e)
+        }
+    }
+
+    private fun observeStreak() {
+        viewModelScope.launch {
+            engagementManager.currentStreak.collect { days -> _uiState.update { it.copy(streakDays = days) } }
+        }
     }
 
     // ── Language ──────────────────────────────────────────────────────────────
@@ -90,6 +110,14 @@ class HomeViewModel(
         viewModelScope.launch {
             setOnboardingStatusUseCase(true)
             _uiState.update { it.copy(showOnboarding = false) }
+            // The user has just seen what the app does: best moment to ask
+            try {
+                engagementManager.askPermissionOnce()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                telemetry.onUnexpectedError(stage = "engagement.askPermissionOnce", cause = e)
+            }
         }
     }
 
@@ -137,10 +165,14 @@ class HomeViewModel(
             }
 
             when (val result = generateIcebreakerUseCase(environment, intensity, language)) {
-                is Resource.Success ->
+                is Resource.Success -> {
                     _uiState.update { it.copy(isLoading = false, icebreaker = result.data) }
+                    // Streak, first-time permission prompt and the reminders that depend on rolls left
+                    recordRoll(generated = true)
+                }
                 is Resource.Error -> {
                     rollDiceUseCase.refund()
+                    recordRoll(generated = false)
                     val msg = result.message
                     when {
                         msg == "no_ai_calls_available" || msg == "daily_ai_limit_reached" ->
@@ -264,5 +296,7 @@ data class HomeUiState(
     val lastEnvironment: String = "",
     val lastIntensity: String = "",
     val lastLanguage: String = "en",
-    val selectedLanguage: String = "en"
+    val selectedLanguage: String = "en",
+    /** Consecutive days with an icebreaker; shown from 2 up. */
+    val streakDays: Int = 0
 )

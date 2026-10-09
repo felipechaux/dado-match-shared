@@ -62,6 +62,12 @@ interface SubscriptionRepository {
     suspend fun resetDailyRolls()
 
     /**
+     * When a free user who has spent every roll gets them back (epoch millis), or null
+     * when there is nothing to wait for (rolls left, or Pro)
+     */
+    suspend fun rollsRefillAtMillis(): Long?
+
+    /**
      * Decrement daily AI (Gemini) call count for premium users
      * @return Updated subscription status
      */

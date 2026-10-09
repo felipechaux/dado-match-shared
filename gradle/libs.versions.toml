@@ -9,11 +9,12 @@ materialIconsCoreVersion = "1.7.3"
 ktor = "3.5.0"
 datastore = "1.1.1"
 koin = "4.2.1"
+androidxWork = "2.11.2"
 koinComposeMultiplatform = "4.2.1"
 lifecycleViewModel = "2.10.0"
 skie ="0.10.9"
 navigation-compose = "2.9.1"
-kotlinx-datetime = "0.6.1"
+kotlinx-datetime = "0.7.1"
 calf-file-picker = "0.5.0"
 coilCompose3Version = "3.0.4"
 # Android-only 1.x line; 2.x (multiplatform) requires Compose Multiplatform 1.11+
@@ -81,6 +82,8 @@ firebase-auth = { module = "dev.gitlive:firebase-auth", version.ref = "firebase-
 firebase-common = { module = "dev.gitlive:firebase-common", version.ref = "firebase-auth" }
 firebase-crashlytics = { module = "dev.gitlive:firebase-crashlytics", version.ref = "firebase-auth" }
 firebase-analytics = { module = "dev.gitlive:firebase-analytics", version.ref = "firebase-auth" }
+firebase-messaging = { module = "dev.gitlive:firebase-messaging", version.ref = "firebase-auth" }
+androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref = "androidxWork" }
 credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
 credentials-play-services-auth = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentials" }
 googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleid" }

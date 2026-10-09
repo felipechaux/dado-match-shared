@@ -1,5 +1,7 @@
 package com.dadomatch.shared.feature.subscription.presentation.ui
 
+import com.dadomatch.shared.feature.engagement.presentation.NotificationSettingsSection
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -223,6 +225,11 @@ fun SettingsScreen(
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // ── Notifications Section ─────────────────────────────────
+                NotificationSettingsSection()
 
                 Spacer(modifier = Modifier.height(100.dp)) // Padding for bottom bar
             }

@@ -78,7 +78,6 @@ import com.dadomatch.shared.shared.generated.resources.start_rolling
 import com.dadomatch.shared.shared.generated.resources.success_subtitle
 import com.dadomatch.shared.shared.generated.resources.success_title
 import kotlinx.coroutines.delay
-import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
@@ -386,8 +385,7 @@ private fun TagChip(
 }
 
 private fun formatDate(instant: kotlin.time.Instant): String {
-    val kx = Instant.fromEpochMilliseconds(instant.toEpochMilliseconds())
-    val local = kx.toLocalDateTime(TimeZone.currentSystemDefault())
+    val local = instant.toLocalDateTime(TimeZone.currentSystemDefault())
     val month = local.month.name.take(3)
         .lowercase()
         .replaceFirstChar { it.uppercase() }

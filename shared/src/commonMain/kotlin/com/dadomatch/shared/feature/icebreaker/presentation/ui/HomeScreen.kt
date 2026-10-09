@@ -56,6 +56,7 @@ import com.dadomatch.shared.presentation.ui.components.bottomBarClearance
 import com.dadomatch.shared.presentation.ui.theme.AppConstants
 import com.dadomatch.shared.presentation.ui.theme.DeepDarkBlue
 import com.dadomatch.shared.presentation.ui.theme.NeonCyan
+import com.dadomatch.shared.feature.icebreaker.presentation.ui.components.StreakBadge
 import com.dadomatch.shared.shared.generated.resources.Res
 import com.dadomatch.shared.shared.generated.resources.environment_label
 import com.dadomatch.shared.shared.generated.resources.error_title
@@ -135,6 +136,7 @@ fun HomeScreen(
             isAnonymous         = isAnonymous,
             isPremium           = uiState.isPremium,
             isLoading           = uiState.isLoading,
+            streakDays          = uiState.streakDays,
             onEnvironmentSelected = { selectedEnvironment = it },
             onIntensitySelected   = { selectedIntensity   = it },
             onLaunch = {
@@ -331,6 +333,7 @@ private fun HomeContent(
     isAnonymous: Boolean,
     isPremium: Boolean,
     isLoading: Boolean,
+    streakDays: Int,
     onEnvironmentSelected: (String) -> Unit,
     onIntensitySelected: (String) -> Unit,
     onLaunch: () -> Unit,
@@ -362,6 +365,10 @@ private fun HomeContent(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 AppLogo(inline = isCompact)
+                if (streakDays >= 2) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    StreakBadge(days = streakDays)
+                }
                 if (isAnonymous) {
                     Spacer(modifier = Modifier.height(10.dp))
                     SignInNudgeBanner(onClick = onSignInClick)

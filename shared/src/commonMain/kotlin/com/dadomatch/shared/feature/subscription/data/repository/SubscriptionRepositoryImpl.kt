@@ -208,6 +208,14 @@ class SubscriptionRepositoryImpl(
         if (!hasPremium) localDataSource.incrementDailyRolls()
     }
 
+    override suspend fun rollsRefillAtMillis(): Long? {
+        if (revenueCatService.hasPremiumAccess(revenueCatService.customerInfoFlow.first())) return null
+        if (localDataSource.getDailyRollsRemaining().first() > 0) return null
+        val lastReset = localDataSource.getLastResetDate().first() ?: return null
+        // Same window as shouldResetDailyRolls(): the first roll after it refills
+        return lastReset.toEpochMilliseconds() + 24L * 60L * 60L * 1000L
+    }
+
     override suspend fun resetDailyRolls() {
         // Check if reset is needed
         if (localDataSource.shouldResetDailyRolls()) {

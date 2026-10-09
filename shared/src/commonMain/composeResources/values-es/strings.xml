@@ -171,4 +171,14 @@
     <string name="profile_edit_name_save">Guardar</string>
     <string name="get_unlimited_rolls">✨ Lanzamientos ilimitados</string>
     <string name="cd_locked_option">Bloqueado</string>
+    <!-- Notifications -->
+    <string name="home_streak">🔥 Racha de %d días</string>
+    <string name="settings_notifications_section">Notificaciones</string>
+    <string name="settings_notifications_all">Recordatorios</string>
+    <string name="settings_notifications_all_desc">Como máximo uno al día</string>
+    <string name="settings_notifications_blocked">Las notificaciones están desactivadas en los ajustes del teléfono</string>
+    <string name="settings_notifications_streak">Racha en peligro</string>
+    <string name="settings_notifications_rolls">Lanzamientos gratis recargados</string>
+    <string name="settings_notifications_night">Plan de noche (jue–sáb)</string>
+    <string name="settings_notifications_miss_you">Rompehielos del día tras unos días sin entrar</string>
 </resources>
