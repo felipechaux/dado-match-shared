@@ -28,7 +28,7 @@ object AppConstants {
         "int_romantic" -> "❤️"
         "int_direct"   -> "🎯"
         "int_funny"    -> "😂"
-        "int_spicy"    -> "🔥"
+        "int_spicy"    -> "⚡"
         else           -> "✨"
     }
 
@@ -50,7 +50,7 @@ object AppConstants {
         "int_romantic" -> NeonPink
         "int_direct"   -> NeonMint
         "int_funny"    -> NeonYellow
-        "int_spicy"    -> NeonRed
+        "int_spicy"    -> NeonOrange
         else           -> NeonPink
     }
 

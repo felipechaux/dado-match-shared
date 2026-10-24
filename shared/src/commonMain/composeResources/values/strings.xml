@@ -39,7 +39,7 @@
     <string name="int_romantic">Romantic</string>
     <string name="int_direct">Direct</string>
     <string name="int_funny">Funny</string>
-    <string name="int_spicy">Spicy</string>
+    <string name="int_spicy">Spark</string>
     
     <!-- Success Screen -->
     <string name="success_title">Your Successes</string>
@@ -171,6 +171,10 @@
     <string name="profile_edit_name_save">Save</string>
     <string name="get_unlimited_rolls">✨ Get Unlimited Rolls</string>
     <string name="cd_locked_option">Locked</string>
+    <string name="cd_roll_dice">Roll the dice</string>
+    <string name="successes_pro_title">PRO ANALYTICS</string>
+    <string name="successes_pro_desc">Unlock your full success history and performance charts with DadoMatch Pro.</string>
+    <string name="auth_error_generic">We couldn\'t sign you in. Please try again.</string>
     <!-- Notifications -->
     <string name="home_streak">🔥 %d-day streak</string>
     <string name="settings_notifications_section">Notifications</string>
@@ -187,7 +191,7 @@
     <string name="game_variant_party">🎉 Party</string>
     <string name="game_variant_date">💘 Date</string>
     <string name="game_variant_party_desc">3 to 8 friends, one phone</string>
-    <string name="game_variant_date_desc">For two: from small talk to spicy</string>
+    <string name="game_variant_date_desc">For two: from small talk to spark</string>
     <string name="game_tone_label">Vibe</string>
     <string name="game_context_label">Setting</string>
     <string name="ctx_none">None</string>
@@ -216,7 +220,7 @@
     <string name="game_type_dare">Mini dare</string>
     <string name="game_level_warm_up">Level 1 · Getting to know</string>
     <string name="game_level_deeper">Level 2 · Deeper</string>
-    <string name="game_level_spicy">Level 3 · Spicy 🔥</string>
+    <string name="game_level_spicy">Level 3 · Spark ⚡</string>
     <string name="game_your_turn">%1$s's turn</string>
     <string name="game_tap_to_start">Tap the dice for the first challenge</string>
     <string name="game_finished_title">Game over!</string>

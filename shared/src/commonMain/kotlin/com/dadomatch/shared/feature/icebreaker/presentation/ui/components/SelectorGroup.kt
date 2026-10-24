@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -97,7 +98,8 @@ fun SelectorGroup(
         Text(
             text = title,
             color = TextGray,
-            fontSize = 14.sp,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Medium,
             modifier = Modifier.padding(bottom = 8.dp)
         )
         // Box captures the true viewport width (screen-constrained),
@@ -133,7 +135,8 @@ fun SelectorGroup(
                                 shape = RoundedCornerShape(20.dp)
                             )
                             .clickable { haptic.light(); onOptionSelected(option) }
-                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                            .heightIn(min = 48.dp)
+                            .padding(horizontal = 18.dp, vertical = 12.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         val resource = when (option) {
@@ -160,7 +163,7 @@ fun SelectorGroup(
                                     imageVector = Icons.Default.Lock,
                                     contentDescription = stringResource(Res.string.cd_locked_option),
                                     tint = if (isSelected) TextWhite.copy(alpha = 0.6f) else TextGray,
-                                    modifier = Modifier.size(12.dp)
+                                    modifier = Modifier.size(14.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                             }
@@ -169,7 +172,7 @@ fun SelectorGroup(
                             if (icon != null) {
                                 Text(
                                     text = icon,
-                                    fontSize = 14.sp,
+                                    fontSize = 16.sp,
                                     modifier = Modifier.padding(end = 6.dp)
                                 )
                             }
@@ -177,7 +180,7 @@ fun SelectorGroup(
                             Text(
                                 text = if (resource != null) stringResource(resource) else option,
                                 color = if (isSelected) TextWhite else TextGray,
-                                fontSize = 13.sp,
+                                fontSize = 15.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                                 maxLines = 1

@@ -11,9 +11,11 @@ object IcebreakerPrompt {
     /** Trims the reply and drops the wrapping quotes models add despite being told not to. */
     fun clean(raw: String): String = raw.trim().trim(*wrappingQuotes).trim()
 
-    fun build(environment: String, intensity: String, language: String): String {
+    fun build(environment: String, intensityKey: String, language: String): String {
         val isSpanish = language.lowercase().contains("es")
         val langName = if (isSpanish) "Español" else "English"
+        // The UI passes resource keys ("int_spicy"); the model gets the tone name the user saw
+        val intensity = toneName(intensityKey, isSpanish)
 
         return if (isSpanish) {
             """
@@ -32,7 +34,7 @@ object IcebreakerPrompt {
             ## Guía de tono
             - Romántico: observación genuina o pregunta que muestra interés real en ellos; crea intriga sutil sin presionar; nunca exagerado
             - Gracioso: observación ingeniosa atada al ambiente '$environment'; ligero, que haga sonreír naturalmente, no forzado
-            - Picante: directo y atrevido con tensión juguetona; confiado pero respetuoso; insinuante sin ser grosero
+            - Chispa: ingenioso y seguro, con un toque coqueto y encantador; respetuoso, nunca sugerente ni subido de tono
 
             ## Reglas absolutas
             - Responde SOLO con la frase — cero explicaciones, etiquetas ni comillas
@@ -57,7 +59,7 @@ object IcebreakerPrompt {
             ## Vibe guide
             - Romantic: a genuine observation or question that shows real curiosity about them; builds quiet intrigue without pressure; never over the top
             - Funny: a witty, situational observation tied to '$environment'; effortless and light — makes them smile, not groan
-            - Spicy: bold and direct with playful tension; confident but respectful; suggestive without being crude
+            - Spark: witty and confident with a charming, lightly flirty touch; respectful, never suggestive or risqué
 
             ## Hard rules
             - Output ONLY the icebreaker phrase — zero explanations, labels, or quotes
@@ -66,5 +68,14 @@ object IcebreakerPrompt {
             - Language: $langName
             """.trimIndent()
         }
+    }
+
+    private fun toneName(key: String, spanish: Boolean): String = when (key) {
+        "int_cringe"   -> "Cringe"
+        "int_romantic" -> if (spanish) "Romántico" else "Romantic"
+        "int_direct"   -> if (spanish) "Directo" else "Direct"
+        "int_funny"    -> if (spanish) "Gracioso" else "Funny"
+        "int_spicy"    -> if (spanish) "Chispa" else "Spark"
+        else           -> key
     }
 }

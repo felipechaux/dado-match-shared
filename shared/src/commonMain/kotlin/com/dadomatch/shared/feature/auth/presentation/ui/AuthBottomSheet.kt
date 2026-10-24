@@ -160,7 +160,7 @@ fun AuthBottomSheet(
                 if (uiState.error != null) {
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = uiState.error ?: "",
+                        text = stringResource(Res.string.auth_error_generic),
                         color = Color(0xFFFF4D4D),
                         style = MaterialTheme.typography.bodySmall,
                         textAlign = TextAlign.Center,

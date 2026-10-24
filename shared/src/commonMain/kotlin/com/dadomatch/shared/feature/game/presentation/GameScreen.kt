@@ -81,9 +81,9 @@ import com.dadomatch.shared.presentation.ui.theme.DarkSurface
 import com.dadomatch.shared.presentation.ui.theme.DeepDarkBlue
 import com.dadomatch.shared.presentation.ui.theme.NeonCyan
 import com.dadomatch.shared.presentation.ui.theme.NeonMint
+import com.dadomatch.shared.presentation.ui.theme.NeonOrange
 import com.dadomatch.shared.presentation.ui.theme.NeonPink
 import com.dadomatch.shared.presentation.ui.theme.NeonPurple
-import com.dadomatch.shared.presentation.ui.theme.NeonRed
 import com.dadomatch.shared.presentation.ui.theme.NeonYellow
 import com.dadomatch.shared.presentation.ui.theme.TextGray
 import com.dadomatch.shared.presentation.ui.theme.TextWhite
@@ -224,7 +224,7 @@ private fun Header(showEnd: Boolean, onBack: () -> Unit, onEnd: () -> Unit) {
             Text(
                 text = stringResource(Res.string.game_end),
                 color = TextWhite,
-                fontSize = 13.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
                 modifier = Modifier
@@ -232,7 +232,8 @@ private fun Header(showEnd: Boolean, onBack: () -> Unit, onEnd: () -> Unit) {
                     .clip(RoundedCornerShape(16.dp))
                     .border(1.dp, TextGray.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
                     .clickable(onClick = onEnd)
-                    .padding(horizontal = 14.dp, vertical = 7.dp)
+                    .heightIn(min = 40.dp)
+                    .padding(horizontal = 16.dp, vertical = 10.dp)
             )
         }
     }
@@ -307,7 +308,7 @@ private fun SetupContent(state: GameUiState, viewModel: GameViewModel) {
                     else Res.string.game_players_hint_date
                 ),
                 color = TextGray,
-                fontSize = 13.sp
+                fontSize = 14.sp
             )
             Spacer(Modifier.height(8.dp))
             PlayersEditor(
@@ -359,7 +360,8 @@ private fun PlayersEditor(
                         .clip(RoundedCornerShape(20.dp))
                         .background(NeonPurple.copy(alpha = 0.2f))
                         .clickable { onRemove(player) }
-                        .padding(start = 14.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+                        .heightIn(min = 44.dp)
+                        .padding(start = 14.dp, end = 10.dp, top = 10.dp, bottom = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(player, color = TextWhite, fontSize = 14.sp)
@@ -415,7 +417,8 @@ private fun PlayContent(state: GameUiState, onRoll: () -> Unit, onRollComplete: 
         RizzDice(
             rolling = state.rolling,
             onRollComplete = { onRollComplete() },
-            modifier = Modifier.padding(vertical = 12.dp).size(150.dp)
+            modifier = Modifier.padding(vertical = 12.dp).size(150.dp),
+            onTap = onRoll
         )
         Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
             AnimatedContent(
@@ -458,15 +461,15 @@ private fun RoundInfo(turn: GameTurn?, roundsLeft: Int?) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (turn != null) {
-            Text(stringResource(Res.string.game_round, turn.round), color = TextGray, fontSize = 13.sp)
+            Text(stringResource(Res.string.game_round, turn.round), color = TextGray, fontSize = 14.sp)
             turn.level?.let { level ->
-                Text("  ·  ", color = TextGray, fontSize = 13.sp)
-                Text(stringResource(levelLabel(level)), color = levelColor(level), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                Text("  ·  ", color = TextGray, fontSize = 14.sp)
+                Text(stringResource(levelLabel(level)), color = levelColor(level), fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
             }
         }
         if (roundsLeft != null && turn != null) {
-            Text("  ·  ", color = TextGray, fontSize = 13.sp)
-            Text(stringResource(Res.string.game_rounds_left, roundsLeft), color = TextGray, fontSize = 13.sp)
+            Text("  ·  ", color = TextGray, fontSize = 14.sp)
+            Text(stringResource(Res.string.game_rounds_left, roundsLeft), color = TextGray, fontSize = 14.sp)
         }
     }
 }
@@ -590,7 +593,7 @@ private fun VariantCard(
     ) {
         Text(title, color = TextWhite, fontSize = 17.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(4.dp))
-        Text(subtitle, color = TextGray, fontSize = 12.sp, lineHeight = 16.sp)
+        Text(subtitle, color = TextGray, fontSize = 14.sp, lineHeight = 19.sp)
     }
 }
 
@@ -602,7 +605,8 @@ private fun Chip(label: String, selected: Boolean, color: Color, onClick: () -> 
             .background(if (selected) color.copy(alpha = 0.2f) else DarkSurface)
             .border(1.dp, if (selected) color else Color.Transparent, RoundedCornerShape(20.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+            .heightIn(min = 48.dp)
+            .padding(horizontal = 18.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (locked) {
@@ -610,14 +614,14 @@ private fun Chip(label: String, selected: Boolean, color: Color, onClick: () -> 
                 Icons.Default.Lock,
                 contentDescription = stringResource(Res.string.cd_locked_option),
                 tint = TextGray,
-                modifier = Modifier.size(12.dp)
+                modifier = Modifier.size(14.dp)
             )
             Spacer(Modifier.width(4.dp))
         }
         Text(
             text = label,
             color = if (selected) TextWhite else TextGray,
-            fontSize = 13.sp,
+            fontSize = 14.sp,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
         )
     }
@@ -632,13 +636,13 @@ private fun toneLabel(tone: GameTone): StringResource = when (tone) {
 private fun toneIcon(tone: GameTone): String = when (tone) {
     GameTone.FUNNY -> "😂"
     GameTone.ROMANTIC -> "❤️"
-    GameTone.SPICY -> "🔥"
+    GameTone.SPICY -> "⚡"
 }
 
 private fun toneColor(tone: GameTone): Color = when (tone) {
     GameTone.FUNNY -> NeonYellow
     GameTone.ROMANTIC -> NeonPink
-    GameTone.SPICY -> NeonRed
+    GameTone.SPICY -> NeonOrange
 }
 
 private fun contextLabel(context: GameContext): StringResource = when (context) {
@@ -681,5 +685,5 @@ private fun levelLabel(level: DateLevel): StringResource = when (level) {
 private fun levelColor(level: DateLevel): Color = when (level) {
     DateLevel.WARM_UP -> NeonCyan
     DateLevel.DEEPER -> NeonPink
-    DateLevel.SPICY -> NeonRed
+    DateLevel.SPICY -> NeonOrange
 }

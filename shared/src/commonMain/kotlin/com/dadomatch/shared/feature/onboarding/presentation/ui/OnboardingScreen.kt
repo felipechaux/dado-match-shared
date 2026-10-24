@@ -147,6 +147,7 @@ fun OnboardingScreen(onDismiss: () -> Unit) {
                 rolling = rolling,
                 onRollComplete = { rolling = false },
                 modifier = Modifier.size(220.dp),
+                onTap = { rolling = true },
             )
 
             // ── Animated title + description ────────────────────────────────────

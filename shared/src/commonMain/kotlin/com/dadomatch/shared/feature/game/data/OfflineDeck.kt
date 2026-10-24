@@ -158,28 +158,28 @@ object OfflineDeck {
     private val DATE_SPICY_ES = deck(
         QUESTION,
         "¿Qué fue lo primero que pensaste al verme?",
-        "¿Cuál es tu idea de una cita perfecta que termine tarde?",
+        "¿Cómo sería tu cita perfecta, de principio a fin?",
         "¿Qué detalle te parece irresistible en alguien?",
-        "¿Cuál ha sido tu momento más atrevido en una cita?",
-        "¿Qué te gustaría que pasara antes de que termine esta noche?",
-        "¿Dónde sería el lugar perfecto para un primer beso?",
+        "¿Qué es lo más espontáneo que has hecho en una cita?",
+        "¿Qué plan te gustaría que hiciéramos juntos algún día?",
+        "¿Qué es algo que te hizo sonreír hoy?",
     ) + deck(
         DARE,
-        "Susúrrale un cumplido al oído.",
+        "Dile el cumplido más sincero que se te ocurra.",
         "Elige la canción para bailar juntos 30 segundos.",
     )
 
     private val DATE_SPICY_EN = deck(
         QUESTION,
         "What was the first thing you thought when you saw me?",
-        "What's your idea of a perfect date that ends late?",
+        "What would your perfect date look like, start to finish?",
         "What little detail do you find irresistible in someone?",
-        "What's the boldest thing you've done on a date?",
-        "What would you like to happen before tonight ends?",
-        "Where would the perfect first kiss happen?",
+        "What's the most spontaneous thing you've done on a date?",
+        "What plan would you love for us to do together someday?",
+        "What's something that made you smile today?",
     ) + deck(
         DARE,
-        "Whisper a compliment in their ear.",
+        "Give them the most sincere compliment you can think of.",
         "Pick a song and dance together for 30 seconds.",
     )
 }
