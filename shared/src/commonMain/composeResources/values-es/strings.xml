@@ -172,6 +172,9 @@
     <string name="get_unlimited_rolls">✨ Lanzamientos ilimitados</string>
     <string name="cd_locked_option">Bloqueado</string>
     <string name="cd_roll_dice">Lanzar el dado</string>
+    <string name="successes_pro_title">ESTADÍSTICAS PRO</string>
+    <string name="successes_pro_desc">Desbloquea todo tu historial de éxitos y tus gráficas de rendimiento con DadoMatch Pro.</string>
+    <string name="auth_error_generic">No pudimos iniciar sesión. Inténtalo de nuevo.</string>
     <!-- Notifications -->
     <string name="home_streak">🔥 Racha de %d días</string>
     <string name="settings_notifications_section">Notificaciones</string>

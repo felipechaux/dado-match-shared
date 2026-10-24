@@ -43,7 +43,6 @@ import androidx.compose.ui.unit.sp
 import com.dadomatch.shared.feature.auth.presentation.ui.AuthBottomSheet
 import com.dadomatch.shared.feature.onboarding.presentation.ui.OnboardingScreen
 import com.dadomatch.shared.feature.auth.presentation.viewmodel.AuthViewModel
-import com.dadomatch.shared.feature.icebreaker.presentation.ui.components.ActionChoiceDialog
 import com.dadomatch.shared.feature.icebreaker.presentation.ui.components.FeedbackDialog
 import com.dadomatch.shared.feature.icebreaker.presentation.ui.components.IcebreakerDialog
 import com.dadomatch.shared.feature.icebreaker.presentation.ui.components.LaunchButton
@@ -81,6 +80,7 @@ import com.dadomatch.shared.shared.generated.resources.rolling_rizz_4
 import com.dadomatch.shared.shared.generated.resources.rolling_rizz_5
 import com.dadomatch.shared.shared.generated.resources.rolling_rizz_6
 import com.dadomatch.shared.shared.generated.resources.surprise_me_button
+import com.dadomatch.shared.shared.generated.resources.error_message_generic
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -188,15 +188,6 @@ fun HomeScreen(
             )
         }
 
-        uiState.actionChoiceIcebreaker?.let { text ->
-            ActionChoiceDialog(
-                icebreakerText = text,
-                onDismiss      = { viewModel.dismissActionChoice() },
-                onCopy         = { viewModel.copyToClipboard(text) },
-                onShare        = { viewModel.shareIcebreaker(text) }
-            )
-        }
-
         if (uiState.showFeedbackDialog) {
             FeedbackDialog(
                 onDismiss = { viewModel.dismissFeedbackDialog() },
@@ -228,9 +219,9 @@ fun HomeScreen(
             )
         }
 
-        uiState.error?.let { errorMsg ->
+        uiState.error?.let {
             IcebreakerDialog(
-                icebreakerText = errorMsg,
+                icebreakerText = stringResource(Res.string.error_message_generic),
                 title          = stringResource(Res.string.error_title),
                 onDismiss      = { viewModel.clearError() },
                 customButton   = {

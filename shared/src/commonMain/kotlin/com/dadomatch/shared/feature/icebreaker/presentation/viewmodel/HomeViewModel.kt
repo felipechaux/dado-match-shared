@@ -201,23 +201,6 @@ class HomeViewModel(
         _uiState.update { it.copy(icebreaker = null) }
     }
 
-    // ── Action Choice ─────────────────────────────────────────────────────────
-
-    fun dismissActionChoice() {
-        _uiState.update { it.copy(actionChoiceIcebreaker = null) }
-    }
-
-    fun copyToClipboard(@Suppress("UNUSED_PARAMETER") text: String) {
-        // Clipboard is handled by ActionChoiceDialog internally via LocalClipboardManager.
-        // This method signals completion and closes the action sheet.
-        _uiState.update { it.copy(actionChoiceIcebreaker = null) }
-    }
-
-    fun shareIcebreaker(@Suppress("UNUSED_PARAMETER") text: String) {
-        // Platform share intent is handled by expect/actual; dismiss the sheet.
-        _uiState.update { it.copy(actionChoiceIcebreaker = null) }
-    }
-
     // ── Feedback Dialog ───────────────────────────────────────────────────────
 
     fun showFeedbackDialog() {
@@ -282,7 +265,6 @@ class HomeViewModel(
 data class HomeUiState(
     val isLoading: Boolean = false,
     val icebreaker: String? = null,
-    val actionChoiceIcebreaker: String? = null,
     val showFeedbackDialog: Boolean = false,
     val isPremium: Boolean = false,
     val dailyRollsRemaining: Int? = null,

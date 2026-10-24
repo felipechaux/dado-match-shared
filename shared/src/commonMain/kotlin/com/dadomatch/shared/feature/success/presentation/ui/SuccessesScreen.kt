@@ -80,6 +80,9 @@ import com.dadomatch.shared.shared.generated.resources.success_title
 import kotlinx.coroutines.delay
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import com.dadomatch.shared.shared.generated.resources.subs_upgrade_button
+import com.dadomatch.shared.shared.generated.resources.successes_pro_desc
+import com.dadomatch.shared.shared.generated.resources.successes_pro_title
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -216,7 +219,7 @@ fun SuccessesScreen(
                     Text(text = "💎", fontSize = 48.sp)
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        "PRO ANALYTICS",
+                        stringResource(Res.string.successes_pro_title),
                         style = MaterialTheme.typography.titleLarge,
                         color = NeonCyan,
                         fontWeight = FontWeight.ExtraBold,
@@ -224,7 +227,7 @@ fun SuccessesScreen(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        "Unlock detailed success history and performance charts with DadoMatch Pro.",
+                        stringResource(Res.string.successes_pro_desc),
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextWhite.copy(alpha = 0.8f),
                         textAlign = TextAlign.Center
@@ -235,7 +238,7 @@ fun SuccessesScreen(
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = NeonPink)
                     ) {
-                        Text("Upgrade to Pro", color = TextWhite, fontWeight = FontWeight.Bold)
+                        Text(stringResource(Res.string.subs_upgrade_button), color = TextWhite, fontWeight = FontWeight.Bold)
                     }
                 }
             }
