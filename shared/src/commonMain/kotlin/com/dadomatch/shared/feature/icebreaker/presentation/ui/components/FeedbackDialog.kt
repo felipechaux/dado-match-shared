@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -105,7 +106,7 @@ fun FeedbackDialog(
             Text(
                 text = stringResource(Res.string.feedback_desc),
                 color = TextGray,
-                fontSize = 14.sp,
+                fontSize = 16.sp,
                 textAlign = TextAlign.Center
             )
 
@@ -147,21 +148,22 @@ fun FeedbackDialog(
             Button(
                 onClick = { if (selectedRating > 0) onSubmit(selectedRating, "") },
                 enabled = selectedRating > 0,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth().height(54.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = NeonPink)
             ) {
                 Text(
                     text = stringResource(Res.string.feedback_submit_button),
                     color = Color.White,
+                    fontSize = 17.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
 
             Spacer(Modifier.height(4.dp))
 
-            TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
-                Text(text = stringResource(Res.string.feedback_skip_button), color = TextGray)
+            TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                Text(text = stringResource(Res.string.feedback_skip_button), color = TextGray, fontSize = 16.sp)
             }
         }
     }

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -93,7 +94,7 @@ fun IcebreakerDialog(
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() }
                 ) { /* consume tap — card should not close on inner tap */ }
-                .padding(28.dp),
+                .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -127,8 +128,8 @@ fun IcebreakerDialog(
                         clipboardManager.setText(AnnotatedString(icebreakerText))
                         copied = true
                     },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth().height(54.dp),
+                    shape = RoundedCornerShape(16.dp),
                     border = androidx.compose.foundation.BorderStroke(
                         1.dp, if (copied) NeonMint else NeonCyan.copy(alpha = 0.5f)
                     )
@@ -136,22 +137,25 @@ fun IcebreakerDialog(
                     Text(
                         text = if (copied) "✓ ${stringResource(Res.string.copied_button)}"
                         else "📋 ${stringResource(Res.string.copy_button)}",
-                        color = if (copied) NeonMint else NeonCyan
+                        color = if (copied) NeonMint else NeonCyan,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
 
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(12.dp))
 
                 // ── Got It ────────────────────────────────────────────────
                 Button(
                     onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth().height(54.dp),
+                    shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = NeonPink)
                 ) {
                     Text(
                         text = stringResource(Res.string.got_it_button),
                         color = Color.White,
+                        fontSize = 17.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -161,11 +165,13 @@ fun IcebreakerDialog(
                     Spacer(Modifier.height(4.dp))
                     TextButton(
                         onClick = onReroll,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
                     ) {
                         Text(
                             text = "🎲 ${stringResource(Res.string.reroll_button)}",
-                            color = TextGray
+                            color = TextWhite.copy(alpha = 0.8f),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
@@ -174,9 +180,9 @@ fun IcebreakerDialog(
                 if (onFeedback != null) {
                     TextButton(
                         onClick = onFeedback,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
                     ) {
-                        Text(text = "🔥 ${stringResource(Res.string.how_did_it_go_title)}", color = TextGray, fontSize = 13.sp)
+                        Text(text = "🔥 ${stringResource(Res.string.how_did_it_go_title)}", color = TextGray, fontSize = 15.sp)
                     }
                 }
             }

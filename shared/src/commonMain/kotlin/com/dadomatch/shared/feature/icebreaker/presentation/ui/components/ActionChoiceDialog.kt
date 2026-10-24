@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -123,6 +124,7 @@ fun ActionChoiceDialog(
                 ) {
                     Text(
                         text = if (copied) "✓ Copied!" else "📋 Copy",
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
@@ -139,6 +141,7 @@ fun ActionChoiceDialog(
                     Text(
                         text = "🚀 Share",
                         color = NeonCyan,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
@@ -148,9 +151,9 @@ fun ActionChoiceDialog(
 
             TextButton(
                 onClick = onDismiss,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
             ) {
-                Text(text = "Close", color = TextGray)
+                Text(text = "Close", color = TextGray, fontSize = 16.sp)
             }
         }
     }

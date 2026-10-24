@@ -324,7 +324,7 @@ fun HomeScreen(
 
 // Below this height (most phones) the header goes inline and spacing tightens
 // so everything, Surprise me included, fits above the bottom bar without scrolling
-private val CompactHeight = 840.dp
+private val CompactHeight = 960.dp
 // Keeps the controls a comfortable width on tablets and landscape
 private val MaxContentWidth = 480.dp
 
