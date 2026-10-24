@@ -48,13 +48,13 @@ fun SignInNudgeBanner(
             Text(
                 text = stringResource(Res.string.sign_in_nudge_title),
                 color = TextWhite,
-                fontSize = 13.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
                 text = stringResource(Res.string.sign_in_nudge_subtitle),
                 color = TextGray,
-                fontSize = 11.sp
+                fontSize = 13.sp
             )
         }
         Icon(

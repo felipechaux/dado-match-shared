@@ -357,7 +357,7 @@ fun SuccessItem(
                 Text(
                     text = formatDate(record.date),
                     color = TextGray.copy(alpha = 0.6f),
-                    fontSize = 11.sp
+                    fontSize = 13.sp
                 )
             }
         }
@@ -378,7 +378,7 @@ private fun TagChip(
         Text(
             text = text,
             color = color,
-            fontSize = 11.sp,
+            fontSize = 13.sp,
             fontWeight = FontWeight.Medium
         )
     }

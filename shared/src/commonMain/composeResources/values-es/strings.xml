@@ -39,7 +39,7 @@
     <string name="int_romantic">Romántico</string>
     <string name="int_direct">Directo</string>
     <string name="int_funny">Gracioso</string>
-    <string name="int_spicy">Picante</string>
+    <string name="int_spicy">Chispa</string>
     
     <!-- Success Screen -->
     <string name="success_title">Tus Éxitos</string>
@@ -171,6 +171,7 @@
     <string name="profile_edit_name_save">Guardar</string>
     <string name="get_unlimited_rolls">✨ Lanzamientos ilimitados</string>
     <string name="cd_locked_option">Bloqueado</string>
+    <string name="cd_roll_dice">Lanzar el dado</string>
     <!-- Notifications -->
     <string name="home_streak">🔥 Racha de %d días</string>
     <string name="settings_notifications_section">Notificaciones</string>
@@ -187,7 +188,7 @@
     <string name="game_variant_party">🎉 Fiesta</string>
     <string name="game_variant_date">💘 Cita</string>
     <string name="game_variant_party_desc">De 3 a 8 amigos, un solo teléfono</string>
-    <string name="game_variant_date_desc">Para dos: de conocerse a picante</string>
+    <string name="game_variant_date_desc">Para dos: de conocerse a la chispa</string>
     <string name="game_tone_label">Tono</string>
     <string name="game_context_label">Contexto</string>
     <string name="ctx_none">Ninguno</string>
@@ -216,7 +217,7 @@
     <string name="game_type_dare">Mini reto</string>
     <string name="game_level_warm_up">Nivel 1 · Conocerse</string>
     <string name="game_level_deeper">Nivel 2 · Profundo</string>
-    <string name="game_level_spicy">Nivel 3 · Picante 🔥</string>
+    <string name="game_level_spicy">Nivel 3 · Chispa ⚡</string>
     <string name="game_your_turn">Turno de %1$s</string>
     <string name="game_tap_to_start">Toquen el dado para el primer reto</string>
     <string name="game_finished_title">¡Fin de la partida!</string>

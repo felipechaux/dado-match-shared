@@ -108,7 +108,7 @@ object GamePrompt {
             val levelText = when (level ?: DateLevel.WARM_UP) {
                 DateLevel.WARM_UP -> if (spanish) "para conocerse, ligeras" else "getting to know each other, light"
                 DateLevel.DEEPER -> if (spanish) "más profundas y personales" else "deeper and more personal"
-                DateLevel.SPICY -> if (spanish) "con tensión y coqueteo atrevido, sin ser explícitas" else "flirty and daring, never explicit"
+                DateLevel.SPICY -> if (spanish) "con complicidad y química, divertidas y encantadoras, siempre aptas para todo público" else "playful chemistry, charming and fun, always family-friendly"
             }
             if (spanish) "para dos personas en una cita, $levelText" else "for two people on a date, $levelText"
         }
@@ -117,7 +117,7 @@ object GamePrompt {
     private fun describeTone(tone: GameTone, spanish: Boolean): String = when (tone) {
         GameTone.FUNNY -> if (spanish) "gracioso, para reírse juntos" else "funny, made to laugh together"
         GameTone.ROMANTIC -> if (spanish) "romántico, cálido y genuino" else "romantic, warm and genuine"
-        GameTone.SPICY -> if (spanish) "picante y atrevido, pero respetuoso y nunca explícito" else "spicy and daring, but respectful and never explicit"
+        GameTone.SPICY -> if (spanish) "con chispa: ingenioso, encantador y seguro, siempre respetuoso y apto para todo público" else "with spark: witty, charming and confident, always respectful and family-friendly"
     }
 
     private fun describeContext(context: GameContext, spanish: Boolean): String {

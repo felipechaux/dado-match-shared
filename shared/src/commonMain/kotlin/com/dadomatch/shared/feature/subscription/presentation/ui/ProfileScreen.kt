@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -167,7 +168,7 @@ fun ProfileScreen() {
                     Spacer(modifier = Modifier.width(4.dp))
                     IconButton(
                         onClick = { showEditNameDialog = true },
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Edit,
@@ -498,7 +499,7 @@ fun StatusChip(
             style = MaterialTheme.typography.labelMedium,
             color = color,
             fontWeight = FontWeight.Bold,
-            fontSize = 12.sp
+            fontSize = 14.sp
         )
     }
 }
@@ -558,7 +559,7 @@ fun InfoCard(
                     text = label,
                     style = MaterialTheme.typography.labelMedium,
                     color = TextGray,
-                    fontSize = 12.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Medium
                 )
                 Spacer(modifier = Modifier.height(4.dp))
@@ -586,6 +587,7 @@ fun DeleteAccountButton(
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .clickable(enabled = enabled) { onClick() }
+            .heightIn(min = 48.dp)
             .padding(vertical = 12.dp)
     ) {
         Icon(

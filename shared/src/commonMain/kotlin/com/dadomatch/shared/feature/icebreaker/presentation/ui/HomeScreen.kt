@@ -256,7 +256,7 @@ fun HomeScreen(
                                 viewModel.clearNoInternetError()
                                 viewModel.onRetryRoll()
                             },
-                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                            modifier = Modifier.fillMaxWidth().height(52.dp),
                             shape    = RoundedCornerShape(24.dp),
                             border   = BorderStroke(1.dp, NeonCyan.copy(alpha = 0.5f)),
                             colors   = ButtonDefaults.outlinedButtonColors(contentColor = NeonCyan)
@@ -285,7 +285,7 @@ fun HomeScreen(
                                 viewModel.clearRateLimitError()
                                 viewModel.onRetryRoll()
                             },
-                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                            modifier = Modifier.fillMaxWidth().height(52.dp),
                             shape    = RoundedCornerShape(24.dp),
                             border   = BorderStroke(1.dp, NeonCyan.copy(alpha = 0.5f)),
                             colors   = ButtonDefaults.outlinedButtonColors(contentColor = NeonCyan)
@@ -350,7 +350,9 @@ private fun HomeContent(
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val isCompact = maxHeight < CompactHeight
         val sectionGap = if (isCompact) 8.dp else 16.dp
-        val diceSize = (maxHeight * if (isCompact) 0.2f else 0.24f).coerceIn(120.dp, 240.dp)
+        // Smaller on short screens to make room for the 48dp+ touch targets below
+        val diceSize = (maxHeight * if (isCompact) 0.16f else 0.24f).coerceIn(110.dp, 240.dp)
+        val secondaryButtonHeight = if (isCompact) 52.dp else 56.dp
 
         // Fills the screen when everything fits (SpaceBetween spreads the
         // sections) and scrolls when it doesn't — small phones, large font
@@ -384,7 +386,9 @@ private fun HomeContent(
             RizzDice(
                 rolling        = rolling,
                 onRollComplete = onRollComplete,
-                modifier       = Modifier.padding(vertical = sectionGap).size(diceSize)
+                modifier       = Modifier.padding(vertical = sectionGap).size(diceSize),
+                onTap          = onLaunch,
+                tapEnabled     = !isLoading
             )
 
             Column(verticalArrangement = Arrangement.spacedBy(sectionGap)) {
@@ -421,7 +425,7 @@ private fun HomeContent(
                     OutlinedButton(
                         onClick  = onSurpriseMe,
                         enabled  = !isLoading && !rolling,
-                        modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                        modifier = Modifier.weight(1f).heightIn(min = secondaryButtonHeight),
                         shape    = RoundedCornerShape(24.dp),
                         border   = BorderStroke(1.dp, NeonCyan.copy(alpha = 0.4f)),
                         colors   = ButtonDefaults.outlinedButtonColors(contentColor = NeonCyan)
@@ -429,7 +433,7 @@ private fun HomeContent(
                         Text(
                             text       = "🎲 ${stringResource(Res.string.surprise_me_button)}",
                             color      = NeonCyan,
-                            fontSize   = 14.sp,
+                            fontSize   = 15.sp,
                             fontWeight = FontWeight.SemiBold,
                             maxLines   = 1
                         )
@@ -437,7 +441,7 @@ private fun HomeContent(
                     OutlinedButton(
                         onClick  = onGameMode,
                         enabled  = !isLoading && !rolling,
-                        modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                        modifier = Modifier.weight(1f).heightIn(min = secondaryButtonHeight),
                         shape    = RoundedCornerShape(24.dp),
                         border   = BorderStroke(1.dp, NeonPink.copy(alpha = 0.5f)),
                         colors   = ButtonDefaults.outlinedButtonColors(contentColor = NeonPink)
@@ -445,7 +449,7 @@ private fun HomeContent(
                         Text(
                             text       = "🎉 ${stringResource(Res.string.game_entry)}",
                             color      = NeonPink,
-                            fontSize   = 14.sp,
+                            fontSize   = 15.sp,
                             fontWeight = FontWeight.SemiBold,
                             maxLines   = 1
                         )

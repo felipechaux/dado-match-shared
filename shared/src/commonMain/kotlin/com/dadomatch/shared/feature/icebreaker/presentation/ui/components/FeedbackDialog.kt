@@ -134,7 +134,7 @@ fun FeedbackDialog(
                         Text(
                             text = ratingLabels[index],
                             color = if (isSelected) NeonCyan else TextGray,
-                            fontSize = 11.sp,
+                            fontSize = 13.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                         )
                     }
